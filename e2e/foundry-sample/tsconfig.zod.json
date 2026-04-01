@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/generated-zod/**/*.ts", "src/validate-zod.ts"]
+}

@@ -1,0 +1,48 @@
+[workspace]
+members = [
+    ".",
+    "crates/abi-typegen-core",
+    "crates/abi-typegen-config",
+    "crates/abi-typegen-codegen",
+]
+resolver = "2"
+
+[workspace.dependencies]
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+heck = "0.5"
+tracing = "0.1"
+
+[package]
+name = "abi-typegen"
+version = "0.1.0"
+edition = "2021"
+description = "Generate bindings from Solidity ABI artifacts (Foundry, Hardhat)"
+license = "MIT"
+repository = "https://github.com/doublesharp/abi-typegen"
+homepage = "https://github.com/doublesharp/abi-typegen"
+keywords = ["solidity", "typescript", "abi", "codegen", "ethereum"]
+categories = ["command-line-utilities", "development-tools"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)', 'cfg(coverage_nightly)'] }
+
+[[bin]]
+name = "abi-typegen"
+path = "src/main.rs"
+
+[dependencies]
+abi-typegen-core = { version = "0.1.0", path = "crates/abi-typegen-core" }
+abi-typegen-config = { version = "0.1.0", path = "crates/abi-typegen-config" }
+abi-typegen-codegen = { version = "0.1.0", path = "crates/abi-typegen-codegen" }
+clap = { version = "4", features = ["derive", "env"] }
+notify = "6"
+anyhow = { workspace = true }
+tempfile = "3"
+serde_json = { workspace = true }
+serde = { workspace = true }
+ureq = { version = "2", features = ["tls"] }
+dotenvy = "0.15"

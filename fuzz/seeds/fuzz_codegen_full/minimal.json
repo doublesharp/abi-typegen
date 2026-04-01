@@ -1,0 +1,20 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "bytecode": {"object": "0x60"},
+  "deployedBytecode": {"object": "0x"},
+  "methodIdentifiers": {},
+  "rawMetadata": "",
+  "metadata": {
+    "language": "Solidity",
+    "output": {
+      "devdoc": {"kind": "dev", "version": 1, "methods": {}},
+      "userdoc": {"kind": "user", "version": 1, "methods": {}}
+    }
+  }
+}

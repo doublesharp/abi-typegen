@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo doc --workspace --no-deps
+
+  npm-lint:
+    name: npm lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: npm/pnpm-lock.yaml
+      - run: cd npm && pnpm install --frozen-lockfile --ignore-scripts
+      - run: cd npm && pnpm run lint
+      - run: cd npm && pnpm run format:check
+
+  e2e-foundry:
+    name: E2E Foundry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: e2e/foundry-sample/pnpm-lock.yaml
+      - run: cargo build
+      - run: cd e2e/foundry-sample && forge build
+      - run: cd e2e/foundry-sample && pnpm install --frozen-lockfile
+      - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
+      - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit
+      - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
+      - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
+      - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity
+      - run: cd e2e/foundry-sample && forge build --contracts ./solidity-validation --out ./out-solidity-validation
+
+  e2e-hardhat:
+    name: E2E Hardhat
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: e2e/hardhat-sample/pnpm-lock.yaml
+      - run: cargo build
+      - name: Copy binary for Hardhat plugin
+        run: mkdir -p npm/abi-typegen/bin && cp target/debug/abi-typegen npm/abi-typegen/bin/
+      - run: cd e2e/hardhat-sample && pnpm install --frozen-lockfile
+      - name: Compile (triggers abi-typegen via plugin)
+        run: cd e2e/hardhat-sample && pnpm exec hardhat compile
+      - name: Verify output was generated
+        run: test -f e2e/hardhat-sample/abi-typegen-out/index.ts

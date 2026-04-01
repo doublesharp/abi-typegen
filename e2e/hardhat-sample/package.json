@@ -1,0 +1,23 @@
+{
+  "name": "hardhat-sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@0xdoublesharp/abi-typegen": "link:../../npm/abi-typegen",
+    "@0xdoublesharp/hardhat-abi-typegen": "link:../../npm/hardhat-abi-typegen",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "ethers": "^6",
+    "hardhat": "^2.22",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^6.0.2"
+  }
+}

@@ -1,0 +1,48 @@
+[package]
+name = "abi-typegen-fuzz"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+# Isolate this crate from the parent workspace so nightly/sanitizer flags
+# do not bleed into the main build.
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+abi-typegen-core = { path = "../crates/abi-typegen-core" }
+abi-typegen-config = { path = "../crates/abi-typegen-config" }
+abi-typegen-codegen = { path = "../crates/abi-typegen-codegen" }
+
+[[bin]]
+name = "fuzz_parse_artifact"
+path = "fuzz_targets/fuzz_parse_artifact.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_config_toml"
+path = "fuzz_targets/fuzz_config_toml.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_sol_type_str"
+path = "fuzz_targets/fuzz_sol_type_str.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_codegen_full"
+path = "fuzz_targets/fuzz_codegen_full.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_barrel"
+path = "fuzz_targets/fuzz_barrel.rs"
+test = false
+doc = false

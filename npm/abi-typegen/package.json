@@ -1,0 +1,31 @@
+{
+  "name": "@0xdoublesharp/abi-typegen",
+  "version": "0.1.0",
+  "description": "Generate typed bindings from Solidity ABI artifacts — pre-built binary",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doublesharp/abi-typegen",
+    "directory": "npm/abi-typegen"
+  },
+  "keywords": [
+    "solidity",
+    "typescript",
+    "abi",
+    "codegen",
+    "ethereum",
+    "viem",
+    "ethers"
+  ],
+  "bin": {
+    "abi-typegen": "bin/abi-typegen"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.mjs"
+  }
+}

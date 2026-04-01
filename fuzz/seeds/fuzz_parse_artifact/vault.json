@@ -1,0 +1,86 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "deposit",
+      "inputs": [{"name": "amount", "type": "uint256", "internalType": "uint256"}],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "deposit",
+      "inputs": [
+        {"name": "amount", "type": "uint256", "internalType": "uint256"},
+        {"name": "recipient", "type": "address", "internalType": "address"}
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getPosition",
+      "inputs": [{"name": "user", "type": "address", "internalType": "address"}],
+      "outputs": [
+        {
+          "name": "position",
+          "type": "tuple",
+          "internalType": "struct Vault.Position",
+          "components": [
+            {"name": "shares", "type": "uint256", "internalType": "uint256"},
+            {"name": "depositedAt", "type": "uint64", "internalType": "uint64"},
+            {"name": "token", "type": "address", "internalType": "address"}
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getBalances",
+      "inputs": [{"name": "users", "type": "address[]", "internalType": "address[]"}],
+      "outputs": [{"name": "", "type": "uint256[]", "internalType": "uint256[]"}],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getMatrix",
+      "inputs": [],
+      "outputs": [{"name": "", "type": "uint256[3]", "internalType": "uint256[3]"}],
+      "stateMutability": "view"
+    },
+    {
+      "type": "error",
+      "name": "InsufficientShares",
+      "inputs": [
+        {"name": "requested", "type": "uint256", "internalType": "uint256"},
+        {"name": "available", "type": "uint256", "internalType": "uint256"}
+      ]
+    },
+    {
+      "type": "event",
+      "name": "Deposited",
+      "inputs": [
+        {"name": "user", "type": "address", "internalType": "address", "indexed": true},
+        {"name": "amount", "type": "uint256", "internalType": "uint256", "indexed": false},
+        {"name": "shares", "type": "uint256", "internalType": "uint256", "indexed": false}
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "receive",
+      "stateMutability": "payable"
+    }
+  ],
+  "bytecode": {"object": "0x"},
+  "deployedBytecode": {"object": "0x"},
+  "methodIdentifiers": {},
+  "rawMetadata": "",
+  "metadata": {
+    "language": "Solidity",
+    "output": {
+      "devdoc": {"kind": "dev", "version": 1, "methods": {}},
+      "userdoc": {"kind": "user", "version": 1, "methods": {}}
+    }
+  }
+}

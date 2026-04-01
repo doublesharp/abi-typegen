@@ -1,0 +1,8 @@
+[profile.default]
+out = "artifacts"
+
+[forge-typegen]
+generated = "src/types"
+target = "viem"
+wrappers = true
+contracts = ["ERC20"]

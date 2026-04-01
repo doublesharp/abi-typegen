@@ -1,0 +1,16 @@
+[package]
+name = "abi-typegen-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core ABI parsing and IR types for abi-typegen"
+license = "MIT"
+repository = "https://github.com/doublesharp/abi-typegen"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)', 'cfg(coverage_nightly)'] }
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

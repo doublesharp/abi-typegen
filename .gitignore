@@ -1,0 +1,27 @@
+/target
+coverage/
+*.lock~
+.DS_Store
+.env
+
+# npm packages — binary downloaded at install time
+npm/abi-typegen/bin/
+npm/node_modules/
+npm/hardhat-abi-typegen/node_modules/
+
+# fuzz artifacts
+fuzz/target/
+fuzz/logs/
+fuzz/corpus/
+
+# e2e artifacts
+e2e/foundry-sample/out/
+e2e/foundry-sample/cache/
+e2e/foundry-sample/node_modules/
+e2e/foundry-sample/src/generated/
+e2e/foundry-sample/lib/
+e2e/hardhat-sample/artifacts/
+e2e/hardhat-sample/cache/
+e2e/hardhat-sample/node_modules/
+e2e/hardhat-sample/typechain-types/
+e2e/hardhat-sample/abi-typegen-out/
