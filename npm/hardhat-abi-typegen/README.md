@@ -1,6 +1,6 @@
 # @0xdoublesharp/hardhat-abi-typegen
 
-Hardhat plugin for [abi-typegen](https://github.com/doublesharp/abi-typegen). Generates TypeScript types from Solidity ABI artifacts on every `hardhat compile`. ~29x faster than TypeChain.
+Hardhat plugin for [abi-typegen](https://github.com/doublesharp/abi-typegen). Generates typed bindings from Solidity ABI artifacts on every `hardhat compile`. ~30x faster than TypeChain.
 
 Downloads the pre-built `abi-typegen` binary for your platform automatically.
 
