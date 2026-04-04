@@ -18,11 +18,14 @@ Install the latest `zod` package in the consuming project when using the `zod` t
 
 ## Non-TypeScript targets
 
-Non-TypeScript targets (`python`, `go`, `rust`, `swift`, `csharp`, `kotlin`, `solidity`) emit a single primary file per contract:
+Non-TypeScript targets (`python`, `go`, `rust`, `swift`, `csharp`, `kotlin`, `solidity`, `yaml`) emit a single primary file per contract:
 - `<Name>.py`, `<Name>.go`, `<Name>.rs`, `<Name>.swift`, `<Name>.cs`, `<Name>.kt`
 - `I<Name>.sol` for the `solidity` target
+- `<Name>.yaml` for the `yaml` target
 
 The `solidity` target reconstructs interface-compatible structs from ABI tuples and emits Solidity `interface` files with events, custom errors, overloads, and `external` function signatures.
+
+The `yaml` target emits a human-readable YAML description of each contract's functions, events, and errors with their parameter types.
 
 ## Overload naming
 
@@ -48,6 +51,19 @@ getValues(): Promise<[bigint, bigint]>
 ## NatSpec
 
 `@notice`, `@param`, and `@return` tags from Solidity NatSpec are emitted as documentation comments in all targets (JSDoc, docstrings, doc comments, KDoc, XML docs, and Solidity NatSpec comments).
+
+## Reserved word escaping
+
+Parameter names that are reserved words in the target language are automatically escaped with an underscore prefix:
+
+| Language | Example reserved names | Escaped as |
+|----------|----------------------|------------|
+| Python | `from`, `lambda`, `yield` | `_from`, `_lambda`, `_yield` |
+| Rust | `type`, `fn`, `self`, `match` | `_type`, `_fn`, `_self`, `_match` |
+| Swift | `self`, `is`, `func`, `let` | `_self`, `_is`, `_func`, `_let` |
+| Kotlin | `fun`, `val`, `when`, `object` | `_fun`, `_val`, `_when`, `_object` |
+
+Go and C# are not affected because field names use PascalCase, which avoids collisions with lowercase keywords. Solidity parameter names originate from Solidity ABIs and are inherently valid.
 
 ## Imports
 

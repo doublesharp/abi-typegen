@@ -23,9 +23,26 @@ Output directory for generated files. Created if it does not exist.
 
 #### `target`
 
-**Type:** string — **Default:** `"viem"`
+**Type:** string, comma-separated string, or array of strings — **Default:** `"viem"`
 
-Code generation target. One of: `viem`, `zod`, `wagmi`, `ethers`, `ethers5`, `web3js`, `python`, `go`, `rust`, `swift`, `csharp`, `kotlin`, `solidity`.
+Code generation target(s). Valid target names: `viem`, `zod`, `wagmi`, `ethers`, `ethers5`, `web3js`, `python`, `go`, `rust`, `swift`, `csharp`, `kotlin`, `solidity`, `yaml`.
+
+Aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml.
+
+All three forms are accepted:
+
+```toml
+# Single target
+target = "viem"
+
+# Comma-separated string
+target = "viem,python,rust"
+
+# Array of strings
+target = ["viem", "python", "rust"]
+```
+
+When multiple targets are specified, each target's output is written to its own subdirectory under `out` (e.g. `src/generated/viem/`, `src/generated/python/`).
 
 #### `wrappers`
 
@@ -58,12 +75,20 @@ import "@0xdoublesharp/hardhat-abi-typegen";
 const config: HardhatUserConfig = {
   typegen: {
     out: "src/generated",
-    target: "viem",
+    target: "viem",            // string, comma-separated string, or string[]
     wrappers: true,
     contracts: [],
     exclude: [],
   },
 };
+```
+
+The `target` field accepts a single string, comma-separated string, or an array:
+
+```typescript
+target: "viem"                    // single target
+target: "viem,python,rust"        // comma-separated
+target: ["viem", "python", "rust"] // array
 ```
 
 ## CLI flags

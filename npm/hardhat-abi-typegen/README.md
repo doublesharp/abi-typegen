@@ -58,7 +58,7 @@ npx abi-typegen generate --hardhat --target viem
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `out` | `string` | `"src/generated"` | Output directory for generated files |
-| `target` | `string` | `"viem"` | Target name or comma-separated targets (see below) |
+| `target` | `string \| string[]` | `"viem"` | Target name, comma-separated targets, or array of targets (see below) |
 | `wrappers` | `boolean` | `true` | Emit typed wrapper files when supported |
 | `contracts` | `string[]` | `[]` | Limit to named contracts (empty = all) |
 | `exclude` | `string[]` | `[]` | Exclude contracts matching glob patterns |
@@ -84,7 +84,12 @@ npx abi-typegen generate --hardhat --target viem
 
 Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml
 
-Multi-target example: `target: "viem,python,rust"` — each target gets its own output subdirectory.
+Multi-target examples — each target gets its own output subdirectory:
+
+```typescript
+target: "viem,python,rust"          // comma-separated string
+target: ["viem", "python", "rust"]  // array of strings
+```
 
 ## Notes
 

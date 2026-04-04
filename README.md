@@ -61,7 +61,7 @@ Minimal `foundry.toml` configuration:
 ```toml
 [abi-typegen]
 out = "src/generated"
-target = "viem"
+target = "viem"            # or "viem,python" or ["viem", "python"]
 ```
 
 Watch mode is useful while iterating:
@@ -98,7 +98,16 @@ npx hardhat compile
 
 ### Multi-target generation
 
+Multiple targets can be specified in the config file or on the command line:
+
+```toml
+# foundry.toml
+[abi-typegen]
+target = ["viem", "python", "rust"]   # also accepts "viem,python,rust"
+```
+
 ```sh
+# CLI
 abi-typegen generate --target viem,python,rust
 ```
 
@@ -110,8 +119,6 @@ src/generated/
   python/
   rust/
 ```
-
-Use comma-separated targets instead of the removed `all` and `all-ts` aliases.
 
 ## Fetch and generate from a block explorer
 
@@ -203,11 +210,11 @@ All networks listed at [docs.etherscan.io/supported-chains](https://docs.ethersc
 
 ```toml
 [abi-typegen]
-out       = "src/generated"   # output directory
-target    = "viem"            # one target from the table above
-wrappers  = true               # emit typed wrapper files when supported
-contracts = []                 # [] = all; or ["MyToken", "Vault"]
-exclude   = []                 # glob patterns: ["*Test", "*Mock", "I*"]
+out       = "src/generated"          # output directory
+target    = "viem"                   # string, "a,b,c", or ["a", "b", "c"]
+wrappers  = true                     # emit typed wrapper files when supported
+contracts = []                       # [] = all; or ["MyToken", "Vault"]
+exclude   = []                       # glob patterns: ["*Test", "*Mock", "I*"]
 ```
 
 ### Hardhat (`hardhat.config.ts`)
@@ -215,7 +222,7 @@ exclude   = []                 # glob patterns: ["*Test", "*Mock", "I*"]
 ```ts
 typegen: {
   out: "src/generated",
-  target: "viem",
+  target: "viem",              // string, "a,b,c", or ["a", "b", "c"]
   wrappers: true,
   contracts: [],
   exclude: [],

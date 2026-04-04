@@ -103,6 +103,15 @@ Pass `--url <URL>` for any Etherscan-compatible explorer not in the list.
 
 For automatic generation on compile, use [@0xdoublesharp/hardhat-abi-typegen](https://www.npmjs.com/package/@0xdoublesharp/hardhat-abi-typegen).
 
+## Configuration
+
+Multi-target generation can also be configured in `foundry.toml`:
+
+```toml
+[abi-typegen]
+target = ["viem", "python", "rust"]   # also accepts "viem,python,rust"
+```
+
 ## Notes
 
 - When using `--target zod`, install the latest `zod` package in the consuming project

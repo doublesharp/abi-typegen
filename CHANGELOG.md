@@ -8,11 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - YAML renderer target (`--target yaml`, alias `yml`) for human-readable ABI descriptions
-- Language-specific reserved word escaping for non-TypeScript renderers
+- Multi-target support in config files: `foundry.toml` and `hardhat.config.ts` now accept comma-separated strings (`target = "viem,python"`) and arrays (`target = ["viem", "python"]`) in addition to single strings
+- Language-specific reserved word escaping for non-TypeScript renderers (Python, Rust, Swift, Kotlin)
+
+### Changed
+- Rust edition upgraded from 2021 to 2024
 
 ### Fixed
-- Python renderer no longer emits broken signatures when tuple types appear in parameter lists
-- Reserved words in parameter names are now escaped for Python, Rust, Swift, and Kotlin
+- Python renderer no longer emits broken signatures when tuple types appear in parameter lists (inline `# {fields}` comments removed from type annotations)
+- Reserved words in parameter names are now escaped per-language: `from` in Python, `type`/`fn`/`self` in Rust, `self`/`is`/`func`/`let` in Swift, `fun`/`val`/`when` in Kotlin
 
 ## [0.1.0] — 2025-04-01
 
