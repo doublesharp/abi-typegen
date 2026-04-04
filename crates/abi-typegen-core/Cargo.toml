@@ -1,7 +1,7 @@
 [package]
 name = "abi-typegen-core"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Core ABI parsing and IR types for abi-typegen"
 license = "MIT"
 repository = "https://github.com/doublesharp/abi-typegen"

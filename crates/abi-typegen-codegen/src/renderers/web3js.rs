@@ -1,4 +1,4 @@
-use crate::type_mapper::{overload_suffix, safe_param_name, sol_type_to_ts, Target};
+use crate::type_mapper::{Target, overload_suffix, safe_param_name, sol_type_to_ts};
 use abi_typegen_core::types::{AbiEvent, AbiFunction, ContractIr, StateMutability};
 use heck::ToUpperCamelCase;
 use std::collections::HashMap;

@@ -125,14 +125,12 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
     }
 
     // Fixed array: strip trailing [N]
-    if ty_str.ends_with(']') {
-        if let Some(bracket) = ty_str.rfind('[') {
-            let size_str = &ty_str[bracket + 1..ty_str.len() - 1];
-            if let Ok(size) = size_str.parse::<usize>() {
-                let inner = parse_sol_type(&ty_str[..bracket], components)?;
-                return Ok(SolType::FixedArray(Box::new(inner), size));
-            }
-        }
+    if ty_str.ends_with(']')
+        && let Some(bracket) = ty_str.rfind('[')
+        && let Ok(size) = ty_str[bracket + 1..ty_str.len() - 1].parse::<usize>()
+    {
+        let inner = parse_sol_type(&ty_str[..bracket], components)?;
+        return Ok(SolType::FixedArray(Box::new(inner), size));
     }
 
     match ty_str {

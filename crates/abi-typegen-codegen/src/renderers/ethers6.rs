@@ -1,4 +1,4 @@
-use crate::type_mapper::{overload_suffix, safe_param_name, sol_type_to_ts, Target};
+use crate::type_mapper::{Target, overload_suffix, safe_param_name, sol_type_to_ts};
 use abi_typegen_core::types::{AbiEvent, AbiFunction, ContractIr, StateMutability};
 use std::collections::HashMap;
 
@@ -195,7 +195,9 @@ mod tests {
     #[test]
     fn connect_factory_fn() {
         let out = render_ethers_file(&erc20());
-        assert!(out.contains("export function connectERC20(address: string, runner: ContractRunner): ERC20Contract {"));
+        assert!(out.contains(
+            "export function connectERC20(address: string, runner: ContractRunner): ERC20Contract {"
+        ));
     }
 
     #[test]

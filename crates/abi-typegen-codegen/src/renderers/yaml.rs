@@ -74,10 +74,10 @@ fn render_function(out: &mut String, f: &AbiFunction) {
     ));
 
     // NatSpec
-    if let Some(ref ns) = f.natspec {
-        if let Some(ref notice) = ns.notice {
-            out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
-        }
+    if let Some(ref ns) = f.natspec
+        && let Some(ref notice) = ns.notice
+    {
+        out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
     }
 
     // Inputs
@@ -109,10 +109,10 @@ fn render_event(out: &mut String, e: &AbiEvent) {
     }
 
     // NatSpec
-    if let Some(ref ns) = e.natspec {
-        if let Some(ref notice) = ns.notice {
-            out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
-        }
+    if let Some(ref ns) = e.natspec
+        && let Some(ref notice) = ns.notice
+    {
+        out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
     }
 
     if e.inputs.is_empty() {
@@ -130,10 +130,10 @@ fn render_error(out: &mut String, e: &AbiError) {
     out.push_str(&format!("  - name: \"{}\"\n", yaml_escape(&e.name)));
 
     // NatSpec
-    if let Some(ref ns) = e.natspec {
-        if let Some(ref notice) = ns.notice {
-            out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
-        }
+    if let Some(ref ns) = e.natspec
+        && let Some(ref notice) = ns.notice
+    {
+        out.push_str(&format!("    notice: \"{}\"\n", yaml_escape(notice.trim())));
     }
 
     if e.inputs.is_empty() {

@@ -180,8 +180,10 @@ fn erc20_solidity_file_correct_structure() {
     let solidity = &files["IERC20.sol"];
     assert!(solidity.contains("interface IERC20 {"));
     assert!(solidity.contains("pragma solidity >=0.8.0;"));
-    assert!(solidity
-        .contains("event Transfer(address indexed from, address indexed to, uint256 value);"));
+    assert!(
+        solidity
+            .contains("event Transfer(address indexed from, address indexed to, uint256 value);")
+    );
     assert!(solidity.contains(
         "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);"
     ));

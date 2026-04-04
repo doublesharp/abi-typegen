@@ -13,14 +13,14 @@ pub fn render_zod_file(ir: &ContractIr) -> String {
     out.push_str("import * as z from 'zod';\n");
     let mut has_sections = false;
 
-    if let Some(constructor) = &ir.constructor {
-        if !constructor.inputs.is_empty() {
-            append_section(
-                &mut out,
-                &mut has_sections,
-                render_constructor_schema(&ir.name, constructor),
-            );
-        }
+    if let Some(constructor) = &ir.constructor
+        && !constructor.inputs.is_empty()
+    {
+        append_section(
+            &mut out,
+            &mut has_sections,
+            render_constructor_schema(&ir.name, constructor),
+        );
     }
 
     let function_counts =

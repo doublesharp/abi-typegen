@@ -6,7 +6,7 @@
 //! Moonbeam, Moonriver, Mantle, Sonic, Taiko, Metis, Manta, HyperEVM, and more.
 //! Pass `--url` to reach any explorer not listed.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 
 // ── Known network shortcuts ──────────────────────────────────────────────────
@@ -355,10 +355,10 @@ pub fn load_abi_from_file(path: &std::path::Path) -> Result<serde_json::Value> {
     if value.is_array() {
         return Ok(value);
     }
-    if let Some(abi) = value.get("abi") {
-        if abi.is_array() {
-            return Ok(abi.clone());
-        }
+    if let Some(abi) = value.get("abi")
+        && abi.is_array()
+    {
+        return Ok(abi.clone());
     }
     bail!(
         "'{}' is not a JSON ABI array or a Foundry/Hardhat artifact with an \"abi\" field",

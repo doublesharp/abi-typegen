@@ -3,7 +3,7 @@
 mod fetch;
 
 use abi_typegen_codegen::{barrel, generate_contract_files};
-use abi_typegen_config::{parse_target, Config, Target};
+use abi_typegen_config::{Config, Target, parse_target};
 use abi_typegen_core::parser::parse_artifact;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -433,7 +433,7 @@ fn apply_overrides(
 
 /// Merges CLI `--exclude` patterns into `config.exclude`.
 fn apply_exclude(config: &mut Config, exclude: &Option<String>) {
-    if let Some(ref patterns) = exclude {
+    if let Some(patterns) = exclude {
         for p in patterns.split(',') {
             let trimmed = p.trim().to_string();
             if !trimmed.is_empty() {
@@ -621,12 +621,13 @@ fn clean_stale_files(out_dir: &Path, generated_files: &HashSet<String>) -> Resul
         if !path.is_file() {
             continue;
         }
-        if let Some(filename) = path.file_name().and_then(|f| f.to_str()) {
-            if is_generated_filename(filename) && !generated_files.contains(filename) {
-                std::fs::remove_file(&path)
-                    .with_context(|| format!("cannot remove stale file '{}'", path.display()))?;
-                println!("abi-typegen: removed stale file '{}'", filename);
-            }
+        if let Some(filename) = path.file_name().and_then(|f| f.to_str())
+            && is_generated_filename(filename)
+            && !generated_files.contains(filename)
+        {
+            std::fs::remove_file(&path)
+                .with_context(|| format!("cannot remove stale file '{}'", path.display()))?;
+            println!("abi-typegen: removed stale file '{}'", filename);
         }
     }
     Ok(())
@@ -751,10 +752,11 @@ fn run_check(config: &Config) -> Result<()> {
                 continue;
             }
 
-            if let Some(filename) = path.file_name().and_then(|f| f.to_str()) {
-                if is_generated_filename(filename) && !expected_files.contains(filename) {
-                    stale.push(filename.to_string());
-                }
+            if let Some(filename) = path.file_name().and_then(|f| f.to_str())
+                && is_generated_filename(filename)
+                && !expected_files.contains(filename)
+            {
+                stale.push(filename.to_string());
             }
         }
     }
@@ -1022,10 +1024,11 @@ fn collect_diff_entries(config: &Config, artifacts: &[(String, PathBuf)]) -> Res
                 continue;
             }
 
-            if let Some(filename) = path.file_name().and_then(|name| name.to_str()) {
-                if is_generated_filename(filename) && !expected_files.contains(filename) {
-                    diffs.push(format!("D {}", filename));
-                }
+            if let Some(filename) = path.file_name().and_then(|name| name.to_str())
+                && is_generated_filename(filename)
+                && !expected_files.contains(filename)
+            {
+                diffs.push(format!("D {}", filename));
             }
         }
     }

@@ -15,10 +15,10 @@ pub fn render_barrel(contract_names: &[String], config: &Config) -> String {
         if matches!(config.target(), Target::Zod) {
             out.push_str(&format!("export * from './{}.zod.js';\n", name));
         }
-        if config.wrappers {
-            if let Some(suffix) = config.target().wrapper_module_suffix() {
-                out.push_str(&format!("export * from './{}.{}.js';\n", name, suffix));
-            }
+        if config.wrappers
+            && let Some(suffix) = config.target().wrapper_module_suffix()
+        {
+            out.push_str(&format!("export * from './{}.{}.js';\n", name, suffix));
         }
     }
 

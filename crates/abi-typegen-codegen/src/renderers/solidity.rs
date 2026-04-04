@@ -566,8 +566,11 @@ mod tests {
     #[test]
     fn renders_functions_events_and_errors() {
         let out = render_solidity_file(&fixture("Token", "erc20.json"));
-        assert!(out
-            .contains("event Transfer(address indexed from, address indexed to, uint256 value);"));
+        assert!(
+            out.contains(
+                "event Transfer(address indexed from, address indexed to, uint256 value);"
+            )
+        );
         assert!(out.contains(
             "error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);"
         ));
