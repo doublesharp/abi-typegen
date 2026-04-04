@@ -12,9 +12,9 @@ Pre-built binary for [abi-typegen](https://github.com/doublesharp/abi-typegen). 
 ## Install
 
 ```sh
-npm  install -D @0xdoublesharp/abi-typegen
-yarn add    -D @0xdoublesharp/abi-typegen
-pnpm add    -D @0xdoublesharp/abi-typegen
+npm install -D @0xdoublesharp/abi-typegen
+yarn add -D @0xdoublesharp/abi-typegen
+pnpm add -D @0xdoublesharp/abi-typegen
 ```
 
 ## Usage

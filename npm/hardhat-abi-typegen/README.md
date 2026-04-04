@@ -12,9 +12,9 @@ Hardhat plugin for [abi-typegen](https://github.com/doublesharp/abi-typegen). Ge
 ## Install
 
 ```sh
-npm  install -D @0xdoublesharp/hardhat-abi-typegen
-yarn add    -D @0xdoublesharp/hardhat-abi-typegen
-pnpm add    -D @0xdoublesharp/hardhat-abi-typegen
+npm install -D @0xdoublesharp/hardhat-abi-typegen
+yarn add -D @0xdoublesharp/hardhat-abi-typegen
+pnpm add -D @0xdoublesharp/hardhat-abi-typegen
 ```
 
 ## Setup
