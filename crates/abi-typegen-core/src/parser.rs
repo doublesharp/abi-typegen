@@ -163,7 +163,7 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
                     .parse()
                     .map_err(|_| ParseError::InvalidBitWidth(s.to_string()))?
             };
-            if bits == 0 || bits > 256 || !bits.is_multiple_of(8) {
+            if bits == 0 || bits > 256 || bits % 8 != 0 {
                 return Err(ParseError::InvalidBitWidth(s.to_string()));
             }
             Ok(SolType::Uint(bits))
@@ -177,7 +177,7 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
                     .parse()
                     .map_err(|_| ParseError::InvalidBitWidth(s.to_string()))?
             };
-            if bits == 0 || bits > 256 || !bits.is_multiple_of(8) {
+            if bits == 0 || bits > 256 || bits % 8 != 0 {
                 return Err(ParseError::InvalidBitWidth(s.to_string()));
             }
             Ok(SolType::Int(bits))

@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "abi-typegen"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "abi-typegen-codegen",
  "abi-typegen-config",
@@ -21,7 +21,7 @@ dependencies = [
 
 [[package]]
 name = "abi-typegen-codegen"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "abi-typegen-config",
  "abi-typegen-core",
@@ -31,7 +31,7 @@ dependencies = [
 
 [[package]]
 name = "abi-typegen-config"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "thiserror",
@@ -40,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "abi-typegen-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
