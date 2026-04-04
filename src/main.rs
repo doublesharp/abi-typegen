@@ -374,12 +374,13 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::CSharp => "csharp",
         Target::Kotlin => "kotlin",
         Target::Solidity => "solidity",
+        Target::Yaml => "yaml",
     }
 }
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity",
+    "csharp", "kotlin", "solidity", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -440,8 +441,9 @@ fn apply_overrides(
             "csharp" | "cs" => abi_typegen_config::Target::CSharp,
             "kotlin" | "kt" => abi_typegen_config::Target::Kotlin,
             "solidity" | "sol" => abi_typegen_config::Target::Solidity,
+            "yaml" | "yml" => abi_typegen_config::Target::Yaml,
             other => anyhow::bail!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
                 other
             ),
         };

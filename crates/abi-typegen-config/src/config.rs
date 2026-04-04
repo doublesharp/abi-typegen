@@ -48,6 +48,8 @@ pub enum Target {
     Kotlin,
     /// Generate Solidity interfaces.
     Solidity,
+    /// Generate YAML ABI descriptions.
+    Yaml,
 }
 
 impl Target {
@@ -74,7 +76,8 @@ impl Target {
             | Self::Swift
             | Self::CSharp
             | Self::Kotlin
-            | Self::Solidity => None,
+            | Self::Solidity
+            | Self::Yaml => None,
         }
     }
 }
@@ -96,8 +99,9 @@ impl<'de> Deserialize<'de> for Target {
             "csharp" | "cs" => Ok(Target::CSharp),
             "kotlin" | "kt" => Ok(Target::Kotlin),
             "solidity" | "sol" => Ok(Target::Solidity),
+            "yaml" | "yml" => Ok(Target::Yaml),
             _ => Err(serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
                 s
             ))),
         }

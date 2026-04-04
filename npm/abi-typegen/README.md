@@ -3,7 +3,7 @@
 </p>
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">13 targets &middot; 8 languages &middot; Foundry &amp; Hardhat &middot; ~30x faster than TypeChain</p>
+<p align="center">14 targets &middot; 8 languages &middot; Foundry &amp; Hardhat &middot; ~30x faster than TypeChain</p>
 
 # @0xdoublesharp/abi-typegen
 
@@ -47,8 +47,9 @@ npx abi-typegen generate --target viem,python,rust
 | C# | `--target csharp` | C# | [Nethereum](https://nethereum.com/) |
 | Kotlin | `--target kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
 | Solidity | `--target solidity` | Solidity | External interfaces |
+| YAML | `--target yaml` | YAML | Human-readable ABI descriptions |
 
-Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity
+Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml
 
 ## Commands
 

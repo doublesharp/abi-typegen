@@ -80,8 +80,9 @@ npx abi-typegen generate --hardhat --target viem
 | C# | `csharp` | C# | [Nethereum](https://nethereum.com/) |
 | Kotlin | `kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
 | Solidity | `solidity` | Solidity | External interfaces |
+| YAML | `yaml` | YAML | Human-readable ABI descriptions |
 
-Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity
+Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml
 
 Multi-target example: `target: "viem,python,rust"` — each target gets its own output subdirectory.
 

@@ -12,4 +12,5 @@ pub mod swift;
 pub mod viem;
 pub mod wagmi;
 pub mod web3js;
+pub mod yaml;
 pub mod zod;

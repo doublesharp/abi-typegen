@@ -5,6 +5,7 @@ use abi_typegen_codegen::ethers::render_ethers_file;
 use abi_typegen_codegen::generate_contract_files;
 use abi_typegen_codegen::solidity::render_solidity_file;
 use abi_typegen_codegen::viem::render_viem_file;
+use abi_typegen_codegen::yaml::render_yaml_file;
 use abi_typegen_codegen::zod::render_zod_file;
 use abi_typegen_config::Config;
 use abi_typegen_core::parser::parse_artifact;
@@ -39,6 +40,10 @@ fn python_config() -> Config {
 
 fn solidity_config() -> Config {
     Config::from_toml_str("[abi-typegen]\ntarget = \"solidity\"\n").unwrap()
+}
+
+fn yaml_config() -> Config {
+    Config::from_toml_str("[abi-typegen]\ntarget = \"yaml\"\n").unwrap()
 }
 
 // ── ERC20 pipeline ──────────────────────────────────────────────────────────
@@ -632,4 +637,105 @@ fn abi_writer_preserves_field_values() {
     );
     assert!(abi.contains("export const ThresholdAbi ="));
     assert!(abi.contains("] as const;"));
+}
+
+// ── YAML target ───────────────────────────────────────────────────────────
+
+#[test]
+fn erc20_yaml_target_produces_one_file() {
+    let ir = parse_artifact("ERC20", &fixture("erc20.json")).unwrap();
+    let files = generate_contract_files(&ir, &yaml_config());
+    assert!(files.contains_key("ERC20.yaml"));
+    assert!(!files.contains_key("ERC20.abi.ts"));
+    assert_eq!(files.len(), 1);
+}
+
+#[test]
+fn erc20_yaml_target_ignores_wrappers_flag() {
+    let ir = parse_artifact("ERC20", &fixture("erc20.json")).unwrap();
+    let mut cfg = yaml_config();
+    cfg.wrappers = false;
+    let files = generate_contract_files(&ir, &cfg);
+    assert_eq!(files.len(), 1);
+    assert!(files.contains_key("ERC20.yaml"));
+}
+
+#[test]
+fn erc20_yaml_correct_structure() {
+    let ir = parse_artifact("ERC20", &fixture("erc20.json")).unwrap();
+    let out = render_yaml_file(&ir);
+    assert!(out.contains("name: \"ERC20\""));
+    assert!(out.contains("functions:"));
+    assert!(out.contains("events:"));
+    assert!(out.contains("errors:"));
+    assert!(out.contains("name: \"totalSupply\""));
+    assert!(out.contains("name: \"transfer\""));
+    assert!(out.contains("name: \"Transfer\""));
+    assert!(out.contains("stateMutability: \"view\""));
+}
+
+#[test]
+fn vault_yaml_has_overloaded_functions() {
+    let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
+    let out = render_yaml_file(&ir);
+    // Both deposit overloads should be present
+    let deposit_count = out.matches("name: \"deposit\"").count();
+    assert!(
+        deposit_count >= 2,
+        "Expected at least 2 deposit functions, found {}",
+        deposit_count
+    );
+}
+
+#[test]
+fn vault_yaml_has_events_and_errors() {
+    let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
+    let out = render_yaml_file(&ir);
+    assert!(
+        out.contains("name: \"Deposited\""),
+        "Expected Deposited event, got:\n{out}"
+    );
+    assert!(
+        out.contains("name: \"InsufficientShares\""),
+        "Expected InsufficientShares error, got:\n{out}"
+    );
+}
+
+#[test]
+fn empty_abi_yaml_has_empty_sections() {
+    let ir = parse_artifact("Empty", empty_abi_json()).unwrap();
+    let out = render_yaml_file(&ir);
+    assert!(out.contains("name: \"Empty\""));
+    assert!(out.contains("functions: []"));
+    assert!(out.contains("events: []"));
+    assert!(out.contains("errors: []"));
+}
+
+#[test]
+fn unnamed_params_yaml_omits_name_key() {
+    let ir = parse_artifact("Unnamed", unnamed_params_json()).unwrap();
+    let out = render_yaml_file(&ir);
+    // The unnamed address param should have type but no name
+    assert!(
+        out.contains("type: \"address\""),
+        "Expected address type, got:\n{out}"
+    );
+    assert!(
+        out.contains("type: \"uint256\""),
+        "Expected uint256 type, got:\n{out}"
+    );
+}
+
+#[test]
+fn yaml_config_roundtrip() {
+    let toml = "[abi-typegen]\ntarget = \"yaml\"\n";
+    let cfg = Config::from_toml_str(toml).unwrap();
+    assert_eq!(cfg.target, abi_typegen_config::Target::Yaml);
+}
+
+#[test]
+fn yaml_config_yml_alias() {
+    let toml = "[abi-typegen]\ntarget = \"yml\"\n";
+    let cfg = Config::from_toml_str(toml).unwrap();
+    assert_eq!(cfg.target, abi_typegen_config::Target::Yaml);
 }

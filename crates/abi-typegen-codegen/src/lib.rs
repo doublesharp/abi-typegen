@@ -18,6 +18,7 @@ pub use renderers::swift;
 pub use renderers::viem;
 pub use renderers::wagmi;
 pub use renderers::web3js;
+pub use renderers::yaml;
 pub use renderers::zod;
 
 use abi_typegen_config::{Config, Target};
@@ -103,6 +104,9 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
                 format!("{}.sol", interface_name),
                 solidity::render_solidity_file(ir),
             );
+        }
+        Target::Yaml => {
+            files.insert(format!("{}.yaml", ir.name), yaml::render_yaml_file(ir));
         }
     }
 

@@ -7,7 +7,7 @@
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
 <p align="center">Foundry or Hardhat in, production-ready client bindings out.</p>
 
-`abi-typegen` is a native Rust CLI that reads compiled Solidity artifacts and generates typed bindings for 13 targets across 8 languages. It works with Foundry and Hardhat, supports single-target and multi-target workflows, and includes the command surface you need for local iteration and CI: `generate`, `watch`, `diff`, `json`, `fetch`, `--check`, and `--clean`.
+`abi-typegen` is a native Rust CLI that reads compiled Solidity artifacts and generates typed bindings for 14 targets across 8 languages. It works with Foundry and Hardhat, supports single-target and multi-target workflows, and includes the command surface you need for local iteration and CI: `generate`, `watch`, `diff`, `json`, `fetch`, `--check`, and `--clean`.
 
 It is designed to be easy to drop into an existing project: point it at your artifacts, pick a target, and generate code that matches the ecosystem you actually use.
 
@@ -195,6 +195,7 @@ All networks listed at [docs.etherscan.io/supported-chains](https://docs.ethersc
 | C# | `--target csharp` | C# | [Nethereum](https://nethereum.com/) |
 | Kotlin | `--target kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
 | Solidity interfaces | `--target solidity` | Solidity | External contract interfaces |
+| YAML | `--target yaml` | YAML | Human-readable ABI descriptions |
 
 ## Configuration
 
