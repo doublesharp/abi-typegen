@@ -152,25 +152,36 @@ fn sol_type_to_python(ty: &SolType) -> String {
         SolType::Array(inner) | SolType::FixedArray(inner, _) => {
             format!("list[{}]", sol_type_to_python(inner))
         }
-        SolType::Tuple(components) => {
-            // Inline representation for anonymous tuples
-            let fields: Vec<String> = components
-                .iter()
-                .enumerate()
-                .map(|(i, c)| {
-                    let pname = python_safe_param_name(&c.name, i);
-                    format!("{}: {}", pname, sol_type_to_python(&c.ty))
-                })
-                .collect();
-            format!("dict[str, Any]  # {{{}}}", fields.join(", "))
-        }
+        SolType::Tuple(_) => "dict[str, Any]".into(),
     }
 }
 
+/// Python keywords that cannot be used as parameter names.
+///
+/// This supplements the JS/TS reserved-word check in `safe_param_name` with
+/// words that are legal identifiers in JavaScript but keywords in Python
+/// (e.g. `from`, `as`, `lambda`, `nonlocal`).
+const PYTHON_KEYWORDS: &[&str] = &[
+    "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue",
+    "def", "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import",
+    "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while",
+    "with", "yield",
+];
+
 /// Converts a parameter name to a Python-safe snake_case name.
+///
+/// Checks both JS/TS reserved words (via `safe_param_name`) and Python
+/// keywords, since names like `from` are valid in TypeScript but not Python.
+/// The Python keyword check runs after snake_case conversion so that
+/// camelCase names like `From` → `from` are also caught.
 fn python_safe_param_name(name: &str, index: usize) -> String {
     let base = safe_param_name(name, index);
-    base.to_snake_case()
+    let snake = base.to_snake_case();
+    if PYTHON_KEYWORDS.contains(&snake.as_str()) {
+        format!("_{}", snake)
+    } else {
+        snake
+    }
 }
 
 /// Builds the Python return type for a view/pure function.
@@ -788,6 +799,147 @@ mod tests {
         assert!(
             out.contains("def get_info(self, data: bytes)"),
             "Write getInfo should not have suffix, got:\n{out}"
+        );
+    }
+
+    #[test]
+    fn from_param_name_is_escaped() {
+        let ir = make_ir(
+            "Bridge",
+            vec![AbiFunction {
+                name: "transferFrom".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "from".to_string(),
+                        ty: SolType::Address,
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "to".to_string(),
+                        ty: SolType::Address,
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "amount".to_string(),
+                        ty: SolType::Uint(256),
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![AbiParam {
+                    name: "".to_string(),
+                    ty: SolType::Bool,
+                    internal_type: None,
+                }],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+        );
+        let out = render_python_file(&ir);
+        assert!(
+            out.contains("_from: ChecksumAddress"),
+            "Expected `from` to be escaped as `_from`, got:\n{out}"
+        );
+        // `to` is not a Python keyword — must NOT be escaped
+        assert!(
+            out.contains(", to: ChecksumAddress"),
+            "Expected `to` to remain unescaped, got:\n{out}"
+        );
+    }
+
+    #[test]
+    fn python_keywords_escaped_after_snake_case() {
+        // camelCase "From" becomes "from" after snake_case — must still be escaped
+        assert_eq!(python_safe_param_name("from", 0), "_from");
+        assert_eq!(python_safe_param_name("lambda", 0), "_lambda");
+        assert_eq!(python_safe_param_name("yield", 0), "_yield");
+        assert_eq!(python_safe_param_name("nonlocal", 0), "_nonlocal");
+        // Non-keyword should pass through unchanged
+        assert_eq!(python_safe_param_name("amount", 0), "amount");
+        assert_eq!(python_safe_param_name("to", 0), "to");
+    }
+
+    #[test]
+    fn tuple_param_no_inline_comment() {
+        let ir = make_ir(
+            "Router",
+            vec![AbiFunction {
+                name: "swap".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "path".to_string(),
+                        ty: SolType::Tuple(vec![
+                            abi_typegen_core::types::TupleComponent {
+                                name: "tokenIn".to_string(),
+                                ty: SolType::Address,
+                                internal_type: None,
+                            },
+                            abi_typegen_core::types::TupleComponent {
+                                name: "tokenOut".to_string(),
+                                ty: SolType::Address,
+                                internal_type: None,
+                            },
+                        ]),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "amount".to_string(),
+                        ty: SolType::Uint(256),
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+        );
+        let out = render_python_file(&ir);
+        // The function signature must be on one line with no inline comment
+        assert!(
+            out.contains(
+                "def swap(self, path: dict[str, Any], amount: int) -> dict[str, Any]: ..."
+            ),
+            "Tuple param should render as `dict[str, Any]` without inline comment, got:\n{out}"
+        );
+    }
+
+    #[test]
+    fn tuple_return_type_no_inline_comment() {
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "getPosition".to_string(),
+                inputs: vec![AbiParam {
+                    name: "id".to_string(),
+                    ty: SolType::Uint(256),
+                    internal_type: None,
+                }],
+                outputs: vec![
+                    AbiParam {
+                        name: "shares".to_string(),
+                        ty: SolType::Uint(256),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "data".to_string(),
+                        ty: SolType::Tuple(vec![abi_typegen_core::types::TupleComponent {
+                            name: "x".to_string(),
+                            ty: SolType::Uint(256),
+                            internal_type: None,
+                        }]),
+                        internal_type: None,
+                    },
+                ],
+                state_mutability: StateMutability::View,
+                natspec: None,
+            }],
+            vec![],
+        );
+        let out = render_python_file(&ir);
+        assert!(
+            out.contains("-> tuple[int, dict[str, Any]]: ..."),
+            "Tuple in return type should have no inline comment, got:\n{out}"
         );
     }
 

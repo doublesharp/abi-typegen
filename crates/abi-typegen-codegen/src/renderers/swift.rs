@@ -3,6 +3,81 @@ use abi_typegen_core::types::{ContractIr, SolType, TupleComponent};
 use heck::ToUpperCamelCase;
 use std::collections::HashMap;
 
+/// Swift keywords that cannot be used as identifiers without backtick escaping.
+///
+/// This supplements the JS/TS reserved-word check in `safe_param_name` with
+/// words that are legal identifiers in JavaScript but keywords in Swift
+/// (e.g. `func`, `let`, `var`, `is`, `as`, `self`).
+const SWIFT_KEYWORDS: &[&str] = &[
+    "Any",
+    "Self",
+    "as",
+    "associatedtype",
+    "break",
+    "case",
+    "catch",
+    "class",
+    "continue",
+    "default",
+    "defer",
+    "deinit",
+    "do",
+    "else",
+    "enum",
+    "extension",
+    "fallthrough",
+    "false",
+    "fileprivate",
+    "for",
+    "func",
+    "guard",
+    "if",
+    "import",
+    "in",
+    "init",
+    "inout",
+    "internal",
+    "is",
+    "let",
+    "nil",
+    "open",
+    "operator",
+    "private",
+    "protocol",
+    "public",
+    "repeat",
+    "rethrows",
+    "return",
+    "self",
+    "static",
+    "struct",
+    "subscript",
+    "super",
+    "switch",
+    "throw",
+    "throws",
+    "true",
+    "try",
+    "typealias",
+    "var",
+    "where",
+    "while",
+];
+
+/// Converts a parameter name to a Swift-safe identifier.
+///
+/// Checks both JS/TS reserved words (via `safe_param_name`) and Swift keywords,
+/// since names like `is`, `as`, `func`, `let` are valid in TypeScript but
+/// keywords in Swift.
+fn swift_safe_param_name(name: &str, index: usize) -> String {
+    let base = safe_param_name(name, index);
+    if SWIFT_KEYWORDS.contains(&base.as_str()) {
+        format!("_{}", base)
+    } else {
+        base
+    }
+}
+
 /// Generates `<ContractName>.swift` — a Swift source file with typed structs
 /// compatible with web3swift.
 pub fn render_swift_file(ir: &ContractIr) -> String {
@@ -59,7 +134,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("struct {} {{\n", struct_name));
         for (i, param) in f.inputs.iter().enumerate() {
-            let field_name = safe_param_name(&param.name, i);
+            let field_name = swift_safe_param_name(&param.name, i);
             let swift_type = sol_type_to_swift(&param.ty);
             out.push_str(&format!("    let {}: {}\n", field_name, swift_type));
         }
@@ -86,7 +161,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("struct {} {{\n", struct_name));
         for (i, param) in event.inputs.iter().enumerate() {
-            let field_name = safe_param_name(&param.name, i);
+            let field_name = swift_safe_param_name(&param.name, i);
             let swift_type = sol_type_to_swift(&param.ty);
             out.push_str(&format!("    let {}: {}\n", field_name, swift_type));
         }
@@ -116,7 +191,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("struct {} {{\n", struct_name));
         for (i, param) in error.inputs.iter().enumerate() {
-            let field_name = safe_param_name(&param.name, i);
+            let field_name = swift_safe_param_name(&param.name, i);
             let swift_type = sol_type_to_swift(&param.ty);
             out.push_str(&format!("    let {}: {}\n", field_name, swift_type));
         }
@@ -187,7 +262,7 @@ fn render_inline_struct(components: &[TupleComponent]) -> String {
         .iter()
         .enumerate()
         .map(|(i, c)| {
-            let name = safe_param_name(&c.name, i);
+            let name = swift_safe_param_name(&c.name, i);
             let swift_type = sol_type_to_swift(&c.ty);
             format!("{}: {}", name, swift_type)
         })
@@ -673,6 +748,59 @@ mod tests {
         assert_eq!(
             count, 1,
             "Expected exactly 1 VaultDepositUint256Params, found {count}"
+        );
+    }
+
+    #[test]
+    fn swift_keywords_escaped_in_field_names() {
+        assert_eq!(swift_safe_param_name("self", 0), "_self");
+        assert_eq!(swift_safe_param_name("is", 0), "_is");
+        assert_eq!(swift_safe_param_name("as", 0), "_as");
+        assert_eq!(swift_safe_param_name("func", 0), "_func");
+        assert_eq!(swift_safe_param_name("let", 0), "_let");
+        assert_eq!(swift_safe_param_name("var", 0), "_var");
+        assert_eq!(swift_safe_param_name("nil", 0), "_nil");
+        assert_eq!(swift_safe_param_name("init", 0), "_init");
+        assert_eq!(swift_safe_param_name("guard", 0), "_guard");
+        // Non-keywords should pass through unchanged
+        assert_eq!(swift_safe_param_name("amount", 0), "amount");
+        assert_eq!(swift_safe_param_name("from", 0), "from");
+        assert_eq!(swift_safe_param_name("to", 0), "to");
+    }
+
+    #[test]
+    fn swift_self_param_escaped() {
+        let ir = make_ir(
+            "Proxy",
+            vec![AbiFunction {
+                name: "execute".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "self".to_string(),
+                        ty: SolType::Address,
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "data".to_string(),
+                        ty: SolType::Bytes,
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+            vec![],
+        );
+        let out = render_swift_file(&ir);
+        assert!(
+            out.contains("let _self: EthereumAddress"),
+            "Expected `_self` field (escaped Swift keyword), got:\n{out}"
+        );
+        assert!(
+            out.contains("let data: Data"),
+            "Expected `data` field unchanged, got:\n{out}"
         );
     }
 

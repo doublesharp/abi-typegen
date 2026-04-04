@@ -3,6 +3,56 @@ use abi_typegen_core::types::{ContractIr, SolType, TupleComponent};
 use heck::ToUpperCamelCase;
 use std::collections::HashMap;
 
+/// Kotlin hard keywords that cannot be used as identifiers.
+///
+/// This supplements the JS/TS reserved-word check in `safe_param_name` with
+/// words that are legal identifiers in JavaScript but keywords in Kotlin
+/// (e.g. `fun`, `val`, `when`, `object`, `is`, `as`).
+const KOTLIN_KEYWORDS: &[&str] = &[
+    "as",
+    "break",
+    "class",
+    "continue",
+    "do",
+    "else",
+    "false",
+    "for",
+    "fun",
+    "if",
+    "in",
+    "interface",
+    "is",
+    "null",
+    "object",
+    "package",
+    "return",
+    "super",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typealias",
+    "typeof",
+    "val",
+    "var",
+    "when",
+    "while",
+];
+
+/// Converts a parameter name to a Kotlin-safe identifier.
+///
+/// Checks both JS/TS reserved words (via `safe_param_name`) and Kotlin keywords,
+/// since names like `fun`, `val`, `when`, `is`, `as` are valid in TypeScript but
+/// keywords in Kotlin.
+fn kotlin_safe_param_name(name: &str, index: usize) -> String {
+    let base = safe_param_name(name, index);
+    if KOTLIN_KEYWORDS.contains(&base.as_str()) {
+        format!("_{}", base)
+    } else {
+        base
+    }
+}
+
 /// Generates `<ContractName>.kt` — a Kotlin source file with data classes
 /// compatible with web3j.
 pub fn render_kotlin_file(ir: &ContractIr) -> String {
@@ -64,7 +114,7 @@ pub fn render_kotlin_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("data class {}(\n", class_name));
         for (i, param) in f.inputs.iter().enumerate() {
-            let prop_name = safe_param_name(&param.name, i);
+            let prop_name = kotlin_safe_param_name(&param.name, i);
             let kt_type = sol_type_to_kotlin(&param.ty);
             out.push_str(&format!("    val {}: {},\n", prop_name, kt_type));
         }
@@ -91,7 +141,7 @@ pub fn render_kotlin_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("data class {}(\n", class_name));
         for (i, param) in event.inputs.iter().enumerate() {
-            let prop_name = safe_param_name(&param.name, i);
+            let prop_name = kotlin_safe_param_name(&param.name, i);
             let kt_type = sol_type_to_kotlin(&param.ty);
             out.push_str(&format!("    val {}: {},\n", prop_name, kt_type));
         }
@@ -121,7 +171,7 @@ pub fn render_kotlin_file(ir: &ContractIr) -> String {
 
         out.push_str(&format!("data class {}(\n", class_name));
         for (i, param) in error.inputs.iter().enumerate() {
-            let prop_name = safe_param_name(&param.name, i);
+            let prop_name = kotlin_safe_param_name(&param.name, i);
             let kt_type = sol_type_to_kotlin(&param.ty);
             out.push_str(&format!("    val {}: {},\n", prop_name, kt_type));
         }
@@ -655,6 +705,57 @@ mod tests {
         assert_eq!(
             count, 1,
             "Expected exactly 1 VaultDepositUint256Params, found {count}"
+        );
+    }
+
+    #[test]
+    fn kotlin_keywords_escaped_in_field_names() {
+        assert_eq!(kotlin_safe_param_name("fun", 0), "_fun");
+        assert_eq!(kotlin_safe_param_name("val", 0), "_val");
+        assert_eq!(kotlin_safe_param_name("when", 0), "_when");
+        assert_eq!(kotlin_safe_param_name("object", 0), "_object");
+        assert_eq!(kotlin_safe_param_name("is", 0), "_is");
+        assert_eq!(kotlin_safe_param_name("as", 0), "_as");
+        assert_eq!(kotlin_safe_param_name("typealias", 0), "_typealias");
+        // Non-keywords should pass through unchanged
+        assert_eq!(kotlin_safe_param_name("amount", 0), "amount");
+        assert_eq!(kotlin_safe_param_name("from", 0), "from");
+        assert_eq!(kotlin_safe_param_name("to", 0), "to");
+    }
+
+    #[test]
+    fn kotlin_fun_param_escaped() {
+        let ir = make_ir(
+            "Dispatcher",
+            vec![AbiFunction {
+                name: "dispatch".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "fun".to_string(),
+                        ty: SolType::Uint(8),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "data".to_string(),
+                        ty: SolType::Bytes,
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+            vec![],
+        );
+        let out = render_kotlin_file(&ir);
+        assert!(
+            out.contains("val _fun: UByte"),
+            "Expected `_fun` field (escaped Kotlin keyword), got:\n{out}"
+        );
+        assert!(
+            out.contains("val data: ByteArray"),
+            "Expected `data` field unchanged, got:\n{out}"
         );
     }
 

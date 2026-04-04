@@ -155,15 +155,41 @@ struct FieldDef {
     sol_ty: SolType,
 }
 
+/// Rust keywords that cannot be used as identifiers without `r#` prefix.
+///
+/// This supplements the JS/TS reserved-word check in `safe_param_name` with
+/// words that are legal identifiers in JavaScript but keywords in Rust
+/// (e.g. `type`, `fn`, `self`, `as`).
+const RUST_KEYWORDS: &[&str] = &[
+    "as", "async", "await", "break", "const", "continue", "crate", "dyn", "else", "enum", "extern",
+    "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub",
+    "ref", "return", "self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use",
+    "where", "while", "yield",
+];
+
+/// Converts a parameter name to a Rust-safe snake_case field name.
+///
+/// Checks both JS/TS reserved words (via `safe_param_name`) and Rust keywords,
+/// since names like `type` are valid in TypeScript but keywords in Rust.
+fn rust_safe_param_name(name: &str, index: usize) -> String {
+    let base = safe_param_name(name, index);
+    let snake = base.to_snake_case();
+    if RUST_KEYWORDS.contains(&snake.as_str()) {
+        format!("_{}", snake)
+    } else {
+        snake
+    }
+}
+
 /// Converts ABI params (function inputs/outputs, error inputs) into field definitions.
 fn params_to_fields(params: &[AbiParam]) -> Vec<FieldDef> {
     params
         .iter()
         .enumerate()
         .map(|(i, p)| {
-            let raw_name = safe_param_name(&p.name, i);
+            let field_name = rust_safe_param_name(&p.name, i);
             FieldDef {
-                name: raw_name.to_snake_case(),
+                name: field_name,
                 ty: sol_type_to_rust(&p.ty),
                 sol_ty: p.ty.clone(),
             }
@@ -177,9 +203,9 @@ fn event_params_to_fields(params: &[AbiEventParam]) -> Vec<FieldDef> {
         .iter()
         .enumerate()
         .map(|(i, p)| {
-            let raw_name = safe_param_name(&p.name, i);
+            let field_name = rust_safe_param_name(&p.name, i);
             FieldDef {
-                name: raw_name.to_snake_case(),
+                name: field_name,
                 ty: sol_type_to_rust(&p.ty),
                 sol_ty: p.ty.clone(),
             }
@@ -942,6 +968,58 @@ mod tests {
         assert_eq!(
             count, 1,
             "Expected exactly 1 VaultDepositUint256Params, found {count}"
+        );
+    }
+
+    #[test]
+    fn rust_keywords_escaped_in_field_names() {
+        assert_eq!(rust_safe_param_name("type", 0), "_type");
+        assert_eq!(rust_safe_param_name("fn", 0), "_fn");
+        assert_eq!(rust_safe_param_name("self", 0), "_self");
+        assert_eq!(rust_safe_param_name("as", 0), "_as");
+        assert_eq!(rust_safe_param_name("async", 0), "_async");
+        assert_eq!(rust_safe_param_name("match", 0), "_match");
+        assert_eq!(rust_safe_param_name("loop", 0), "_loop");
+        assert_eq!(rust_safe_param_name("trait", 0), "_trait");
+        // Non-keywords should pass through unchanged
+        assert_eq!(rust_safe_param_name("amount", 0), "amount");
+        assert_eq!(rust_safe_param_name("from", 0), "from");
+        assert_eq!(rust_safe_param_name("to", 0), "to");
+    }
+
+    #[test]
+    fn type_param_generates_valid_field() {
+        let ir = make_ir(
+            "Registry",
+            vec![AbiFunction {
+                name: "register".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "type".to_string(),
+                        ty: SolType::Uint(8),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "name".to_string(),
+                        ty: SolType::StringType,
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+            vec![],
+        );
+        let out = render_rust_file(&ir);
+        assert!(
+            out.contains("pub _type: u8"),
+            "Expected `_type` field (escaped Rust keyword), got:\n{out}"
+        );
+        assert!(
+            out.contains("pub name: String"),
+            "Expected `name` field unchanged, got:\n{out}"
         );
     }
 
