@@ -10,12 +10,19 @@
   },
   "keywords": [
     "solidity",
-    "typescript",
     "abi",
     "codegen",
+    "typescript",
     "ethereum",
     "viem",
-    "ethers"
+    "ethers",
+    "wagmi",
+    "web3",
+    "zod",
+    "foundry",
+    "hardhat",
+    "smart-contracts",
+    "typegen"
   ],
   "bin": {
     "abi-typegen": "bin/abi-typegen"

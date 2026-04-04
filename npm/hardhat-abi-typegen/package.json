@@ -11,11 +11,20 @@
   },
   "keywords": [
     "solidity",
-    "typescript",
     "abi",
     "codegen",
+    "typescript",
     "ethereum",
-    "hardhat"
+    "hardhat",
+    "hardhat-plugin",
+    "viem",
+    "ethers",
+    "wagmi",
+    "web3",
+    "zod",
+    "smart-contracts",
+    "typegen",
+    "typechain"
   ],
   "files": [
     "index.cjs",
