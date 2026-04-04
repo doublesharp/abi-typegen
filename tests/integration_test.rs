@@ -730,12 +730,12 @@ fn unnamed_params_yaml_omits_name_key() {
 fn yaml_config_roundtrip() {
     let toml = "[abi-typegen]\ntarget = \"yaml\"\n";
     let cfg = Config::from_toml_str(toml).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Yaml);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Yaml);
 }
 
 #[test]
 fn yaml_config_yml_alias() {
     let toml = "[abi-typegen]\ntarget = \"yml\"\n";
     let cfg = Config::from_toml_str(toml).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Yaml);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Yaml);
 }

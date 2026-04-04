@@ -45,7 +45,7 @@ fn generated_config(
     Config {
         artifacts_dir,
         out_dir,
-        target,
+        targets: vec![target],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -86,7 +86,7 @@ fn load_config_returns_defaults_when_file_missing() {
     // Defaults from Config::from_toml_str("")
     assert_eq!(cfg.artifacts_dir, PathBuf::from("out"));
     assert_eq!(cfg.out_dir, PathBuf::from("src/generated"));
-    assert_eq!(cfg.target, abi_typegen_config::Target::Viem);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Viem);
     assert!(cfg.wrappers);
     assert!(cfg.contracts.is_empty());
 
@@ -115,7 +115,7 @@ contracts = ["Token", "Bridge"]
     let cfg = load_config(&path, false).unwrap();
     assert_eq!(cfg.artifacts_dir, PathBuf::from("build-artifacts"));
     assert_eq!(cfg.out_dir, PathBuf::from("ts/types"));
-    assert_eq!(cfg.target, abi_typegen_config::Target::Ethers);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Ethers);
     assert!(!cfg.wrappers);
     assert_eq!(cfg.contracts, vec!["Token", "Bridge"]);
 
@@ -155,28 +155,28 @@ fn apply_overrides_out_overrides_out_dir() {
 fn apply_overrides_target_viem() {
     let mut cfg = default_config();
     apply_overrides(&mut cfg, None, None, Some("viem".to_string()), false).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Viem);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Viem);
 }
 
 #[test]
 fn apply_overrides_target_zod() {
     let mut cfg = default_config();
     apply_overrides(&mut cfg, None, None, Some("zod".to_string()), false).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Zod);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Zod);
 }
 
 #[test]
 fn apply_overrides_target_ethers() {
     let mut cfg = default_config();
     apply_overrides(&mut cfg, None, None, Some("ethers".to_string()), false).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Ethers);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Ethers);
 }
 
 #[test]
 fn apply_overrides_target_solidity() {
     let mut cfg = default_config();
     apply_overrides(&mut cfg, None, None, Some("solidity".to_string()), false).unwrap();
-    assert_eq!(cfg.target, abi_typegen_config::Target::Solidity);
+    assert_eq!(*cfg.target(), abi_typegen_config::Target::Solidity);
 }
 
 #[test]
@@ -201,14 +201,14 @@ fn apply_overrides_no_flags_leaves_config_unchanged() {
     let mut cfg = default_config();
     let original_out = cfg.artifacts_dir.clone();
     let original_gen = cfg.out_dir.clone();
-    let original_target = cfg.target.clone();
+    let original_targets = cfg.targets.clone();
     let original_wrappers = cfg.wrappers;
 
     apply_overrides(&mut cfg, None, None, None, false).unwrap();
 
     assert_eq!(cfg.artifacts_dir, original_out);
     assert_eq!(cfg.out_dir, original_gen);
-    assert_eq!(cfg.target, original_target);
+    assert_eq!(cfg.targets, original_targets);
     assert_eq!(cfg.wrappers, original_wrappers);
 }
 
@@ -451,7 +451,7 @@ fn run_generate_produces_ts_files() {
     let config = Config {
         artifacts_dir: artifacts_dir.clone(),
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -853,7 +853,7 @@ fn run_generate_missing_artifacts_dir_errors() {
     let config = Config {
         artifacts_dir: dir.join("nonexistent-out"),
         out_dir: dir.join("gen"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -876,7 +876,7 @@ fn run_generate_empty_artifacts_dir_prints_no_artifacts() {
     let config = Config {
         artifacts_dir,
         out_dir: dir.join("gen"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -912,7 +912,7 @@ fn run_generate_skips_unparseable_artifact() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -947,7 +947,7 @@ fn run_generate_with_contract_filter() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec!["Alpha".to_string()],
         exclude: vec![],
@@ -974,7 +974,7 @@ fn run_generate_all_parse_failures_prints_no_contracts() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -1162,7 +1162,7 @@ fn watch_loop_exits_on_channel_disconnect() {
     let config = Config {
         artifacts_dir,
         out_dir: dir.join("gen"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1190,7 +1190,7 @@ fn watch_loop_handles_event_and_regenerates() {
     let config = Config {
         artifacts_dir: artifacts_dir.clone(),
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1220,7 +1220,7 @@ fn watch_loop_handles_watch_error() {
     let config = Config {
         artifacts_dir,
         out_dir: dir.join("gen"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1312,7 +1312,7 @@ fn watch_loop_regenerate_error_is_logged_not_fatal() {
         artifacts_dir,
         // Point at an impossible path so write fails
         out_dir: PathBuf::from("/dev/null/impossible"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1341,7 +1341,7 @@ fn run_watch_initial_generate_failure_continues() {
     let config = Config {
         artifacts_dir: artifacts_dir.clone(),
         out_dir: PathBuf::from("/dev/null/impossible"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1412,7 +1412,7 @@ fn exclude_filters_contracts_ending_in_test() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
@@ -1442,7 +1442,7 @@ fn exclude_filters_interfaces() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["I*".to_string()],
@@ -1473,7 +1473,7 @@ fn exclude_multiple_patterns() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string(), "I*".to_string(), "Mock*".to_string()],
@@ -1504,7 +1504,7 @@ fn selected_artifacts_applies_exclude_patterns() {
     let config = Config {
         artifacts_dir,
         out_dir: dir.join("generated"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string(), "I*".to_string()],
@@ -1532,7 +1532,7 @@ fn collect_diff_entries_ignores_excluded_contracts() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
@@ -1560,7 +1560,7 @@ fn collect_diff_entries_reports_deleted_generated_files() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1590,7 +1590,7 @@ fn collect_json_summaries_ignores_excluded_contracts() {
     let config = Config {
         artifacts_dir,
         out_dir: dir.join("generated"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
@@ -1620,7 +1620,7 @@ fn check_returns_ok_when_output_matches() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1649,7 +1649,7 @@ fn check_returns_err_when_output_is_stale() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1684,7 +1684,7 @@ fn check_returns_err_when_extra_generated_file_exists() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1719,7 +1719,7 @@ fn clean_removes_stale_files() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
@@ -1759,7 +1759,7 @@ fn clean_removes_stale_web3_files() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Web3js,
+        targets: vec![abi_typegen_config::Target::Web3js],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
@@ -1789,7 +1789,7 @@ fn clean_removes_stale_zod_files() {
     let config = Config {
         artifacts_dir,
         out_dir: gen_dir.clone(),
-        target: abi_typegen_config::Target::Zod,
+        targets: vec![abi_typegen_config::Target::Zod],
         wrappers: false,
         contracts: vec![],
         exclude: vec![],

@@ -3,7 +3,7 @@
 mod fetch;
 
 use abi_typegen_codegen::{barrel, generate_contract_files};
-use abi_typegen_config::{Config, Target};
+use abi_typegen_config::{parse_target, Config, Target};
 use abi_typegen_core::parser::parse_artifact;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -170,54 +170,39 @@ fn run(cli: Cli) -> Result<()> {
             check,
             clean,
         } => {
-            // If target contains commas, run for each target
-            if let Some(ref target_str) = target {
-                if target_str.contains(',') {
-                    let mut base_out_dir = None;
-                    let mut active_target_dirs = HashSet::new();
-                    for t in target_str.split(',') {
-                        let mut cfg = load_config(&config_path, cli.hardhat)?;
-                        apply_overrides(
-                            &mut cfg,
-                            artifacts.clone(),
-                            out.clone(),
-                            Some(t.trim().to_string()),
-                            no_wrappers,
-                        )?;
-                        apply_contracts(&mut cfg, &contracts);
-                        apply_exclude(&mut cfg, &exclude);
-                        if base_out_dir.is_none() {
-                            base_out_dir = Some(cfg.out_dir.clone());
-                        }
-                        active_target_dirs.insert(target_dir_name(&cfg.target).to_string());
-                        cfg.out_dir = multi_target_out_dir(&cfg.out_dir, &cfg.target);
-                        if check {
-                            run_check(&cfg)?;
-                        } else {
-                            run_generate(&cfg, clean)?;
-                        }
-                    }
-
-                    if let Some(base_out_dir) = base_out_dir.as_deref() {
-                        if check {
-                            ensure_no_stale_target_dirs(base_out_dir, &active_target_dirs)?;
-                        } else if clean {
-                            clean_stale_target_dirs(base_out_dir, &active_target_dirs)?;
-                        }
-                    }
-
-                    return Ok(());
-                }
-            }
-            // Single target (existing behavior)
             let mut config = load_config(&config_path, cli.hardhat)?;
             apply_overrides(&mut config, artifacts, out, target, no_wrappers)?;
             apply_contracts(&mut config, &contracts);
             apply_exclude(&mut config, &exclude);
-            if check {
-                run_check(&config)?;
+
+            if config.targets.len() > 1 {
+                // Multi-target: generate into per-target subdirectories
+                let base_out_dir = config.out_dir.clone();
+                let mut active_target_dirs = HashSet::new();
+                for target in config.targets.clone() {
+                    let mut target_config = config.clone();
+                    target_config.targets = vec![target.clone()];
+                    active_target_dirs.insert(target_dir_name(&target).to_string());
+                    target_config.out_dir = multi_target_out_dir(&base_out_dir, &target);
+                    if check {
+                        run_check(&target_config)?;
+                    } else {
+                        run_generate(&target_config, clean)?;
+                    }
+                }
+
+                if check {
+                    ensure_no_stale_target_dirs(&base_out_dir, &active_target_dirs)?;
+                } else if clean {
+                    clean_stale_target_dirs(&base_out_dir, &active_target_dirs)?;
+                }
             } else {
-                run_generate(&config, clean)?;
+                // Single target (existing behavior)
+                if check {
+                    run_check(&config)?;
+                } else {
+                    run_generate(&config, clean)?;
+                }
             }
         }
         Commands::Watch { artifacts } => {
@@ -427,26 +412,18 @@ fn apply_overrides(
         config.out_dir = o;
     }
     if let Some(t) = target {
-        config.target = match t.as_str() {
-            "viem" => abi_typegen_config::Target::Viem,
-            "zod" => abi_typegen_config::Target::Zod,
-            "ethers" | "ethers6" => abi_typegen_config::Target::Ethers,
-            "ethers5" => abi_typegen_config::Target::Ethers5,
-            "web3js" | "web3" => abi_typegen_config::Target::Web3js,
-            "wagmi" => abi_typegen_config::Target::Wagmi,
-            "python" => abi_typegen_config::Target::Python,
-            "go" => abi_typegen_config::Target::Go,
-            "rust" => abi_typegen_config::Target::Rust,
-            "swift" => abi_typegen_config::Target::Swift,
-            "csharp" | "cs" => abi_typegen_config::Target::CSharp,
-            "kotlin" | "kt" => abi_typegen_config::Target::Kotlin,
-            "solidity" | "sol" => abi_typegen_config::Target::Solidity,
-            "yaml" | "yml" => abi_typegen_config::Target::Yaml,
-            other => anyhow::bail!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
-                other
-            ),
-        };
+        let mut targets = Vec::new();
+        for part in t.split(',') {
+            let trimmed = part.trim();
+            let parsed = parse_target(trimmed).ok_or_else(|| {
+                anyhow::anyhow!(
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                    trimmed
+                )
+            })?;
+            targets.push(parsed);
+        }
+        config.targets = targets;
     }
     if no_wrappers {
         config.wrappers = false;
@@ -733,7 +710,7 @@ fn run_check(config: &Config) -> Result<()> {
     let temp_config = Config {
         artifacts_dir: config.artifacts_dir.clone(),
         out_dir: temp_dir.path().to_path_buf(),
-        target: config.target.clone(),
+        targets: config.targets.clone(),
         wrappers: config.wrappers,
         contracts: config.contracts.clone(),
         exclude: config.exclude.clone(),

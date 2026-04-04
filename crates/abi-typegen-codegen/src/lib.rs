@@ -32,14 +32,14 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
     let mut files = HashMap::new();
 
     // TypeScript targets emit an as-const ABI file
-    if config.target.emits_typescript_abi() {
+    if config.target().emits_typescript_abi() {
         files.insert(
             format!("{}.abi.ts", ir.name),
             abi_writer::render_abi_file(ir),
         );
     }
 
-    match config.target {
+    match *config.target() {
         Target::Viem => {
             if config.wrappers {
                 files.insert(format!("{}.viem.ts", ir.name), viem::render_viem_file(ir));

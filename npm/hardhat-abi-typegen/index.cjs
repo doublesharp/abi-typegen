@@ -62,7 +62,7 @@ subtask(TASK_COMPILE_SOLIDITY_COMPILE_JOBS).setAction(async (args, hre, runSuper
     "--out",
     config.out,
     "--target",
-    config.target,
+    Array.isArray(config.target) ? config.target.join(",") : config.target,
   ];
 
   if (!config.wrappers) {

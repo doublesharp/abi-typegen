@@ -18,6 +18,29 @@ pub enum ConfigError {
     TomlParse(#[from] toml::de::Error),
 }
 
+/// Parses a target name string into a [`Target`] enum variant.
+///
+/// Returns `None` if the string does not match any known target.
+pub fn parse_target(s: &str) -> Option<Target> {
+    match s {
+        "viem" => Some(Target::Viem),
+        "zod" => Some(Target::Zod),
+        "wagmi" => Some(Target::Wagmi),
+        "ethers" | "ethers6" => Some(Target::Ethers),
+        "ethers5" => Some(Target::Ethers5),
+        "web3js" | "web3" => Some(Target::Web3js),
+        "python" => Some(Target::Python),
+        "go" => Some(Target::Go),
+        "rust" => Some(Target::Rust),
+        "swift" => Some(Target::Swift),
+        "csharp" | "cs" => Some(Target::CSharp),
+        "kotlin" | "kt" => Some(Target::Kotlin),
+        "solidity" | "sol" => Some(Target::Solidity),
+        "yaml" | "yml" => Some(Target::Yaml),
+        _ => None,
+    }
+}
+
 /// Code generation target.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Target {
@@ -85,26 +108,12 @@ impl Target {
 impl<'de> Deserialize<'de> for Target {
     fn deserialize<D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Self, D::Error> {
         let s = String::deserialize(d)?;
-        match s.as_str() {
-            "viem" => Ok(Target::Viem),
-            "zod" => Ok(Target::Zod),
-            "wagmi" => Ok(Target::Wagmi),
-            "ethers" | "ethers6" => Ok(Target::Ethers),
-            "ethers5" => Ok(Target::Ethers5),
-            "web3js" | "web3" => Ok(Target::Web3js),
-            "python" => Ok(Target::Python),
-            "go" => Ok(Target::Go),
-            "rust" => Ok(Target::Rust),
-            "swift" => Ok(Target::Swift),
-            "csharp" | "cs" => Ok(Target::CSharp),
-            "kotlin" | "kt" => Ok(Target::Kotlin),
-            "solidity" | "sol" => Ok(Target::Solidity),
-            "yaml" | "yml" => Ok(Target::Yaml),
-            _ => Err(serde::de::Error::custom(format!(
+        parse_target(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!(
                 "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
                 s
-            ))),
-        }
+            ))
+        })
     }
 }
 
@@ -113,14 +122,88 @@ impl<'de> Deserialize<'de> for Target {
 struct AbiTypegenSection {
     #[serde(default = "default_out_dir")]
     out: PathBuf,
-    #[serde(default)]
-    target: Target,
+    #[serde(
+        default = "default_targets",
+        deserialize_with = "deserialize_targets",
+        rename = "target"
+    )]
+    targets: Vec<Target>,
     #[serde(default = "default_true")]
     wrappers: bool,
     #[serde(default)]
     contracts: Vec<String>,
     #[serde(default)]
     exclude: Vec<String>,
+}
+
+/// Serde field alias so that the TOML key `target` maps to the `targets` field.
+///
+/// Accepts:
+/// - a single string: `"viem"` -> `vec![Target::Viem]`
+/// - a comma-separated string: `"viem,python"` -> `vec![Target::Viem, Target::Python]`
+/// - a TOML array of strings: `["viem", "python"]` -> `vec![Target::Viem, Target::Python]`
+fn deserialize_targets<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> std::result::Result<Vec<Target>, D::Error> {
+    use serde::de;
+
+    struct TargetsVisitor;
+
+    impl<'de> de::Visitor<'de> for TargetsVisitor {
+        type Value = Vec<Target>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str(
+                "a target string, comma-separated target string, or array of target strings",
+            )
+        }
+
+        fn visit_str<E: de::Error>(self, v: &str) -> std::result::Result<Vec<Target>, E> {
+            parse_targets_from_str(v).map_err(de::Error::custom)
+        }
+
+        fn visit_seq<A: de::SeqAccess<'de>>(
+            self,
+            mut seq: A,
+        ) -> std::result::Result<Vec<Target>, A::Error> {
+            let mut targets = Vec::new();
+            while let Some(s) = seq.next_element::<String>()? {
+                let t = parse_target(s.trim()).ok_or_else(|| {
+                    de::Error::custom(format!(
+                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                        s
+                    ))
+                })?;
+                targets.push(t);
+            }
+            if targets.is_empty() {
+                return Err(de::Error::custom("target array must not be empty"));
+            }
+            Ok(targets)
+        }
+    }
+
+    d.deserialize_any(TargetsVisitor)
+}
+
+/// Parses a possibly comma-separated target string into a list of targets.
+fn parse_targets_from_str(s: &str) -> Result<Vec<Target>, String> {
+    let parts: Vec<&str> = s.split(',').map(|p| p.trim()).collect();
+    let mut targets = Vec::with_capacity(parts.len());
+    for part in parts {
+        let t = parse_target(part).ok_or_else(|| {
+            format!(
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                part
+            )
+        })?;
+        targets.push(t);
+    }
+    Ok(targets)
+}
+
+fn default_targets() -> Vec<Target> {
+    vec![Target::default()]
 }
 
 fn default_out_dir() -> PathBuf {
@@ -173,8 +256,8 @@ pub struct Config {
     pub artifacts_dir: PathBuf,
     /// Where to write generated files.
     pub out_dir: PathBuf,
-    /// Which generation target to use.
-    pub target: Target,
+    /// Which generation targets to use (one or more).
+    pub targets: Vec<Target>,
     /// Whether to emit typed wrapper functions.
     pub wrappers: bool,
     /// Specific contracts to generate (empty = all).
@@ -184,13 +267,23 @@ pub struct Config {
 }
 
 impl Config {
+    /// Returns the first (primary) target.
+    ///
+    /// This is a convenience accessor for code paths that operate on a single
+    /// target at a time (e.g. codegen, which is invoked once per target).
+    pub fn target(&self) -> &Target {
+        self.targets
+            .first()
+            .expect("Config must have at least one target")
+    }
+
     /// Parses configuration from a TOML string (the content of `foundry.toml`).
     pub fn from_toml_str(toml_str: &str) -> Result<Self, ConfigError> {
         let raw: FoundryToml = toml::from_str(toml_str)?;
         let artifacts_dir = raw.profile.default.out;
         let section = raw.abi_typegen.unwrap_or(AbiTypegenSection {
             out: default_out_dir(),
-            target: Target::default(),
+            targets: default_targets(),
             wrappers: true,
             contracts: vec![],
             exclude: vec![],
@@ -198,7 +291,7 @@ impl Config {
         Ok(Config {
             artifacts_dir,
             out_dir: section.out,
-            target: section.target,
+            targets: section.targets,
             wrappers: section.wrappers,
             contracts: section.contracts,
             exclude: section.exclude,
@@ -229,7 +322,7 @@ out = "out"
         let cfg = Config::from_toml_str(toml).unwrap();
         assert_eq!(cfg.artifacts_dir, PathBuf::from("out"));
         assert_eq!(cfg.out_dir, PathBuf::from("src/generated"));
-        assert_eq!(cfg.target, Target::Viem);
+        assert_eq!(*cfg.target(), Target::Viem);
         assert!(cfg.wrappers);
         assert!(cfg.contracts.is_empty());
     }
@@ -249,7 +342,7 @@ contracts = ["MyToken", "Vault"]
         let cfg = Config::from_toml_str(toml).unwrap();
         assert_eq!(cfg.artifacts_dir, PathBuf::from("artifacts"));
         assert_eq!(cfg.out_dir, PathBuf::from("app/types"));
-        assert_eq!(cfg.target, Target::Viem);
+        assert_eq!(*cfg.target(), Target::Viem);
         assert!(!cfg.wrappers);
         assert_eq!(cfg.contracts, vec!["MyToken", "Vault"]);
     }
@@ -291,14 +384,14 @@ target = "truffle"
     fn target_zod_roundtrip() {
         let toml = "[abi-typegen]\ntarget = \"zod\"\n";
         let cfg = Config::from_toml_str(toml).unwrap();
-        assert_eq!(cfg.target, Target::Zod);
+        assert_eq!(*cfg.target(), Target::Zod);
     }
 
     #[test]
     fn target_solidity_roundtrip() {
         let toml = "[abi-typegen]\ntarget = \"solidity\"\n";
         let cfg = Config::from_toml_str(toml).unwrap();
-        assert_eq!(cfg.target, Target::Solidity);
+        assert_eq!(*cfg.target(), Target::Solidity);
     }
 
     #[test]
@@ -314,7 +407,7 @@ target = "truffle"
         let cfg = Config::from_toml_str("").unwrap();
         assert_eq!(cfg.artifacts_dir, PathBuf::from("out"));
         assert_eq!(cfg.out_dir, PathBuf::from("src/generated"));
-        assert_eq!(cfg.target, Target::Viem);
+        assert_eq!(*cfg.target(), Target::Viem);
     }
 
     #[test]
@@ -324,7 +417,7 @@ target = "truffle"
 target = "ethers"
 "#;
         let cfg = Config::from_toml_str(toml).unwrap();
-        assert_eq!(cfg.target, Target::Ethers);
+        assert_eq!(*cfg.target(), Target::Ethers);
         assert_eq!(cfg.out_dir, PathBuf::from("src/generated"));
         assert!(cfg.wrappers);
         assert!(cfg.contracts.is_empty());
@@ -358,7 +451,7 @@ target = "viem"
         .unwrap();
         let cfg = Config::from_file(&path).unwrap();
         assert_eq!(cfg.artifacts_dir, PathBuf::from("build"));
-        assert_eq!(cfg.target, Target::Viem);
+        assert_eq!(*cfg.target(), Target::Viem);
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -378,7 +471,7 @@ target = "viem"
     fn target_ethers_roundtrip() {
         let toml = "[abi-typegen]\ntarget = \"ethers\"\n";
         let cfg = Config::from_toml_str(toml).unwrap();
-        assert_eq!(cfg.target, Target::Ethers);
+        assert_eq!(*cfg.target(), Target::Ethers);
     }
 
     #[test]
@@ -389,5 +482,97 @@ out = "custom-out"
 "#;
         let cfg = Config::from_toml_str(toml).unwrap();
         assert_eq!(cfg.artifacts_dir, PathBuf::from("custom-out"));
+    }
+
+    #[test]
+    fn target_comma_separated_string() {
+        let toml = r#"
+[abi-typegen]
+target = "viem,python"
+"#;
+        let cfg = Config::from_toml_str(toml).unwrap();
+        assert_eq!(cfg.targets, vec![Target::Viem, Target::Python]);
+        assert_eq!(*cfg.target(), Target::Viem);
+    }
+
+    #[test]
+    fn target_comma_separated_with_spaces() {
+        let toml = r#"
+[abi-typegen]
+target = "viem, python, go"
+"#;
+        let cfg = Config::from_toml_str(toml).unwrap();
+        assert_eq!(cfg.targets, vec![Target::Viem, Target::Python, Target::Go]);
+    }
+
+    #[test]
+    fn target_array_syntax() {
+        let toml = r#"
+[abi-typegen]
+target = ["viem", "python"]
+"#;
+        let cfg = Config::from_toml_str(toml).unwrap();
+        assert_eq!(cfg.targets, vec![Target::Viem, Target::Python]);
+    }
+
+    #[test]
+    fn target_array_single_element() {
+        let toml = r#"
+[abi-typegen]
+target = ["zod"]
+"#;
+        let cfg = Config::from_toml_str(toml).unwrap();
+        assert_eq!(cfg.targets, vec![Target::Zod]);
+        assert_eq!(*cfg.target(), Target::Zod);
+    }
+
+    #[test]
+    fn target_array_empty_is_rejected() {
+        let toml = r#"
+[abi-typegen]
+target = []
+"#;
+        let result = Config::from_toml_str(toml);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn target_array_unknown_element_errors() {
+        let toml = r#"
+[abi-typegen]
+target = ["viem", "invalid"]
+"#;
+        let result = Config::from_toml_str(toml);
+        assert!(result.is_err());
+        let msg = format!("{:?}", result.unwrap_err());
+        assert!(
+            msg.contains("invalid"),
+            "error should mention 'invalid': {msg}"
+        );
+    }
+
+    #[test]
+    fn target_comma_separated_unknown_errors() {
+        let toml = r#"
+[abi-typegen]
+target = "viem,badtarget"
+"#;
+        let result = Config::from_toml_str(toml);
+        assert!(result.is_err());
+        let msg = format!("{:?}", result.unwrap_err());
+        assert!(
+            msg.contains("badtarget"),
+            "error should mention 'badtarget': {msg}"
+        );
+    }
+
+    #[test]
+    fn parse_target_known_names() {
+        assert_eq!(parse_target("viem"), Some(Target::Viem));
+        assert_eq!(parse_target("python"), Some(Target::Python));
+        assert_eq!(parse_target("sol"), Some(Target::Solidity));
+        assert_eq!(parse_target("cs"), Some(Target::CSharp));
+        assert_eq!(parse_target("kt"), Some(Target::Kotlin));
+        assert_eq!(parse_target("unknown"), None);
     }
 }

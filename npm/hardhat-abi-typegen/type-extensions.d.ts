@@ -5,8 +5,8 @@ declare module "hardhat/types/config" {
     typegen?: {
       /** Output directory for generated TypeScript files. Default: "src/generated" */
       out?: string;
-      /** Generation target. Default: "viem". Comma-separated values are allowed for multi-target generation. */
-      target?: string;
+      /** Generation target. Default: "viem". Accepts a single target, comma-separated targets, or an array of targets. */
+      target?: string | string[];
       /** Emit typed wrapper files when supported. Default: true */
       wrappers?: boolean;
       /** Limit generation to named contracts. Default: [] (all) */
@@ -19,7 +19,7 @@ declare module "hardhat/types/config" {
   interface HardhatConfig {
     typegen: {
       out: string;
-      target: string;
+      target: string | string[];
       wrappers: boolean;
       contracts: string[];
       exclude: string[];
