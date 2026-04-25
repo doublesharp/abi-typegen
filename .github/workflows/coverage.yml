@@ -49,8 +49,9 @@ jobs:
       - name: Generate Doublcov report
         uses: doublesharp/doublcov@v0
         with:
+          version: v0.3.0
           command: cargo-llvm-cov
-          args: -- --workspace
+          args: --mode static -- --workspace
 
       - name: Save Doublcov history
         if: always() && hashFiles('.doublcov/history.json') != ''
@@ -76,6 +77,7 @@ jobs:
             coverage/lcov.info
             .doublcov/history.json
           if-no-files-found: warn
+          include-hidden-files: true
 
       - name: Prepare Pages artifact
         if: github.event_name != 'pull_request' && hashFiles('coverage/report/index.html') != ''
@@ -104,7 +106,7 @@ jobs:
             echo "## Doublcov coverage"
             echo
             if [ "${{ github.event_name }}" = "pull_request" ]; then
-              echo "Download the \`doublcov-report\` artifact from this workflow run and open \`index.html\` to view the static report."
+              echo "Download and extract the \`doublcov-report\` artifact, then preview it with \`npx @0xdoublesharp/doublcov@0.3.0 open coverage/report\`."
             else
               echo "This run also publishes the report to GitHub Pages."
             fi

@@ -4,7 +4,7 @@
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus
 
-DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov
+DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0.3.0
 
 # ── Development ───────────────────────────────────────────────────────────────
 
@@ -113,10 +113,10 @@ fuzz-init-corpus: ## Create local corpus dirs (gitignored); must run before fuzz
 # Run:   make coverage-summary → print summary to stdout
 
 coverage: ## Doublcov report in coverage/report/index.html
-	$(DOUBLCOV) cargo-llvm-cov --no-open -- --workspace
+	$(DOUBLCOV) cargo-llvm-cov --mode standalone --no-open -- --workspace
 
 coverage-open: ## Generate HTML coverage report and open in browser
-	$(DOUBLCOV) cargo-llvm-cov --open -- --workspace
+	$(DOUBLCOV) cargo-llvm-cov --mode standalone --open -- --workspace
 
 coverage-summary: ## Print line/branch coverage summary to stdout
 	cargo llvm-cov --workspace --summary-only
