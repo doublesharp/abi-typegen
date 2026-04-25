@@ -36,15 +36,21 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
+      - name: Update npm
+        run: npm install -g npm@latest
+
       # Binary package first (hardhat plugin depends on it)
       - name: Publish @0xdoublesharp/abi-typegen
-        run: cd npm/abi-typegen && npm publish --access public
+        run: npm publish ./npm/abi-typegen --access public --provenance --ignore-scripts
 
       - name: Publish @0xdoublesharp/hardhat-abi-typegen
-        run: cd npm/hardhat-abi-typegen && npm publish --access public
+        run: npm publish ./npm/hardhat-abi-typegen --access public --provenance --ignore-scripts

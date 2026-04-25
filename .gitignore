@@ -1,5 +1,6 @@
 /target
 coverage/
+.doublcov/
 *.lock~
 .DS_Store
 .env

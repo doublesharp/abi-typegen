@@ -1,0 +1,6 @@
+{
+  "name": "abi-typegen",
+  "sources": ["src", "crates", "tests"],
+  "out": "coverage/report",
+  "history": ".doublcov/history.json"
+}
