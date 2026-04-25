@@ -4,15 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.x] — Unreleased
+
+### Added
+- Coverage reporting workflow with downloadable artifacts and a published GitHub Pages report
+
+### Changed
+- npm publish workflow now uses provenance publishing
+
 ## [0.2.0] — 2026-04-04
 
 ### Added
 - YAML renderer target (`--target yaml`, alias `yml`) for human-readable ABI descriptions
 - Multi-target support in config files: `foundry.toml` and `hardhat.config.ts` now accept comma-separated strings (`target = "viem,python"`) and arrays (`target = ["viem", "python"]`) in addition to single strings
-- Language-specific reserved word escaping for non-TypeScript renderers (Python, Rust, Swift, Kotlin)
 
 ### Changed
-- Rust edition upgraded from 2021 to 2024
+- Rust source builds now require Rust 1.85 and use edition 2024
 
 ### Fixed
 - Python renderer no longer emits broken signatures when tuple types appear in parameter lists (inline `# {fields}` comments removed from type annotations)
