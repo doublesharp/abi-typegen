@@ -11,6 +11,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -73,11 +77,25 @@ jobs:
             .doublcov/history.json
           if-no-files-found: warn
 
-      - name: Upload Pages artifact
+      - name: Prepare Pages artifact
         if: github.event_name != 'pull_request' && hashFiles('coverage/report/index.html') != ''
+        run: |
+          mkdir -p pages/coverage
+          cp -R coverage/report/. pages/coverage/
+          cat > pages/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>abi-typegen coverage</title>
+          <script>location.replace("coverage/" + location.hash);</script>
+          <meta http-equiv="refresh" content="0; url=coverage/">
+          <a href="coverage/">abi-typegen coverage report</a>
+          HTML
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && hashFiles('pages/coverage/index.html') != ''
         uses: actions/upload-pages-artifact@v3
         with:
-          path: coverage/report
+          path: pages
 
       - name: Write summary
         if: always() && hashFiles('coverage/report/index.html') != ''
@@ -99,18 +117,21 @@ jobs:
     needs: doublcov
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    concurrency:
-      group: github-pages
-      cancel-in-progress: false
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}coverage/
     steps:
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
+      - name: Write Pages summary
+        run: |
+          {
+            echo "## Published coverage"
+            echo
+            echo "${{ steps.deployment.outputs.page_url }}coverage/"
+          } >> "$GITHUB_STEP_SUMMARY"

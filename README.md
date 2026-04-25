@@ -6,6 +6,13 @@
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
 <p align="center">Foundry or Hardhat in, production-ready client bindings out.</p>
+<p align="center">
+  <a href="https://github.com/doublesharp/abi-typegen/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/doublesharp/abi-typegen/ci.yml?branch=main&label=ci"></a>
+  <a href="https://github.com/doublesharp/abi-typegen/actions/workflows/coverage.yml"><img alt="Coverage workflow" src="https://img.shields.io/github/actions/workflow/status/doublesharp/abi-typegen/coverage.yml?branch=main&label=coverage"></a>
+  <a href="https://doublesharp.github.io/abi-typegen/coverage/"><img alt="Coverage report" src="https://img.shields.io/badge/coverage-report-2ea043"></a>
+  <a href="https://crates.io/crates/abi-typegen"><img alt="crates.io" src="https://img.shields.io/crates/v/abi-typegen"></a>
+  <a href="https://www.npmjs.com/package/@0xdoublesharp/abi-typegen"><img alt="npm" src="https://img.shields.io/npm/v/@0xdoublesharp/abi-typegen?label=npm"></a>
+</p>
 
 `abi-typegen` is a native Rust CLI that reads compiled Solidity artifacts and generates typed bindings for 14 targets across 8 languages. It works with Foundry and Hardhat, supports single-target and multi-target workflows, and includes the command surface you need for local iteration and CI: `generate`, `watch`, `diff`, `json`, `fetch`, `--check`, and `--clean`.
 
