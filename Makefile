@@ -4,7 +4,7 @@
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus
 
-DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0.3.0
+DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0
 
 # ── Development ───────────────────────────────────────────────────────────────
 

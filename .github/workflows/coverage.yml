@@ -49,7 +49,7 @@ jobs:
       - name: Generate Doublcov report
         uses: doublesharp/doublcov@v0
         with:
-          version: v0.3.0
+          version: v0
           command: cargo-llvm-cov
           args: --mode static -- --workspace
 
@@ -106,7 +106,7 @@ jobs:
             echo "## Doublcov coverage"
             echo
             if [ "${{ github.event_name }}" = "pull_request" ]; then
-              echo "Download and extract the \`doublcov-report\` artifact, then preview it with \`npx @0xdoublesharp/doublcov@0.3.0 open coverage/report\`."
+              echo "Download and extract the \`doublcov-report\` artifact, then preview it with \`npx @0xdoublesharp/doublcov@0 open coverage/report\`."
             else
               echo "This run also publishes the report to GitHub Pages."
             fi
