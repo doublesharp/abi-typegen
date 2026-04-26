@@ -49,7 +49,7 @@ jobs:
       - name: Generate Doublcov report
         uses: doublesharp/doublcov@v0
         with:
-          version: v0
+          version: latest
           command: cargo-llvm-cov
           args: --mode static -- --workspace
 
