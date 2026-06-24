@@ -84,6 +84,28 @@ impl Target {
         )
     }
 
+    /// Returns whether this target should emit a TypeScript barrel (`index.ts`).
+    ///
+    /// The barrel re-exports the generated TypeScript modules using ES module
+    /// syntax, so it is only meaningful for TypeScript-family targets. Targets
+    /// that emit other languages (e.g. Python `.py`, Go `.go`, Solidity `.sol`)
+    /// must not produce a stray, content-free `index.ts`.
+    pub fn emits_barrel(&self) -> bool {
+        match self {
+            Self::Viem | Self::Zod | Self::Wagmi | Self::Ethers | Self::Ethers5 | Self::Web3js => {
+                true
+            }
+            Self::Python
+            | Self::Go
+            | Self::Rust
+            | Self::Swift
+            | Self::CSharp
+            | Self::Kotlin
+            | Self::Solidity
+            | Self::Yaml => false,
+        }
+    }
+
     /// Returns the generated wrapper module suffix for targets that emit wrappers.
     pub fn wrapper_module_suffix(&self) -> Option<&'static str> {
         match self {

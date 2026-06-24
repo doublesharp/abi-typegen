@@ -589,11 +589,16 @@ fn run_generate(config: &Config, clean: bool) -> Result<()> {
         return Ok(());
     }
 
-    let barrel_content = barrel::render_barrel(&contract_names, config);
-    let barrel_path = config.out_dir.join("index.ts");
-    std::fs::write(&barrel_path, barrel_content)
-        .with_context(|| format!("cannot write '{}'", barrel_path.display()))?;
-    generated_files.insert("index.ts".to_string());
+    // The barrel is a TypeScript artifact (`export * from './...js'`), so only
+    // emit it for TypeScript-family targets. Non-TS targets (Python, Go, …)
+    // would otherwise get a stray, content-free `index.ts`.
+    if config.target().emits_barrel() {
+        let barrel_content = barrel::render_barrel(&contract_names, config);
+        let barrel_path = config.out_dir.join("index.ts");
+        std::fs::write(&barrel_path, barrel_content)
+            .with_context(|| format!("cannot write '{}'", barrel_path.display()))?;
+        generated_files.insert("index.ts".to_string());
+    }
 
     if clean {
         clean_stale_files(&config.out_dir, &generated_files)?;
@@ -1001,8 +1006,9 @@ fn collect_diff_entries(config: &Config, artifacts: &[(String, PathBuf)]) -> Res
         contract_names.push(name.clone());
     }
 
-    // Check the barrel file the same way run_generate does.
-    if !contract_names.is_empty() {
+    // Check the barrel file the same way run_generate does — only for
+    // TypeScript-family targets, which are the only ones that emit `index.ts`.
+    if !contract_names.is_empty() && config.target().emits_barrel() {
         let barrel_content = barrel::render_barrel(&contract_names, config);
         let barrel_path = config.out_dir.join("index.ts");
         expected_files.insert("index.ts".to_string());
