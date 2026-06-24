@@ -33,7 +33,7 @@ async function validateToken(t: TokenContract) {
   // View → Promise<T>
   const name: string = await t.name();
   const symbol: string = await t.symbol();
-  const decimals: number = await t.decimals();
+  const decimals: bigint = await t.decimals();
   const totalSupply: bigint = await t.totalSupply();
   const balance: bigint = await t.balanceOf('0xabc');
   const allowance: bigint = await t.allowance('0xabc', '0xdef');
@@ -69,7 +69,7 @@ async function validateVault(v: VaultContract) {
 
   // Array I/O
   const balances: bigint[] = await v.getBalances(['0xabc']);
-  const matrix: bigint[] = await v.getMatrix();
+  const matrix: [bigint, bigint, bigint] = await v.getMatrix();
 
   // Event filters
   const f1: EventFilter = v.filters.Deposited('0xabc');
@@ -111,22 +111,22 @@ async function validateRegistry(r: RegistryContract) {
 
 // ── EdgeCases ──────────────────────────────────────────────────────────────
 async function validateEdgeCases(e: EdgeCasesContract) {
-  // ── Integer width boundary: uint8-uint48 → number, uint64+ → bigint ──
+  // ── ethers v6 decodes all Solidity integer widths as bigint ──
   const small = await e.smallInts();
-  const a: number = small.a; // uint8
-  const b: number = small.b; // uint16
-  const c: number = small.c; // uint32
-  const d: number = small.d; // uint48
+  const a: bigint = small.a; // uint8
+  const b: bigint = small.b; // uint16
+  const c: bigint = small.c; // uint32
+  const d: bigint = small.d; // uint48
 
   const large = await e.largeInts();
   const e1: bigint = large.a; // uint64
   const e2: bigint = large.b; // uint128
   const e3: bigint = large.c; // uint256
 
-  // ── Signed ints: same boundary ───────────────────────────────────────
+  // ── Signed ints: same decoded bigint behavior ────────────────────────
   const signed = await e.signedInts();
-  const s1: number = signed.a; // int8
-  const s2: number = signed.b; // int48
+  const s1: bigint = signed.a; // int8
+  const s2: bigint = signed.b; // int48
   const s3: bigint = signed.c; // int256
 
   // ── Bytes variants ───────────────────────────────────────────────────
@@ -141,7 +141,7 @@ async function validateEdgeCases(e: EdgeCasesContract) {
   const nested: bigint[][] = await e.nestedArray(); // uint256[][]
 
   // ── Fixed array of addresses ─────────────────────────────────────────
-  const addrs: string[] = await e.fixedArrayOfAddresses(); // address[3]
+  const addrs: [string, string, string] = await e.fixedArrayOfAddresses(); // address[3]
 
   // ── Multiple named returns ───────────────────────────────────────────
   const multi = await e.multiReturn();

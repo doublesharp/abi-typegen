@@ -33,6 +33,7 @@ e2e: e2e-foundry e2e-hardhat ## Run all e2e tests
 e2e-foundry: build ## E2E: Foundry → abi-typegen → tsc
 	cd e2e/foundry-sample && forge build
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
+	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target ethers
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json

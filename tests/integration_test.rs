@@ -155,11 +155,13 @@ fn erc20_ethers_file_correct_structure() {
     let eth = &files["ERC20.ethers.ts"];
     assert!(eth.contains("export interface ERC20Contract {"));
     assert!(eth.contains("export function connectERC20("));
-    assert!(eth.contains("balanceOf(account: string): Promise<bigint>"));
+    assert!(eth.contains("balanceOf(account: AddressLike): Promise<bigint>"));
+    assert!(eth.contains(
+        "transfer(to: AddressLike, amount: BigNumberish): Promise<ContractTransactionResponse>"
+    ));
     assert!(
-        eth.contains("transfer(to: string, amount: bigint): Promise<ContractTransactionResponse>")
+        eth.contains("Transfer(from?: AddressLike | null, to?: AddressLike | null): EventFilter")
     );
-    assert!(eth.contains("Transfer(from?: string | null, to?: string | null): EventFilter"));
 }
 
 #[test]
@@ -218,7 +220,7 @@ fn vault_tuple_output_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getPosition(user: string): Promise<{"));
+    assert!(eth.contains("getPosition(user: AddressLike): Promise<["));
     assert!(eth.contains("shares: bigint"));
 }
 
@@ -227,7 +229,7 @@ fn vault_array_input_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getBalances(users: string[]): Promise<bigint[]>"));
+    assert!(eth.contains("getBalances(users: AddressLike[]): Promise<bigint[]>"));
 }
 
 #[test]
@@ -313,9 +315,9 @@ fn unnamed_params_viem_uses_positional_names() {
 fn unnamed_params_ethers_uses_positional_names() {
     let ir = parse_artifact("Unnamed", unnamed_params_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("swap(arg0: string, arg1: bigint)"));
+    assert!(out.contains("swap(arg0: AddressLike, arg1: BigNumberish)"));
     // Event filter with unnamed indexed param
-    assert!(out.contains("Swapped(arg0?: string | null)"));
+    assert!(out.contains("Swapped(arg0?: AddressLike | null)"));
 }
 
 // ── Reserved words ────────────────────────────────────────────────────────
@@ -347,7 +349,7 @@ fn reserved_word_params_viem_escaped() {
 fn reserved_word_params_ethers_escaped() {
     let ir = parse_artifact("Reserved", reserved_word_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("setConfig(_class: bigint, _delete: string)"));
+    assert!(out.contains("setConfig(_class: BigNumberish, _delete: AddressLike)"));
 }
 
 // ── Empty ABI contract ─────────────────────────────────────────────────────
@@ -534,7 +536,7 @@ fn pure_fn_returns_promise_value() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("compute(x: bigint): Promise<bigint>"),
+        eth.contains("compute(x: BigNumberish): Promise<bigint>"),
         "pure function should return Promise<T>"
     );
 }

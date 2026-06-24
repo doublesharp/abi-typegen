@@ -42,6 +42,34 @@ const approve: TokenApproveParams = { spender: '0x03' as Hex, amount: 200n };
 const mint: TokenMintParams = { to: '0x04' as Hex, amount: 300n };
 void transfer; void approve; void mint;
 
+// ── Read return inference from as-const ABIs ───────────────────────────────
+async function validateReads() {
+  const decimals: number = await token.read.decimals();
+  const totalSupply: bigint = await token.read.totalSupply();
+  const balance: bigint = await token.read.balanceOf([addr]);
+
+  const position = await vault.read.getPosition([addr]);
+  const shares: bigint = position.shares;
+  const depositedAt: bigint = position.depositedAt;
+  const positionToken: Address = position.token;
+  const matrix: readonly [bigint, bigint, bigint] = await vault.read.getMatrix();
+
+  const entry = await registry.read.getEntry([
+    '0x0000000000000000000000000000000000000000000000000000000000000001',
+  ]);
+  const entryOwner: Address = entry.meta.owner;
+  const entryActive: boolean = entry.meta.active;
+
+  const multi = await edge.read.multiReturn();
+  const count: bigint = multi[0];
+  const flag: boolean = multi[2];
+
+  void decimals; void totalSupply; void balance; void shares; void depositedAt;
+  void positionToken; void matrix; void entryOwner; void entryActive;
+  void count; void flag;
+}
+void validateReads;
+
 // ── Param types: overloaded deposit ────────────────────────────────────────
 const dep: VaultDepositUint256AddressParams = { amount: 100n, recipient: '0x05' as Hex };
 const dep1: VaultDepositUint256Params = { amount: 200n };
