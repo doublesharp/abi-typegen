@@ -303,8 +303,10 @@ mod tests {
     use super::*;
     use abi_typegen_core::parser::parse_artifact;
     use abi_typegen_core::types::{
-        AbiError, AbiEvent, AbiEventParam, AbiFunction, AbiParam, SolType, StateMutability,
+        AbiError, AbiEvent, AbiEventParam, AbiFunction, AbiParam, NatSpec, SolType,
+        StateMutability, TupleComponent,
     };
+    use std::collections::HashMap;
 
     fn erc20() -> ContractIr {
         let json = std::fs::read_to_string(
@@ -718,5 +720,188 @@ mod tests {
             ),
             "Expected doc comment on error struct, got:\n{out}"
         );
+    }
+
+    #[test]
+    fn natspec_notice_comments_are_rendered_for_functions_events_and_errors() {
+        let natspec = NatSpec {
+            notice: Some("Transfers custody".to_string()),
+            dev: None,
+            params: HashMap::new(),
+            returns: HashMap::new(),
+        };
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "deposit".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiEvent {
+                name: "Deposited".to_string(),
+                inputs: vec![AbiEventParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    indexed: false,
+                    internal_type: None,
+                }],
+                anonymous: false,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiError {
+                name: "Rejected".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                natspec: Some(natspec),
+            }],
+        );
+
+        let out = render_go_file(&ir);
+
+        assert!(out.contains("// VaultDepositParams holds the parameters for the deposit function.\n// Transfers custody"));
+        assert!(out.contains(
+            "// VaultDepositedEvent represents the Deposited event.\n// Transfers custody"
+        ));
+        assert!(out.contains(
+            "// VaultRejectedError represents the Rejected error.\n// Transfers custody"
+        ));
+    }
+
+    #[test]
+    fn natspec_without_notice_uses_default_comments() {
+        let natspec = NatSpec {
+            notice: None,
+            dev: Some("internal detail".to_string()),
+            params: HashMap::new(),
+            returns: HashMap::new(),
+        };
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "deposit".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiEvent {
+                name: "Deposited".to_string(),
+                inputs: vec![AbiEventParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    indexed: false,
+                    internal_type: None,
+                }],
+                anonymous: false,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiError {
+                name: "Rejected".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                natspec: Some(natspec),
+            }],
+        );
+
+        let out = render_go_file(&ir);
+
+        assert!(
+            out.contains("// VaultDepositParams holds the parameters for the deposit function.\n")
+        );
+        assert!(out.contains("// VaultDepositedEvent represents the Deposited event.\n"));
+        assert!(out.contains("// VaultRejectedError represents the Rejected error.\n"));
+        assert!(!out.contains("internal detail"));
+    }
+
+    #[test]
+    fn skips_error_structs_with_no_inputs() {
+        let ir = make_ir(
+            "Vault",
+            vec![],
+            vec![],
+            vec![AbiError {
+                name: "Unauthorized".to_string(),
+                inputs: vec![],
+                natspec: None,
+            }],
+        );
+
+        let out = render_go_file(&ir);
+
+        assert!(!out.contains("VaultUnauthorizedError"));
+    }
+
+    #[test]
+    fn raw_abi_with_backtick_uses_escaped_quoted_string() {
+        let mut ir = make_ir("Tick", vec![], vec![], vec![]);
+        ir.raw_abi = serde_json::json!([{
+            "type": "function",
+            "name": "quote`me",
+            "inputs": [],
+            "outputs": []
+        }]);
+
+        let out = render_go_file(&ir);
+
+        assert!(out.contains("const TickABI = \""));
+        assert!(out.contains("quote`me"));
+        assert!(!out.contains("const TickABI = `"));
+    }
+
+    #[test]
+    fn tuple_types_render_inline_structs_and_drive_import_detection() {
+        let tuple = SolType::Tuple(vec![
+            TupleComponent {
+                name: "owner".to_string(),
+                ty: SolType::Address,
+                internal_type: None,
+            },
+            TupleComponent {
+                name: "amount".to_string(),
+                ty: SolType::Uint(256),
+                internal_type: None,
+            },
+        ]);
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "setPosition".to_string(),
+                inputs: vec![AbiParam {
+                    name: "position".to_string(),
+                    ty: tuple,
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+            vec![],
+        );
+
+        let out = render_go_file(&ir);
+
+        assert!(out.contains("\"math/big\""));
+        assert!(out.contains("\"github.com/ethereum/go-ethereum/common\""));
+        assert!(out.contains("Position struct {"));
+        assert!(out.contains("Owner common.Address"));
+        assert!(out.contains("Amount *big.Int"));
+        assert_eq!(sol_type_to_go(&SolType::Tuple(vec![])), "struct{}");
     }
 }

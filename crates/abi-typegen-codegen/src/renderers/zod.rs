@@ -429,6 +429,8 @@ where
 mod tests {
     use super::*;
     use abi_typegen_core::parser::parse_artifact;
+    use abi_typegen_core::types::StateMutability;
+    use std::collections::HashMap;
 
     fn fixture(contract_name: &str, file_name: &str) -> ContractIr {
         let json = std::fs::read_to_string(
@@ -470,5 +472,191 @@ mod tests {
         assert!(out.contains(
             "export const VaultGetPositionResultSchema = z.object({ shares: z.bigint().refine("
         ));
+    }
+
+    #[test]
+    fn constructor_events_errors_and_complex_types_are_rendered() {
+        let ir = ContractIr {
+            name: "Complex".to_string(),
+            constructor: Some(AbiConstructor {
+                inputs: vec![AbiParam {
+                    name: "owner".to_string(),
+                    ty: SolType::Address,
+                    internal_type: None,
+                }],
+                state_mutability: StateMutability::NonPayable,
+            }),
+            functions: vec![AbiFunction {
+                name: "configure".to_string(),
+                inputs: vec![
+                    AbiParam {
+                        name: "salt".to_string(),
+                        ty: SolType::BytesN(4),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "limits".to_string(),
+                        ty: SolType::FixedArray(Box::new(SolType::Uint(16)), 2),
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "metadata".to_string(),
+                        ty: SolType::Tuple(vec![
+                            TupleComponent {
+                                name: "name".to_string(),
+                                ty: SolType::StringType,
+                                internal_type: None,
+                            },
+                            TupleComponent {
+                                name: "".to_string(),
+                                ty: SolType::Bytes,
+                                internal_type: None,
+                            },
+                        ]),
+                        internal_type: None,
+                    },
+                ],
+                outputs: vec![
+                    AbiParam {
+                        name: "ok".to_string(),
+                        ty: SolType::Bool,
+                        internal_type: None,
+                    },
+                    AbiParam {
+                        name: "".to_string(),
+                        ty: SolType::Int(32),
+                        internal_type: None,
+                    },
+                ],
+                state_mutability: StateMutability::NonPayable,
+                natspec: Some(NatSpec {
+                    notice: Some("Configure contract".to_string()),
+                    dev: Some("Only owner".to_string()),
+                    params: HashMap::from([
+                        ("salt".to_string(), "configuration salt".to_string()),
+                        ("limits".to_string(), "two limits".to_string()),
+                    ]),
+                    returns: HashMap::from([
+                        ("ok".to_string(), "whether it worked".to_string()),
+                        ("".to_string(), "signed status code".to_string()),
+                    ]),
+                }),
+            }],
+            events: vec![AbiEvent {
+                name: "Configured".to_string(),
+                inputs: vec![AbiEventParam {
+                    name: "owner".to_string(),
+                    ty: SolType::Address,
+                    indexed: true,
+                    internal_type: None,
+                }],
+                anonymous: false,
+                natspec: Some(NatSpec {
+                    notice: Some("Configuration changed".to_string()),
+                    dev: None,
+                    params: HashMap::from([("owner".to_string(), "new owner".to_string())]),
+                    returns: HashMap::new(),
+                }),
+            }],
+            errors: vec![AbiError {
+                name: "BadConfig".to_string(),
+                inputs: vec![AbiParam {
+                    name: "code".to_string(),
+                    ty: SolType::Uint(8),
+                    internal_type: None,
+                }],
+                natspec: Some(NatSpec {
+                    notice: Some("Invalid configuration".to_string()),
+                    dev: None,
+                    params: HashMap::from([("code".to_string(), "failure code".to_string())]),
+                    returns: HashMap::new(),
+                }),
+            }],
+            has_fallback: false,
+            has_receive: false,
+            natspec: None,
+            raw_abi: serde_json::Value::Array(vec![]),
+        };
+
+        let out = render_zod_file(&ir);
+
+        assert!(out.contains("export const ComplexConstructorParamsSchema = z.object({"));
+        assert!(out.contains("owner: z.string().regex(/^0x[a-fA-F0-9]{40}$/)"));
+        assert!(out.contains("salt: z.string().regex(/^0x[a-fA-F0-9]{8}$/)"));
+        assert!(out.contains("limits: z.tuple([z.number().int().min(0).max(65535), z.number().int().min(0).max(65535)])"));
+        assert!(out.contains("metadata: z.object({ name: z.string(), arg1: z.string().regex(/^0x(?:[a-fA-F0-9]{2})*$/) })"));
+        assert!(out.contains("export const ComplexConfigureResultSchema = z.object({"));
+        assert!(out.contains("arg1: z.number().int().min(-2147483648).max(2147483647)"));
+        assert!(out.contains("export const ComplexConfiguredEventSchema = z.object({"));
+        assert!(out.contains("export const ComplexBadConfigErrorSchema = z.object({"));
+        assert!(out.contains(" * Configure contract"));
+        assert!(out.contains(" * @dev Only owner"));
+        assert!(out.contains(" * @param salt configuration salt"));
+        assert!(out.contains(" * @returns ok whether it worked"));
+        assert!(out.contains(" * @param owner new owner"));
+    }
+
+    #[test]
+    fn overloaded_events_and_errors_use_signature_based_names() {
+        let ir = ContractIr {
+            name: "Vault".to_string(),
+            constructor: None,
+            functions: vec![],
+            events: vec![
+                AbiEvent {
+                    name: "Moved".to_string(),
+                    inputs: vec![AbiEventParam {
+                        name: "amount".to_string(),
+                        ty: SolType::Uint(256),
+                        indexed: false,
+                        internal_type: None,
+                    }],
+                    anonymous: false,
+                    natspec: None,
+                },
+                AbiEvent {
+                    name: "Moved".to_string(),
+                    inputs: vec![AbiEventParam {
+                        name: "account".to_string(),
+                        ty: SolType::Address,
+                        indexed: true,
+                        internal_type: None,
+                    }],
+                    anonymous: false,
+                    natspec: None,
+                },
+            ],
+            errors: vec![
+                AbiError {
+                    name: "Rejected".to_string(),
+                    inputs: vec![AbiParam {
+                        name: "amount".to_string(),
+                        ty: SolType::Uint(256),
+                        internal_type: None,
+                    }],
+                    natspec: None,
+                },
+                AbiError {
+                    name: "Rejected".to_string(),
+                    inputs: vec![AbiParam {
+                        name: "account".to_string(),
+                        ty: SolType::Address,
+                        internal_type: None,
+                    }],
+                    natspec: None,
+                },
+            ],
+            has_fallback: false,
+            has_receive: false,
+            natspec: None,
+            raw_abi: serde_json::Value::Array(vec![]),
+        };
+
+        let out = render_zod_file(&ir);
+
+        assert!(out.contains("export const VaultMovedUint256EventSchema = z.object({"));
+        assert!(out.contains("export const VaultMovedAddressEventSchema = z.object({"));
+        assert!(out.contains("export const VaultRejectedUint256ErrorSchema = z.object({"));
+        assert!(out.contains("export const VaultRejectedAddressErrorSchema = z.object({"));
     }
 }

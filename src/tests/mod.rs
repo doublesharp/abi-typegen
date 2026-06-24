@@ -1195,6 +1195,122 @@ fn run_dispatches_generate_with_contract_overrides() {
     cleanup(&dir);
 }
 
+#[test]
+fn run_dispatches_diff_with_overrides() {
+    let dir = temp_test_dir("run_dispatch_diff_override");
+    let artifacts_dir = dir.join("out");
+    let gen_dir = dir.join("types");
+
+    write_target_matrix_artifact(&artifacts_dir, "Token");
+    let mut config = generated_config(
+        artifacts_dir.clone(),
+        gen_dir.clone(),
+        abi_typegen_config::Target::Viem,
+    );
+    config.wrappers = false;
+    run_generate(&config, false).unwrap();
+
+    let cli = Cli {
+        command: Commands::Diff {
+            artifacts: Some(artifacts_dir),
+            out: Some(gen_dir),
+            target: Some("viem".into()),
+            no_wrappers: true,
+            contracts: vec!["Token".into()],
+            exclude: None,
+        },
+        config: Some(dir.join("nonexistent.toml")),
+        hardhat: false,
+    };
+
+    run(cli).unwrap();
+    cleanup(&dir);
+}
+
+#[test]
+fn run_dispatches_json_with_overrides() {
+    let dir = temp_test_dir("run_dispatch_json_override");
+    let artifacts_dir = dir.join("out");
+
+    write_target_matrix_artifact(&artifacts_dir, "Token");
+    write_target_matrix_artifact(&artifacts_dir, "SkipMe");
+
+    let cli = Cli {
+        command: Commands::Json {
+            artifacts: Some(artifacts_dir),
+            contracts: vec!["Token".into()],
+            exclude: Some("*Skip*".into()),
+            pretty: true,
+        },
+        config: Some(dir.join("nonexistent.toml")),
+        hardhat: false,
+    };
+
+    run(cli).unwrap();
+    cleanup(&dir);
+}
+
+#[test]
+fn run_fetch_rejects_existing_artifact_without_force() {
+    let dir = temp_test_dir("run_fetch_existing_artifact");
+    let artifacts_dir = dir.join("out");
+    let abi_path = dir.join("Token.abi.json");
+    std::fs::write(&abi_path, r#"[]"#).unwrap();
+
+    let dest = fetch::artifact_path(&artifacts_dir, "Token");
+    std::fs::create_dir_all(dest.parent().unwrap()).unwrap();
+    std::fs::write(&dest, r#"{"abi":[]}"#).unwrap();
+
+    let result = run_fetch(FetchSource::File(&abi_path), "Token", &artifacts_dir, false);
+
+    assert!(result.is_err());
+    let msg = result.unwrap_err().to_string();
+    assert!(msg.contains("artifact already exists"));
+    assert!(msg.contains("--force"));
+
+    cleanup(&dir);
+}
+
+#[test]
+fn fetch_source_file_takes_priority_over_network_fields() {
+    let dir = temp_test_dir("fetch_source_file_priority");
+    let abi_path = dir.join("Token.abi.json");
+    std::fs::write(&abi_path, r#"[]"#).unwrap();
+
+    let source = FetchSource::resolve(
+        Some("0x0000000000000000000000000000000000000000"),
+        Some(&abi_path),
+        "unknown-network",
+        None,
+        Some("cli-key".into()),
+    )
+    .unwrap();
+
+    match source {
+        FetchSource::File(path) => assert_eq!(path, abi_path.as_path()),
+        FetchSource::Network { .. } => panic!("expected file source to win"),
+    }
+
+    cleanup(&dir);
+}
+
+#[test]
+fn resolve_config_path_handles_explicit_hardhat_and_default_modes() {
+    let explicit = Some(PathBuf::from("custom.toml"));
+    assert_eq!(
+        resolve_config_path(&explicit, true),
+        PathBuf::from("custom.toml")
+    );
+    assert_eq!(
+        resolve_config_path(&None, true),
+        PathBuf::from("hardhat.config.ts")
+    );
+    assert_eq!(
+        resolve_config_path(&None, false),
+        PathBuf::from("foundry.toml")
+    );
+}
+
 // ---------------------------------------------------------------
 // watch_loop
 // ---------------------------------------------------------------

@@ -386,6 +386,31 @@ pub fn artifact_path(artifacts_dir: &std::path::Path, name: &str) -> std::path::
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::{Read, Write};
+    use std::sync::mpsc;
+
+    fn serve_once(
+        body: &'static str,
+    ) -> (String, mpsc::Receiver<String>, std::thread::JoinHandle<()>) {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/api", listener.local_addr().unwrap());
+        let (tx, rx) = mpsc::channel();
+        let handle = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buffer = [0_u8; 4096];
+            let bytes = stream.read(&mut buffer).unwrap();
+            let request = String::from_utf8_lossy(&buffer[..bytes]).to_string();
+            tx.send(request).unwrap();
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                body.len(),
+                body
+            );
+            stream.write_all(response.as_bytes()).unwrap();
+        });
+
+        (url, rx, handle)
+    }
 
     #[test]
     fn mainnet_resolves() {
@@ -456,6 +481,91 @@ mod tests {
             msg.contains("not verified"),
             "pattern check for unverified contract"
         );
+    }
+
+    #[test]
+    fn fetch_abi_builds_request_and_decodes_success_response() {
+        let body = r#"{"status":"1","result":"[{\"type\":\"function\",\"name\":\"balanceOf\"}]"}"#;
+        let (url, rx, handle) = serve_once(body);
+        let api_url = format!("{url}?chainid=1");
+
+        let abi = fetch_abi(
+            &api_url,
+            "0x0000000000000000000000000000000000000001",
+            Some("test-key"),
+        )
+        .unwrap();
+
+        assert_eq!(abi[0]["type"], "function");
+        assert_eq!(abi[0]["name"], "balanceOf");
+
+        let request = rx.recv().unwrap();
+        assert!(request.starts_with(
+            "GET /api?chainid=1&module=contract&action=getabi&address=0x0000000000000000000000000000000000000001&apikey=test-key "
+        ));
+        handle.join().unwrap();
+    }
+
+    #[test]
+    fn fetch_abi_uses_question_mark_for_plain_api_urls() {
+        let body = r#"{"status":"1","result":"[]"}"#;
+        let (url, rx, handle) = serve_once(body);
+
+        let abi = fetch_abi(&url, "0x0000000000000000000000000000000000000002", None).unwrap();
+
+        assert!(abi.as_array().unwrap().is_empty());
+        let request = rx.recv().unwrap();
+        assert!(request.starts_with(
+            "GET /api?module=contract&action=getabi&address=0x0000000000000000000000000000000000000002 "
+        ));
+        assert!(!request.contains("apikey="));
+        handle.join().unwrap();
+    }
+
+    #[test]
+    fn fetch_abi_maps_explorer_error_messages() {
+        let cases = [
+            (
+                r#"{"status":"0","result":"Contract source code not verified"}"#,
+                "not verified on this explorer",
+            ),
+            (
+                r#"{"status":"0","result":"Invalid API Key"}"#,
+                "invalid or missing API key",
+            ),
+            (
+                r#"{"status":"0","result":"Max rate limit reached"}"#,
+                "rate limit reached",
+            ),
+            (
+                r#"{"status":"0","result":"temporary explorer failure"}"#,
+                "block explorer returned error: temporary explorer failure",
+            ),
+        ];
+
+        for (body, expected) in cases {
+            let (url, _rx, handle) = serve_once(body);
+
+            let err =
+                fetch_abi(&url, "0x0000000000000000000000000000000000000003", None).unwrap_err();
+
+            assert!(err.to_string().contains(expected), "{err}");
+            handle.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn fetch_abi_rejects_invalid_result_json() {
+        let body = r#"{"status":"1","result":"not-json"}"#;
+        let (url, _rx, handle) = serve_once(body);
+
+        let err = fetch_abi(&url, "0x0000000000000000000000000000000000000004", None).unwrap_err();
+
+        assert!(
+            format!("{err:#}").contains("block explorer returned invalid ABI JSON"),
+            "{err:#}"
+        );
+        handle.join().unwrap();
     }
 
     #[test]
