@@ -3,7 +3,22 @@
   "version": "0.3.0",
   "description": "Hardhat plugin for abi-typegen — auto-generate typed bindings on compile",
   "license": "MIT",
+  "type": "module",
   "main": "index.cjs",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./hardhat2": {
+      "types": "./type-extensions.d.ts",
+      "import": "./index.cjs",
+      "require": "./index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/doublesharp/abi-typegen",
@@ -27,7 +42,11 @@
     "typechain"
   ],
   "files": [
+    "config-hooks.js",
+    "index.d.ts",
+    "index.js",
     "index.cjs",
+    "solidity-hooks.js",
     "type-extensions.d.ts",
     "README.md"
   ],
@@ -35,7 +54,7 @@
     "@0xdoublesharp/abi-typegen": "^0.3.0"
   },
   "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "hardhat": "^2.0.0 || ^3.0.0"
   },
   "peerDependenciesMeta": {
     "hardhat": {

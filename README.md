@@ -82,9 +82,11 @@ For Zod output, install the latest `zod` package in the consuming project.
 ### Hardhat
 
 ```ts
-import "@0xdoublesharp/hardhat-abi-typegen";
+import { defineConfig } from "hardhat/config";
+import abiTypegen from "@0xdoublesharp/hardhat-abi-typegen";
 
-const config: HardhatUserConfig = {
+export default defineConfig({
+  plugins: [abiTypegen],
   solidity: "0.8.34",
   typegen: {
     out: "src/generated",
@@ -92,9 +94,7 @@ const config: HardhatUserConfig = {
     contracts: ["Token"],
     exclude: ["*Test"],
   },
-};
-
-export default config;
+});
 ```
 
 Bindings are generated automatically on every compile:
@@ -102,6 +102,8 @@ Bindings are generated automatically on every compile:
 ```sh
 npx hardhat compile
 ```
+
+Hardhat 2 is still supported through the CommonJS fallback used by `import "@0xdoublesharp/hardhat-abi-typegen"` in Hardhat 2 configs. The explicit fallback subpath is `@0xdoublesharp/hardhat-abi-typegen/hardhat2`.
 
 ### Multi-target generation
 

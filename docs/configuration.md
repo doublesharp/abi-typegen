@@ -69,10 +69,14 @@ exclude = ["*Test", "*Mock", "I*"]
 
 ## Hardhat (`hardhat.config.ts`)
 
-```typescript
-import "@0xdoublesharp/hardhat-abi-typegen";
+Hardhat 3 uses the plugin-object form:
 
-const config: HardhatUserConfig = {
+```typescript
+import { defineConfig } from "hardhat/config";
+import abiTypegen from "@0xdoublesharp/hardhat-abi-typegen";
+
+export default defineConfig({
+  plugins: [abiTypegen],
   typegen: {
     out: "src/generated",
     target: "viem",            // string, comma-separated string, or string[]
@@ -80,7 +84,13 @@ const config: HardhatUserConfig = {
     contracts: [],
     exclude: [],
   },
-};
+});
+```
+
+Hardhat 2 uses the CommonJS fallback:
+
+```typescript
+import "@0xdoublesharp/hardhat-abi-typegen";
 ```
 
 The `target` field accepts a single string, comma-separated string, or an array:

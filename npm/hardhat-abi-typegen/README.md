@@ -19,7 +19,30 @@ pnpm add -D @0xdoublesharp/hardhat-abi-typegen
 
 ## Setup
 
-Add to `hardhat.config.ts`:
+### Hardhat 3
+
+Add the plugin to `plugins` in `hardhat.config.ts`:
+
+```typescript
+import { defineConfig } from "hardhat/config";
+import abiTypegen from "@0xdoublesharp/hardhat-abi-typegen";
+
+export default defineConfig({
+  plugins: [abiTypegen],
+  solidity: "0.8.34",
+  typegen: {
+    out: "src/generated",       // output directory (default: "src/generated")
+    target: "viem",             // target name or comma-separated targets
+    wrappers: true,             // emit typed wrappers (default: true)
+    contracts: ["Token"],       // optional - limit to named contracts
+    exclude: ["*Test", "*Mock"],// optional - exclude by glob pattern
+  },
+});
+```
+
+### Hardhat 2
+
+Hardhat 2 projects can keep the side-effect import:
 
 ```typescript
 import "@0xdoublesharp/hardhat-abi-typegen";
@@ -30,13 +53,15 @@ const config: HardhatUserConfig = {
     out: "src/generated",       // output directory (default: "src/generated")
     target: "viem",             // target name or comma-separated targets
     wrappers: true,             // emit typed wrappers (default: true)
-    contracts: ["Token"],       // optional — limit to named contracts
-    exclude: ["*Test", "*Mock"],// optional — exclude by glob pattern
+    contracts: ["Token"],       // optional - limit to named contracts
+    exclude: ["*Test", "*Mock"],// optional - exclude by glob pattern
   },
 };
 
 export default config;
 ```
+
+The package uses conditional exports: ESM imports get the Hardhat 3 plugin object, and CommonJS/Hardhat 2 imports get the legacy task-hook plugin. The explicit fallback subpath `@0xdoublesharp/hardhat-abi-typegen/hardhat2` is also available for Hardhat 2 projects that want to pin the legacy adapter.
 
 ## Usage
 
