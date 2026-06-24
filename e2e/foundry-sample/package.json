@@ -12,9 +12,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "ethers": "^6.16.0",
-    "typescript": "^6.0.2",
-    "viem": "^2.47.6",
-    "zod": "^4.3.6"
+    "ethers": "^6.17.0",
+    "typescript": "^6.0.3",
+    "viem": "^2.53.1",
+    "zod": "^4.4.3"
   }
 }
