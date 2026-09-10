@@ -97,6 +97,7 @@ jobs:
           cache: pnpm
           cache-dependency-path: e2e/foundry-sample/pnpm-lock.yaml
       - run: cargo build
+      - run: node --test npm/tests/package.test.mjs
       - run: cd e2e/foundry-sample && forge build
       - run: cd e2e/foundry-sample && pnpm install --frozen-lockfile
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
