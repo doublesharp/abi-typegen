@@ -1,6 +1,6 @@
 {
   "name": "@0xdoublesharp/hardhat-abi-typegen",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Hardhat plugin for abi-typegen — auto-generate typed bindings on compile",
   "license": "MIT",
   "type": "module",
@@ -51,7 +51,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@0xdoublesharp/abi-typegen": "^0.3.0"
+    "@0xdoublesharp/abi-typegen": "^0.3.1"
   },
   "peerDependencies": {
     "hardhat": "^2.0.0 || ^3.0.0"

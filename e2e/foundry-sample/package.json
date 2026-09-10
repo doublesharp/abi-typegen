@@ -6,13 +6,15 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "typecheck:zod": "tsc --noEmit -p tsconfig.zod.json",
-    "test": "tsc --noEmit"
+    "test": "tsc --noEmit",
+    "test:runtime": "node test-ethers-runtime.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "ethers": "^6.17.0",
+    "ethers5": "npm:ethers@5.8.0",
     "typescript": "^6.0.3",
     "viem": "^2.53.1",
     "zod": "^4.4.3"

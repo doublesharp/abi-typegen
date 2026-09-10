@@ -100,7 +100,9 @@ jobs:
       - run: cd e2e/foundry-sample && forge build
       - run: cd e2e/foundry-sample && pnpm install --frozen-lockfile
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
+      - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target ethers
       - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit
+      - run: cd e2e/foundry-sample && pnpm run test:runtime
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
       - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity

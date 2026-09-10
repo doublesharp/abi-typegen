@@ -315,24 +315,48 @@ fn discover_artifacts_skips_non_sol_dirs() {
 }
 
 #[test]
-fn discover_artifacts_skips_sol_dirs_without_matching_json() {
-    let dir = temp_test_dir("discover_skip_nojson");
+fn discover_artifacts_uses_contract_names_and_ignores_hardhat_debug_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("contracts/Bundle.sol");
+    std::fs::create_dir_all(&source).unwrap();
+    for name in ["Alpha.json", "Beta.json", "Beta.dbg.json", "notes.txt"] {
+        std::fs::write(source.join(name), "{}").unwrap();
+    }
+    let found = discover_artifacts(dir.path(), &[]).unwrap();
+    assert_eq!(
+        found,
+        vec![
+            ("Alpha".into(), source.join("Alpha.json")),
+            ("Beta".into(), source.join("Beta.json")),
+        ]
+    );
+    assert_eq!(
+        discover_artifacts(dir.path(), &["Beta".into()]).unwrap(),
+        vec![("Beta".into(), source.join("Beta.json")),]
+    );
+}
 
-    // .sol dir but no matching JSON
-    let sol_dir = dir.join("Bar.sol");
-    std::fs::create_dir_all(&sol_dir).unwrap();
-    std::fs::write(sol_dir.join("Other.json"), "{}").unwrap();
-
-    // .sol dir with matching JSON
-    let good_dir = dir.join("Foo.sol");
-    std::fs::create_dir_all(&good_dir).unwrap();
-    std::fs::write(good_dir.join("Foo.json"), "{}").unwrap();
-
-    let results = discover_artifacts(&dir, &[]).unwrap();
-    assert_eq!(results.len(), 1);
-    assert_eq!(results[0].0, "Foo");
-
-    cleanup(&dir);
+#[test]
+fn selected_artifacts_rejects_colliding_contract_names() {
+    let dir = tempfile::tempdir().unwrap();
+    for source in ["a/Token.sol", "b/Token.sol"] {
+        let path = dir.path().join(source);
+        std::fs::create_dir_all(&path).unwrap();
+        std::fs::write(path.join("Token.json"), r#"{"abi": []}"#).unwrap();
+    }
+    let mut config = generated_config(
+        dir.path().to_path_buf(),
+        dir.path().join("gen"),
+        Target::Viem,
+    );
+    let error = selected_artifacts(&config).unwrap_err().to_string();
+    assert!(error.contains("Token"), "{error}");
+    assert!(
+        error.contains("a/Token.sol") && error.contains("b/Token.sol"),
+        "{error}"
+    );
+    config.exclude = vec!["Token".into()];
+    assert!(selected_artifacts(&config).unwrap().is_empty());
 }
 
 // ---------------------------------------------------------------
@@ -936,46 +960,27 @@ fn run_generate_empty_artifacts_dir_prints_no_artifacts() {
 }
 
 #[test]
-fn run_generate_skips_unparsable_artifact() {
-    let dir = temp_test_dir("run_generate_bad_artifact");
-    let artifacts_dir = dir.join("out");
-    let gen_dir = dir.join("generated");
-
-    // Good artifact
-    let good_dir = artifacts_dir.join("Good.sol");
-    std::fs::create_dir_all(&good_dir).unwrap();
-    std::fs::write(
-        good_dir.join("Good.json"),
-        r#"{"abi": [{"type": "receive", "stateMutability": "payable"}]}"#,
-    )
-    .unwrap();
-
-    // Bad artifact (invalid JSON)
-    let bad_dir = artifacts_dir.join("Bad.sol");
-    std::fs::create_dir_all(&bad_dir).unwrap();
-    std::fs::write(bad_dir.join("Bad.json"), "not json at all").unwrap();
-
-    let config = Config {
-        artifacts_dir,
-        out_dir: gen_dir.clone(),
-        targets: vec![abi_typegen_config::Target::Viem],
-        wrappers: false,
-        contracts: vec![],
-        exclude: vec![],
-    };
-
-    run_generate(&config, false).unwrap();
-
-    // Good contract should be generated
-    assert!(gen_dir.join("Good.abi.ts").exists());
-    // Bad contract should be skipped (no file)
-    assert!(!gen_dir.join("Bad.abi.ts").exists());
-    // Barrel should only have Good
-    let barrel = std::fs::read_to_string(gen_dir.join("index.ts")).unwrap();
-    assert!(barrel.contains("Good.abi.js"));
-    assert!(!barrel.contains("Bad"));
-
-    cleanup(&dir);
+fn invalid_artifact_fails_without_changing_existing_output() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Viem);
+    write_target_matrix_artifact(&config.artifacts_dir, "Alpha");
+    write_target_matrix_artifact(&config.artifacts_dir, "ZBad");
+    std::fs::write(config.artifacts_dir.join("ZBad.sol/ZBad.json"), "invalid").unwrap();
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let existing = config.out_dir.join("Alpha.abi.ts");
+    std::fs::write(&existing, "previous bindings").unwrap();
+    std::fs::write(config.out_dir.join("Old.abi.ts"), "keep on failure").unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(error.contains("ZBad.json"), "{error}");
+    assert_eq!(
+        std::fs::read_to_string(existing).unwrap(),
+        "previous bindings"
+    );
+    assert!(config.out_dir.join("Old.abi.ts").exists());
+    assert!(run_check(&config).is_err());
+    let artifacts = selected_artifacts(&config).unwrap();
+    assert!(collect_diff_entries(&config, &artifacts).is_err());
+    assert!(collect_json_summaries(&config).is_err());
 }
 
 #[test]
@@ -1003,33 +1008,6 @@ fn run_generate_with_contract_filter() {
 
     assert!(gen_dir.join("Alpha.abi.ts").exists());
     assert!(!gen_dir.join("Beta.abi.ts").exists());
-
-    cleanup(&dir);
-}
-
-#[test]
-fn run_generate_all_parse_failures_prints_no_contracts() {
-    let dir = temp_test_dir("run_generate_all_fail");
-    let artifacts_dir = dir.join("out");
-    let gen_dir = dir.join("generated");
-
-    let sol_dir = artifacts_dir.join("Bad.sol");
-    std::fs::create_dir_all(&sol_dir).unwrap();
-    std::fs::write(sol_dir.join("Bad.json"), "invalid").unwrap();
-
-    let config = Config {
-        artifacts_dir,
-        out_dir: gen_dir.clone(),
-        targets: vec![abi_typegen_config::Target::Viem],
-        wrappers: true,
-        contracts: vec![],
-        exclude: vec![],
-    };
-
-    run_generate(&config, false).unwrap();
-
-    // No barrel should be written when all contracts fail
-    assert!(!gen_dir.join("index.ts").exists());
 
     cleanup(&dir);
 }
@@ -1398,66 +1376,6 @@ fn watch_loop_handles_watch_error() {
     cleanup(&dir);
 }
 
-// ---------------------------------------------------------------
-// run() Watch dispatch
-// ---------------------------------------------------------------
-
-#[test]
-fn run_dispatches_watch() {
-    let dir = temp_test_dir("run_dispatch_watch");
-    let artifacts_dir = dir.join("out");
-    std::fs::create_dir_all(&artifacts_dir).unwrap();
-
-    let toml_path = dir.join("foundry.toml");
-    std::fs::write(
-        &toml_path,
-        format!("[profile.default]\nout = \"{}\"\n", artifacts_dir.display()),
-    )
-    .unwrap();
-
-    let cli = Cli {
-        command: Commands::Watch { artifacts: None },
-        config: Some(toml_path),
-        hardhat: false,
-    };
-
-    // run_watch blocks, so spawn in a thread and give it a moment
-    let handle = std::thread::spawn(move || run(cli));
-    // Allow the watcher to start
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    // Write a file to trigger an event
-    std::fs::write(artifacts_dir.join("trigger.txt"), "x").unwrap();
-    std::thread::sleep(std::time::Duration::from_millis(400));
-
-    // The thread is blocked; we can't join it cleanly without a shutdown signal.
-    // But coverage is collected when the test binary exits.
-    // Detach the thread.
-    drop(handle);
-    cleanup(&dir);
-}
-
-#[test]
-fn run_dispatches_watch_with_out_override() {
-    let dir = temp_test_dir("run_dispatch_watch_override");
-    let artifacts_dir = dir.join("custom-out");
-    std::fs::create_dir_all(&artifacts_dir).unwrap();
-
-    let cli = Cli {
-        command: Commands::Watch {
-            artifacts: Some(artifacts_dir.clone()),
-        },
-        config: Some(dir.join("nonexistent.toml")),
-        hardhat: false,
-    };
-
-    let handle = std::thread::spawn(move || run(cli));
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    std::fs::write(artifacts_dir.join("trigger.txt"), "x").unwrap();
-    std::thread::sleep(std::time::Duration::from_millis(400));
-    drop(handle);
-    cleanup(&dir);
-}
-
 #[test]
 fn watch_loop_regenerate_error_is_logged_not_fatal() {
     // Point artifacts_dir at a valid dir but out_dir at an impossible path
@@ -1489,31 +1407,6 @@ fn watch_loop_regenerate_error_is_logged_not_fatal() {
 
     // Should not panic — error is logged via eprintln
     watch_loop(&config, &rx);
-    cleanup(&dir);
-}
-
-#[test]
-fn run_watch_initial_generate_failure_continues() {
-    // artifacts_dir exists but has no artifacts, and out_dir can't be created
-    // → initial run_generate fails, but watch should still start
-    let dir = temp_test_dir("run_watch_init_fail");
-    let artifacts_dir = dir.join("out");
-    std::fs::create_dir_all(&artifacts_dir).unwrap();
-
-    let config = Config {
-        artifacts_dir: artifacts_dir.clone(),
-        out_dir: PathBuf::from("/dev/null/impossible"),
-        targets: vec![abi_typegen_config::Target::Viem],
-        wrappers: false,
-        contracts: vec![],
-        exclude: vec![],
-    };
-
-    // Use watch_loop directly with immediate disconnect to test the flow
-    // where initial generate would fail (simulated by impossible out_dir)
-    // but we can't easily test run_watch itself without blocking.
-    // Instead, we verify run_generate fails and that's handled:
-    assert!(run_generate(&config, false).is_err());
     cleanup(&dir);
 }
 
@@ -2326,4 +2219,224 @@ fn run_fetch_file_from_disk_generates_bindings() {
     );
 
     cleanup(&dir);
+}
+
+#[test]
+fn clean_empty_selection_removes_stale_outputs_including_yaml() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Yaml);
+    std::fs::create_dir_all(&config.artifacts_dir).unwrap();
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    for name in ["Old.yaml", "Old.abi.ts", "index.ts", "README.md"] {
+        std::fs::write(config.out_dir.join(name), "old").unwrap();
+    }
+    assert_eq!(
+        collect_diff_entries(&config, &[]).unwrap(),
+        vec!["D Old.abi.ts", "D Old.yaml", "D index.ts"]
+    );
+    run_generate(&config, true).unwrap();
+    assert_missing_files(&config.out_dir, &["Old.yaml", "Old.abi.ts", "index.ts"]);
+    assert_eq!(
+        std::fs::read_to_string(config.out_dir.join("README.md")).unwrap(),
+        "old"
+    );
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn regeneration_preserves_unchanged_files_and_updates_changed_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Viem);
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    run_generate(&config, false).unwrap();
+    let old_time = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_000_000);
+    for name in ["Token.abi.ts", "Token.viem.ts", "index.ts"] {
+        let file = std::fs::File::options()
+            .write(true)
+            .open(config.out_dir.join(name))
+            .unwrap();
+        file.set_modified(old_time).unwrap();
+    }
+    run_generate(&config, false).unwrap();
+    for name in ["Token.abi.ts", "Token.viem.ts", "index.ts"] {
+        assert_eq!(
+            std::fs::metadata(config.out_dir.join(name))
+                .unwrap()
+                .modified()
+                .unwrap(),
+            old_time,
+            "rewrote {name}"
+        );
+    }
+    std::fs::write(
+        config.artifacts_dir.join("Token.sol/Token.json"),
+        r#"{"abi": []}"#,
+    )
+    .unwrap();
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("Token.abi.ts"), "[] as const");
+    assert_eq!(
+        std::fs::metadata(config.out_dir.join("index.ts"))
+            .unwrap()
+            .modified()
+            .unwrap(),
+        old_time
+    );
+}
+
+#[test]
+fn output_filename_collisions_fail_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Solidity,
+    );
+    for name in ["Token", "IToken"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let output = config.out_dir.join("IToken.sol");
+    std::fs::write(&output, "previous interface").unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(
+        error.contains("IToken.sol") && error.contains("Token"),
+        "{error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(output).unwrap(),
+        "previous interface"
+    );
+    assert!(run_check(&config).is_err());
+    assert!(collect_diff_entries(&config, &selected_artifacts(&config).unwrap()).is_err());
+}
+
+#[test]
+fn watch_regenerates_every_configured_target() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Viem);
+    config.targets = vec![Target::Viem, Target::Python];
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    let (tx, rx) = std::sync::mpsc::channel();
+    tx.send(Ok(notify::Event::new(notify::EventKind::Modify(
+        notify::event::ModifyKind::Data(notify::event::DataChange::Any),
+    ))))
+    .unwrap();
+    drop(tx);
+    watch_loop(&config, &rx);
+    assert_file_contains(
+        &config.out_dir.join("viem/Token.viem.ts"),
+        "getTokenContract",
+    );
+    assert_file_contains(&config.out_dir.join("python/Token.py"), "balance_of");
+    assert_missing_files(&config.out_dir, &["Token.abi.ts", "index.ts"]);
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn fetch_rejects_invalid_abi_before_overwriting_artifact() {
+    let dir = tempfile::tempdir().unwrap();
+    let artifacts = dir.path().join("out");
+    write_target_matrix_artifact(&artifacts, "Token");
+    let path = artifacts.join("Token.sol/Token.json");
+    let previous = std::fs::read(&path).unwrap();
+    let invalid = dir.path().join("invalid.json");
+    std::fs::write(
+        &invalid,
+        r#"[{"type":"function","name":"f","inputs":[{"type":"uint257"}]}]"#,
+    )
+    .unwrap();
+    assert!(run_fetch(FetchSource::File(&invalid), "Token", &artifacts, true).is_err());
+    assert_eq!(std::fs::read(path).unwrap(), previous);
+}
+
+#[test]
+fn multi_target_check_and_diff_agree_with_generation() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Viem);
+    config.targets = vec![Target::Viem, Target::Python];
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    run_generate(&config, false).unwrap();
+    assert!(config.out_dir.join("python/Token.py").is_file());
+    run_check(&config).unwrap();
+    let artifacts = selected_artifacts(&config).unwrap();
+    assert!(
+        collect_diff_entries(&config, &artifacts)
+            .unwrap()
+            .is_empty()
+    );
+    std::fs::write(config.out_dir.join("python/Token.py"), "stale").unwrap();
+    std::fs::write(config.out_dir.join("viem/Gone.abi.ts"), "stale").unwrap();
+    assert_eq!(
+        collect_diff_entries(&config, &artifacts).unwrap(),
+        vec!["D viem/Gone.abi.ts", "M python/Token.py"]
+    );
+    assert!(run_check(&config).is_err());
+    run_generate(&config, true).unwrap();
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn multi_target_render_error_preserves_every_target() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Viem);
+    config.targets = vec![Target::Viem, Target::Solidity];
+    for name in ["Token", "IToken"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    std::fs::create_dir_all(config.out_dir.join("viem")).unwrap();
+    let old = config.out_dir.join("viem/Token.abi.ts");
+    std::fs::write(&old, "previous").unwrap();
+    assert!(run_generate(&config, true).is_err());
+    assert_eq!(std::fs::read_to_string(old).unwrap(), "previous");
+}
+
+#[test]
+fn glob_matching_agrees_with_independent_dynamic_programming_oracle() {
+    fn words(alphabet: &[u8], max_length: usize) -> Vec<Vec<u8>> {
+        let mut all = vec![vec![]];
+        let mut layer = all.clone();
+        for _ in 0..max_length {
+            layer = layer
+                .iter()
+                .flat_map(|prefix| {
+                    alphabet.iter().map(move |&byte| {
+                        let mut word = prefix.clone();
+                        word.push(byte);
+                        word
+                    })
+                })
+                .collect();
+            all.extend(layer.clone());
+        }
+        all
+    }
+    fn oracle(name: &[u8], pattern: &[u8]) -> bool {
+        let mut table = vec![vec![false; pattern.len() + 1]; name.len() + 1];
+        table[0][0] = true;
+        for j in 1..=pattern.len() {
+            table[0][j] = pattern[j - 1] == b'*' && table[0][j - 1];
+            for i in 1..=name.len() {
+                table[i][j] = match pattern[j - 1] {
+                    b'*' => table[i][j - 1] || table[i - 1][j],
+                    b'?' => table[i - 1][j - 1],
+                    byte => byte == name[i - 1] && table[i - 1][j - 1],
+                };
+            }
+        }
+        table[name.len()][pattern.len()]
+    }
+    let patterns = words(b"ab*?", 5);
+    for name in words(b"ab", 5) {
+        for pattern in &patterns {
+            assert_eq!(
+                matches_glob(
+                    std::str::from_utf8(&name).unwrap(),
+                    std::str::from_utf8(pattern).unwrap()
+                ),
+                oracle(&name, pattern),
+                "name={name:?}, pattern={pattern:?}"
+            );
+        }
+    }
 }

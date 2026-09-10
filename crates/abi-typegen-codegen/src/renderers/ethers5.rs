@@ -1,8 +1,8 @@
-use crate::type_mapper::{overload_suffix, safe_param_name};
+use super::ethers_common::{function_signature, method_names};
+use crate::type_mapper::safe_param_name;
 use abi_typegen_core::types::{
     AbiEvent, AbiFunction, AbiParam, ContractIr, SolType, StateMutability,
 };
-use std::collections::HashMap;
 
 /// Maps a Solidity type to its ethers v5 TypeScript representation.
 ///
@@ -100,22 +100,9 @@ pub fn render_ethers5_file(ir: &ContractIr) -> String {
         ir.name
     ));
 
-    // Count overloaded function names.
-    let mut name_counts: HashMap<&str, u32> = HashMap::new();
-    for f in &ir.functions {
-        *name_counts.entry(f.name.as_str()).or_insert(0) += 1;
-    }
-
-    for f in &ir.functions {
-        let count = *name_counts.get(f.name.as_str()).unwrap_or(&1);
-        let overloaded;
-        let method_name: &str = if count > 1 {
-            overloaded = format!("{}{}", f.name, overload_suffix(&f.inputs));
-            &overloaded
-        } else {
-            &f.name
-        };
-        out.push_str(&render_function_sig(method_name, f));
+    let names = method_names(&ir.functions);
+    for (function, name) in ir.functions.iter().zip(&names) {
+        out.push_str(&render_function_sig(name, function));
     }
 
     // Event filters
@@ -135,8 +122,27 @@ pub fn render_ethers5_file(ir: &ContractIr) -> String {
         ir.name, ir.name
     ));
     out.push_str(&format!(
-        "  return new ethers.Contract(address, {}Abi, signerOrProvider) as unknown as {}Contract;\n",
-        ir.name, ir.name
+        "  const contract = new ethers.Contract(address, {}Abi, signerOrProvider);\n",
+        ir.name
+    ));
+    let aliases: Vec<_> = ir
+        .functions
+        .iter()
+        .zip(&names)
+        .filter(|(function, name)| function.name != **name)
+        .collect();
+    if !aliases.is_empty() {
+        out.push_str("  Object.assign(contract, {\n");
+        for (function, name) in aliases {
+            let signature = serde_json::to_string(&function_signature(function))
+                .expect("function signatures serialize as JSON strings");
+            out.push_str(&format!("    {}: contract[{}],\n", name, signature));
+        }
+        out.push_str("  });\n");
+    }
+    out.push_str(&format!(
+        "  return contract as unknown as {}Contract;\n",
+        ir.name
     ));
     out.push_str("}\n");
 
@@ -184,8 +190,17 @@ fn render_event_filter(event: &AbiEvent) -> String {
         .inputs
         .iter()
         .enumerate()
-        .filter(|(_, p)| p.indexed)
+        .take(
+            event
+                .inputs
+                .iter()
+                .rposition(|param| param.indexed)
+                .map_or(0, |index| index + 1),
+        )
         .map(|(i, p)| {
+            if !p.indexed {
+                return format!("{}?: null", safe_param_name(&p.name, i));
+            }
             format!(
                 "{}?: {} | null",
                 safe_param_name(&p.name, i),
@@ -330,6 +345,34 @@ mod tests {
     }
 
     #[test]
+    fn overload_aliases_are_bound_to_runtime_methods() {
+        let out = render_ethers5_file(&vault());
+        assert!(out.contains(r#"contract["deposit(uint256)"]"#), "{out}");
+    }
+
+    #[test]
+    fn filter_preserves_non_indexed_slots_before_indexed_fields() {
+        let ir = abi_typegen_core::parser::parse_artifact(
+            "Mixed",
+            r#"{"abi":[{"type":"event","name":"Moved","inputs":[
+            {"name":"amount","type":"uint256","indexed":false},
+            {"name":"from","type":"address","indexed":true},
+            {"name":"memo","type":"bytes32","indexed":false},
+            {"name":"to","type":"address","indexed":true},
+            {"name":"ignored","type":"bool","indexed":false}
+        ]}]}"#,
+        )
+        .unwrap();
+        let out = render_ethers5_file(&ir);
+        assert!(
+            out.contains(
+                "Moved(amount?: null, from?: string | null, memo?: null, to?: string | null)"
+            ),
+            "{out}"
+        );
+    }
+
+    #[test]
     fn header_and_imports() {
         let out = render_ethers5_file(&erc20());
         assert!(
@@ -393,7 +436,7 @@ mod tests {
         );
         assert!(
             out.contains(
-                "return new ethers.Contract(address, ERC20Abi, signerOrProvider) as unknown as ERC20Contract;"
+                "const contract = new ethers.Contract(address, ERC20Abi, signerOrProvider);"
             ),
             "Missing factory body, got:\n{out}"
         );

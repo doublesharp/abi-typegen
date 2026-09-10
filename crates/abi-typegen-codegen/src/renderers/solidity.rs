@@ -8,6 +8,7 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
 struct StructDef {
+    source_name: String,
     name: String,
     components: Vec<TupleComponent>,
 }
@@ -32,17 +33,22 @@ pub fn render_solidity_file(ir: &ContractIr) -> String {
     out.push_str(&format!("interface {} {{\n", interface_name(&ir.name)));
 
     let mut has_items = false;
-    for struct_def in collect_struct_defs(ir) {
-        append_interface_item(&mut out, &mut has_items, &render_struct_def(&struct_def));
+    let defs = collect_struct_defs(ir);
+    for struct_def in &defs {
+        append_interface_item(
+            &mut out,
+            &mut has_items,
+            &render_struct_def(struct_def, &defs),
+        );
     }
     for error in &ir.errors {
-        append_interface_item(&mut out, &mut has_items, &render_error(error));
+        append_interface_item(&mut out, &mut has_items, &render_error(error, &defs));
     }
     for event in &ir.events {
-        append_interface_item(&mut out, &mut has_items, &render_event(event));
+        append_interface_item(&mut out, &mut has_items, &render_event(event, &defs));
     }
     for function in &ir.functions {
-        append_interface_item(&mut out, &mut has_items, &render_function(function));
+        append_interface_item(&mut out, &mut has_items, &render_function(function, &defs));
     }
     if ir.has_fallback {
         append_interface_item(&mut out, &mut has_items, "    fallback() external;");
@@ -143,8 +149,17 @@ fn collect_structs_in_type(
 ) {
     match ty {
         SolType::Tuple(components) => {
-            let struct_name = tuple_type_name(internal_type, fallback_name);
-            if seen.insert(struct_name.clone()) {
+            let source_name = tuple_type_name(internal_type, fallback_name);
+            if !defs
+                .iter()
+                .any(|def| def.source_name == source_name && def.components == *components)
+            {
+                let mut struct_name = source_name.clone();
+                let mut suffix = 2;
+                while !seen.insert(struct_name.clone()) {
+                    struct_name = format!("{}_{}", source_name, suffix);
+                    suffix += 1;
+                }
                 for (index, component) in components.iter().enumerate() {
                     collect_structs_in_type(
                         &component.ty,
@@ -159,6 +174,7 @@ fn collect_structs_in_type(
                     );
                 }
                 defs.push(StructDef {
+                    source_name,
                     name: struct_name,
                     components: components.clone(),
                 });
@@ -192,13 +208,14 @@ fn tuple_name_segment(name: &str, index: usize, fallback_prefix: &str) -> String
     }
 }
 
-fn render_struct_def(def: &StructDef) -> String {
+fn render_struct_def(def: &StructDef, defs: &[StructDef]) -> String {
     let mut out = String::new();
     out.push_str(&format!("    struct {} {{\n", def.name));
     for (index, component) in def.components.iter().enumerate() {
         out.push_str(&format!(
             "        {};\n",
             render_field_like(
+                defs,
                 &component.ty,
                 component.internal_type.as_deref(),
                 &format!(
@@ -215,7 +232,7 @@ fn render_struct_def(def: &StructDef) -> String {
     out
 }
 
-fn render_error(error: &AbiError) -> String {
+fn render_error(error: &AbiError, defs: &[StructDef]) -> String {
     let mut out = String::new();
     let param_names: Vec<&str> = error
         .inputs
@@ -230,12 +247,12 @@ fn render_error(error: &AbiError) -> String {
     out.push_str(&format!(
         "    error {}({});",
         error.name,
-        render_error_params(error)
+        render_error_params(error, defs)
     ));
     out
 }
 
-fn render_event(event: &AbiEvent) -> String {
+fn render_event(event: &AbiEvent, defs: &[StructDef]) -> String {
     let mut out = String::new();
     let param_names: Vec<&str> = event
         .inputs
@@ -250,13 +267,13 @@ fn render_event(event: &AbiEvent) -> String {
     out.push_str(&format!(
         "    event {}({}){};",
         event.name,
-        render_event_params(event),
+        render_event_params(event, defs),
         if event.anonymous { " anonymous" } else { "" }
     ));
     out
 }
 
-fn render_function(function: &AbiFunction) -> String {
+fn render_function(function: &AbiFunction, defs: &[StructDef]) -> String {
     let mut out = String::new();
     let param_names: Vec<&str> = function
         .inputs
@@ -277,23 +294,27 @@ fn render_function(function: &AbiFunction) -> String {
     out.push_str(&format!(
         "    function {}({}) external{}",
         function.name,
-        render_function_params(function),
+        render_function_params(function, defs),
         render_mutability(&function.state_mutability)
     ));
     if !function.outputs.is_empty() {
-        out.push_str(&format!(" returns ({})", render_function_outputs(function)));
+        out.push_str(&format!(
+            " returns ({})",
+            render_function_outputs(function, defs)
+        ));
     }
     out.push(';');
     out
 }
 
-fn render_function_params(function: &AbiFunction) -> String {
+fn render_function_params(function: &AbiFunction, defs: &[StructDef]) -> String {
     function
         .inputs
         .iter()
         .enumerate()
         .map(|(index, input)| {
             render_field_like(
+                defs,
                 &input.ty,
                 input.internal_type.as_deref(),
                 &format!(
@@ -309,7 +330,7 @@ fn render_function_params(function: &AbiFunction) -> String {
         .join(", ")
 }
 
-fn render_function_outputs(function: &AbiFunction) -> String {
+fn render_function_outputs(function: &AbiFunction, defs: &[StructDef]) -> String {
     let mut used_names = function
         .inputs
         .iter()
@@ -334,6 +355,7 @@ fn render_function_outputs(function: &AbiFunction) -> String {
             };
 
             render_type_with_optional_name(
+                defs,
                 &output.ty,
                 output.internal_type.as_deref(),
                 &format!("{}Result{}", function.name.to_upper_camel_case(), index),
@@ -345,19 +367,25 @@ fn render_function_outputs(function: &AbiFunction) -> String {
         .join(", ")
 }
 
-fn render_event_params(event: &AbiEvent) -> String {
+fn render_event_params(event: &AbiEvent, defs: &[StructDef]) -> String {
     event
         .inputs
         .iter()
         .enumerate()
-        .map(|(index, input)| render_event_param(input, &event.name, index))
+        .map(|(index, input)| render_event_param(input, &event.name, index, defs))
         .collect::<Vec<_>>()
         .join(", ")
 }
 
-fn render_event_param(input: &AbiEventParam, event_name: &str, index: usize) -> String {
+fn render_event_param(
+    input: &AbiEventParam,
+    event_name: &str,
+    index: usize,
+    defs: &[StructDef],
+) -> String {
     let name = safe_param_name(&input.name, index);
     let ty = render_solidity_type(
+        defs,
         &input.ty,
         input.internal_type.as_deref(),
         &format!(
@@ -373,13 +401,14 @@ fn render_event_param(input: &AbiEventParam, event_name: &str, index: usize) -> 
     }
 }
 
-fn render_error_params(error: &AbiError) -> String {
+fn render_error_params(error: &AbiError, defs: &[StructDef]) -> String {
     error
         .inputs
         .iter()
         .enumerate()
         .map(|(index, input)| {
             render_field_like(
+                defs,
                 &input.ty,
                 input.internal_type.as_deref(),
                 &format!(
@@ -396,13 +425,14 @@ fn render_error_params(error: &AbiError) -> String {
 }
 
 fn render_field_like(
+    defs: &[StructDef],
     ty: &SolType,
     internal_type: Option<&str>,
     fallback_name: &str,
     name: String,
     data_location: Option<&'static str>,
 ) -> String {
-    let mut out = render_solidity_type(ty, internal_type, fallback_name);
+    let mut out = render_solidity_type(defs, ty, internal_type, fallback_name);
     if let Some(location) = data_location {
         out.push(' ');
         out.push_str(location);
@@ -413,13 +443,14 @@ fn render_field_like(
 }
 
 fn render_type_with_optional_name(
+    defs: &[StructDef],
     ty: &SolType,
     internal_type: Option<&str>,
     fallback_name: &str,
     name: Option<String>,
     data_location: Option<&'static str>,
 ) -> String {
-    let mut out = render_solidity_type(ty, internal_type, fallback_name);
+    let mut out = render_solidity_type(defs, ty, internal_type, fallback_name);
     if let Some(location) = data_location {
         out.push(' ');
         out.push_str(location);
@@ -431,7 +462,12 @@ fn render_type_with_optional_name(
     out
 }
 
-fn render_solidity_type(ty: &SolType, internal_type: Option<&str>, fallback_name: &str) -> String {
+fn render_solidity_type(
+    defs: &[StructDef],
+    ty: &SolType,
+    internal_type: Option<&str>,
+    fallback_name: &str,
+) -> String {
     match ty {
         SolType::Uint(bits) => format!("uint{}", bits),
         SolType::Int(bits) => format!("int{}", bits),
@@ -443,17 +479,24 @@ fn render_solidity_type(ty: &SolType, internal_type: Option<&str>, fallback_name
         SolType::Array(inner) => {
             format!(
                 "{}[]",
-                render_solidity_type(inner, internal_type, fallback_name)
+                render_solidity_type(defs, inner, internal_type, fallback_name)
             )
         }
         SolType::FixedArray(inner, size) => {
             format!(
                 "{}[{}]",
-                render_solidity_type(inner, internal_type, fallback_name),
+                render_solidity_type(defs, inner, internal_type, fallback_name),
                 size
             )
         }
-        SolType::Tuple(_) => tuple_type_name(internal_type, fallback_name),
+        SolType::Tuple(components) => {
+            let source_name = tuple_type_name(internal_type, fallback_name);
+            defs.iter()
+                .find(|def| def.source_name == source_name && def.components == *components)
+                .expect("all rendered tuples were registered before rendering")
+                .name
+                .clone()
+        }
     }
 }
 
@@ -547,6 +590,31 @@ mod tests {
         )
         .unwrap();
         parse_artifact(contract_name, &json).unwrap()
+    }
+
+    #[test]
+    fn colliding_struct_names_preserve_distinct_fields_and_references() {
+        let ir = abi_typegen_core::parser::parse_artifact("Review", r#"{"abi":[
+            {"type":"function","name":"deposit","inputs":[{"name":"position","type":"tuple","internalType":"struct A.Position","components":[{"name":"amount","type":"uint256"}]}]},
+            {"type":"function","name":"deposit","inputs":[{"name":"position","type":"tuple","internalType":"struct B.Position","components":[{"name":"account","type":"address"}]}]},
+            {"type":"function","name":"again","inputs":[{"name":"positions","type":"tuple[]","internalType":"struct B.Position[]","components":[{"name":"account","type":"address"}]}]}
+        ]}"#).unwrap();
+        let out = render_solidity_file(&ir);
+        assert_eq!(out.matches("struct Position {").count(), 1);
+        assert_eq!(out.matches("struct Position_2 {").count(), 1);
+        assert!(out.contains("address account;"), "{out}");
+        assert!(
+            out.contains("function deposit(Position calldata position)"),
+            "{out}"
+        );
+        assert!(
+            out.contains("function deposit(Position_2 calldata position)"),
+            "{out}"
+        );
+        assert!(
+            out.contains("function again(Position_2[] calldata positions)"),
+            "{out}"
+        );
     }
 
     #[test]

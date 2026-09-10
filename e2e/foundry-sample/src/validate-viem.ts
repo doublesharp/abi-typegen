@@ -95,3 +95,20 @@ const _regId: Hex = reg.id;
 const _regLabel: string = reg.label;
 const _depRecip: Hex = dep.recipient;
 void _to; void _amt; void _sp; void _regId; void _regLabel; void _depRecip;
+
+// Recursive arrays must retain each readonly level, and tuple overloads must
+// produce distinct declarations even when their Solidity struct names match.
+import type {
+  TupleCasesSetMatrixParams,
+  TupleCasesSetRowsParams,
+  TupleCasesDepositTupleUint256EndTupleParams,
+  TupleCasesDepositTupleAddressEndTupleParams,
+} from './generated/TupleCases.viem.js';
+
+const tupleMatrix: TupleCasesSetMatrixParams = { matrix: [[1n, 2n], [3n]] as const };
+const tupleRows: TupleCasesSetRowsParams = { rows: [[true, false]] as const };
+const tupleAmount: TupleCasesDepositTupleUint256EndTupleParams = { position: { amount: 42n } };
+const tupleAccount: TupleCasesDepositTupleAddressEndTupleParams = { position: { account: addr } };
+// @ts-expect-error An address tuple cannot be passed to the amount overload.
+const wrongTuple: TupleCasesDepositTupleUint256EndTupleParams = tupleAccount;
+void tupleMatrix; void tupleRows; void tupleAmount; void tupleAccount; void wrongTuple;

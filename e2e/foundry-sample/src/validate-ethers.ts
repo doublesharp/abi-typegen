@@ -193,3 +193,11 @@ async function validateEdgeCases(e: EdgeCasesContract) {
 
 void token; void vault; void registry; void edge;
 void validateToken; void validateVault; void validateRegistry; void validateEdgeCases;
+
+// Non-indexed slots before indexed fields must remain present in the filter API.
+import { connectTupleCases } from './generated/TupleCases.ethers.js';
+const tupleCases = connectTupleCases('0x0000000000000000000000000000000000000001', provider);
+const moved: EventFilter = tupleCases.filters.Moved(null, '0x0000000000000000000000000000000000000002', null, null);
+// @ts-expect-error Non-indexed fields cannot be filtered by a value.
+tupleCases.filters.Moved(123n, null, null, null);
+void moved;
