@@ -1,6 +1,6 @@
 [package]
 name = "abi-typegen-core"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 rust-version = "1.85"
 description = "Core ABI parsing and IR types for abi-typegen"

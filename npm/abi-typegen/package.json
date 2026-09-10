@@ -1,6 +1,6 @@
 {
   "name": "@0xdoublesharp/abi-typegen",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Generate typed bindings from Solidity ABI artifacts — pre-built binary",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,7 @@
     "typegen"
   ],
   "bin": {
-    "abi-typegen": "bin/abi-typegen"
+    "abi-typegen": "scripts/run.mjs"
   },
   "files": [
     "bin/",

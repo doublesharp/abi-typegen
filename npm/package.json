@@ -2,10 +2,10 @@
   "private": true,
   "description": "Lint tooling for npm packages",
   "scripts": {
-    "lint": "eslint abi-typegen/scripts/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js",
-    "lint:fix": "eslint abi-typegen/scripts/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js --fix",
-    "format": "prettier --write abi-typegen/scripts/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js hardhat-abi-typegen/index.d.ts hardhat-abi-typegen/type-extensions.d.ts eslint.config.mjs",
-    "format:check": "prettier --check abi-typegen/scripts/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js hardhat-abi-typegen/index.d.ts hardhat-abi-typegen/type-extensions.d.ts eslint.config.mjs"
+    "lint": "eslint abi-typegen/scripts/ tests/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js",
+    "lint:fix": "eslint abi-typegen/scripts/ tests/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js --fix",
+    "format": "prettier --write abi-typegen/scripts/ tests/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js hardhat-abi-typegen/index.d.ts hardhat-abi-typegen/type-extensions.d.ts eslint.config.mjs",
+    "format:check": "prettier --check abi-typegen/scripts/ tests/ hardhat-abi-typegen/index.cjs hardhat-abi-typegen/index.js hardhat-abi-typegen/config-hooks.js hardhat-abi-typegen/solidity-hooks.js hardhat-abi-typegen/index.d.ts hardhat-abi-typegen/type-extensions.d.ts eslint.config.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
