@@ -7,7 +7,14 @@ import {IRegistry} from "../src/generated-solidity/IRegistry.sol";
 import {IToken} from "../src/generated-solidity/IToken.sol";
 import {IVault} from "../src/generated-solidity/IVault.sol";
 
+import {ITupleCases} from "../src/generated-solidity/ITupleCases.sol";
+
 contract GeneratedInterfacesCheck {
+    function depositTuples(ITupleCases target) external {
+        target.deposit(ITupleCases.Position(address(this)));
+        target.deposit(ITupleCases.Position_2(uint256(42)));
+    }
+
     function tokenAllowance(
         IToken token,
         address owner,

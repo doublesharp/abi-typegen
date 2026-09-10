@@ -5,13 +5,14 @@ export default [
   js.configs.recommended,
   prettier,
   {
-    files: ["**/*.mjs"],
+    files: ["**/*.mjs", "hardhat-abi-typegen/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
         console: "readonly",
         process: "readonly",
+        URL: "readonly",
       },
     },
   },

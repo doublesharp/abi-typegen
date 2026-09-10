@@ -23,11 +23,22 @@
 | Requires Node.js | no | yes |
 | Foundry support | yes | via plugin |
 | Hardhat support | yes | yes |
-| Named multi-returns | yes | no |
+| Named multi-returns | yes | yes |
 | Signature-based overloads | yes | no |
 | `--check` for CI | yes | no |
 | `--exclude` patterns | yes | no |
 | Watch mode | yes | no |
+
+### Ethers Type Surface
+
+abi-typegen's `ethers` target is checked against TypeChain's `ethers-v6` output on the e2e contracts. The `ethers5` target is validated against ethers v5 ABI decoding behavior. It intentionally matches SDK runtime behavior where that matters:
+
+- Function inputs use ethers-compatible input aliases: `BigNumberish` for integers and `BytesLike` for bytes. Ethers v6 address inputs use `AddressLike`.
+- Ethers v6 integer outputs are `bigint`; ethers v5 integer outputs are `number` for <= 48-bit values and `BigNumber` for wider values.
+- Fixed-size arrays are emitted as tuple types, e.g. `uint256[3]` becomes `[bigint, bigint, bigint]`.
+- Named tuple and multi-return outputs expose tuple positions plus named object fields.
+
+abi-typegen keeps a smaller wrapper surface than TypeChain: it does not generate factories, `BaseContract` subclasses, or encode/decode helper overloads. It improves the callable method surface with signature-based overload names such as `depositUint256Address`, avoiding quoted full-signature property names for overloaded functions.
 
 ## vs abigen (Go)
 

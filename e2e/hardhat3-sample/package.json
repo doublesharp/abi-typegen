@@ -1,0 +1,14 @@
+{
+  "name": "hardhat3-sample",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@0xdoublesharp/abi-typegen": "link:../../npm/abi-typegen",
+    "@0xdoublesharp/hardhat-abi-typegen": "link:../../npm/hardhat-abi-typegen",
+    "@types/node": "^22.7.5",
+    "hardhat": "^3.9.0",
+    "typescript": "^6.0.3",
+    "viem": "^2.53.1"
+  }
+}

@@ -158,38 +158,3 @@ pub struct ContractIr {
     /// Raw ABI JSON value, preserved for `as const` serialization.
     pub raw_abi: serde_json::Value,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sol_type_eq() {
-        assert_eq!(SolType::Uint(256), SolType::Uint(256));
-        assert_ne!(SolType::Uint(256), SolType::Uint(128));
-        assert_eq!(SolType::Bool, SolType::Bool);
-        assert_eq!(
-            SolType::Array(Box::new(SolType::Address)),
-            SolType::Array(Box::new(SolType::Address))
-        );
-        assert_eq!(
-            SolType::FixedArray(Box::new(SolType::Uint(256)), 3),
-            SolType::FixedArray(Box::new(SolType::Uint(256)), 3)
-        );
-        assert_ne!(
-            SolType::FixedArray(Box::new(SolType::Uint(256)), 3),
-            SolType::FixedArray(Box::new(SolType::Uint(256)), 4)
-        );
-    }
-
-    #[test]
-    fn tuple_component_eq() {
-        let c1 = TupleComponent {
-            name: "to".into(),
-            ty: SolType::Address,
-            internal_type: None,
-        };
-        let c2 = c1.clone();
-        assert_eq!(c1, c2);
-    }
-}

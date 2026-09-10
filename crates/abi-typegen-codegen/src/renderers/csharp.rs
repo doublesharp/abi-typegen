@@ -317,8 +317,10 @@ mod tests {
     use super::*;
     use abi_typegen_core::parser::parse_artifact;
     use abi_typegen_core::types::{
-        AbiError, AbiEvent, AbiEventParam, AbiFunction, AbiParam, SolType, StateMutability,
+        AbiError, AbiEvent, AbiEventParam, AbiFunction, AbiParam, NatSpec, SolType,
+        StateMutability, TupleComponent,
     };
+    use std::collections::HashMap;
 
     fn erc20() -> ContractIr {
         let json = std::fs::read_to_string(
@@ -765,5 +767,160 @@ mod tests {
             out.contains("public string Arg1 { get; set; }"),
             "Expected PascalCase Arg1 property, got:\n{out}"
         );
+    }
+
+    #[test]
+    fn csharp_natspec_notice_comments_are_rendered_for_functions_events_and_errors() {
+        let natspec = NatSpec {
+            notice: Some("Transfers custody".to_string()),
+            dev: None,
+            params: HashMap::new(),
+            returns: HashMap::new(),
+        };
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "deposit".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiEvent {
+                name: "Deposited".to_string(),
+                inputs: vec![AbiEventParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    indexed: false,
+                    internal_type: None,
+                }],
+                anonymous: false,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiError {
+                name: "Rejected".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                natspec: Some(natspec),
+            }],
+        );
+
+        let out = render_csharp_file(&ir);
+
+        assert!(out.contains(
+            "/// <summary>Parameters for the deposit function. Transfers custody</summary>"
+        ));
+        assert!(out.contains("/// <summary>The Deposited event. Transfers custody</summary>"));
+        assert!(out.contains("/// <summary>The Rejected error. Transfers custody</summary>"));
+    }
+
+    #[test]
+    fn csharp_natspec_without_notice_uses_default_comments() {
+        let natspec = NatSpec {
+            notice: None,
+            dev: Some("internal detail".to_string()),
+            params: HashMap::new(),
+            returns: HashMap::new(),
+        };
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "deposit".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiEvent {
+                name: "Deposited".to_string(),
+                inputs: vec![AbiEventParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    indexed: false,
+                    internal_type: None,
+                }],
+                anonymous: false,
+                natspec: Some(natspec.clone()),
+            }],
+            vec![AbiError {
+                name: "Rejected".to_string(),
+                inputs: vec![AbiParam {
+                    name: "amount".to_string(),
+                    ty: SolType::Uint(64),
+                    internal_type: None,
+                }],
+                natspec: Some(natspec),
+            }],
+        );
+
+        let out = render_csharp_file(&ir);
+
+        assert!(out.contains("/// <summary>Parameters for the deposit function.</summary>"));
+        assert!(out.contains("/// <summary>The Deposited event.</summary>"));
+        assert!(out.contains("/// <summary>The Rejected error.</summary>"));
+        assert!(!out.contains("internal detail"));
+    }
+
+    #[test]
+    fn csharp_skips_error_classes_with_no_inputs() {
+        let ir = make_ir(
+            "Vault",
+            vec![],
+            vec![],
+            vec![AbiError {
+                name: "Unauthorized".to_string(),
+                inputs: vec![],
+                natspec: None,
+            }],
+        );
+
+        let out = render_csharp_file(&ir);
+
+        assert!(!out.contains("VaultUnauthorizedError"));
+    }
+
+    #[test]
+    fn csharp_tuple_types_use_object_and_drive_big_integer_detection() {
+        let tuple = SolType::Tuple(vec![TupleComponent {
+            name: "amount".to_string(),
+            ty: SolType::Uint(256),
+            internal_type: None,
+        }]);
+        let ir = make_ir(
+            "Vault",
+            vec![AbiFunction {
+                name: "setPosition".to_string(),
+                inputs: vec![AbiParam {
+                    name: "position".to_string(),
+                    ty: tuple.clone(),
+                    internal_type: None,
+                }],
+                outputs: vec![],
+                state_mutability: StateMutability::NonPayable,
+                natspec: None,
+            }],
+            vec![],
+            vec![],
+        );
+
+        let out = render_csharp_file(&ir);
+
+        assert!(out.contains("using System.Numerics;"));
+        assert!(out.contains("[Parameter(\"(uint256)\", \"position\", 1)]"));
+        assert!(out.contains("public object Position { get; set; }"));
+        assert_eq!(sol_type_to_csharp(&tuple), "object");
+        assert_eq!(sol_type_to_csharp(&SolType::Tuple(vec![])), "object");
+        assert_eq!(sol_type_to_sol_string(&tuple), "(uint256)");
     }
 }

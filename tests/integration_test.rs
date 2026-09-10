@@ -155,11 +155,13 @@ fn erc20_ethers_file_correct_structure() {
     let eth = &files["ERC20.ethers.ts"];
     assert!(eth.contains("export interface ERC20Contract {"));
     assert!(eth.contains("export function connectERC20("));
-    assert!(eth.contains("balanceOf(account: string): Promise<bigint>"));
+    assert!(eth.contains("balanceOf(account: AddressLike): Promise<bigint>"));
+    assert!(eth.contains(
+        "transfer(to: AddressLike, amount: BigNumberish): Promise<ContractTransactionResponse>"
+    ));
     assert!(
-        eth.contains("transfer(to: string, amount: bigint): Promise<ContractTransactionResponse>")
+        eth.contains("Transfer(from?: AddressLike | null, to?: AddressLike | null): EventFilter")
     );
-    assert!(eth.contains("Transfer(from?: string | null, to?: string | null): EventFilter"));
 }
 
 #[test]
@@ -218,7 +220,7 @@ fn vault_tuple_output_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getPosition(user: string): Promise<{"));
+    assert!(eth.contains("getPosition(user: AddressLike): Promise<["));
     assert!(eth.contains("shares: bigint"));
 }
 
@@ -227,7 +229,7 @@ fn vault_array_input_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getBalances(users: string[]): Promise<bigint[]>"));
+    assert!(eth.contains("getBalances(users: AddressLike[]): Promise<bigint[]>"));
 }
 
 #[test]
@@ -313,9 +315,9 @@ fn unnamed_params_viem_uses_positional_names() {
 fn unnamed_params_ethers_uses_positional_names() {
     let ir = parse_artifact("Unnamed", unnamed_params_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("swap(arg0: string, arg1: bigint)"));
+    assert!(out.contains("swap(arg0: AddressLike, arg1: BigNumberish)"));
     // Event filter with unnamed indexed param
-    assert!(out.contains("Swapped(arg0?: string | null)"));
+    assert!(out.contains("Swapped(arg0?: AddressLike | null)"));
 }
 
 // ── Reserved words ────────────────────────────────────────────────────────
@@ -347,7 +349,7 @@ fn reserved_word_params_viem_escaped() {
 fn reserved_word_params_ethers_escaped() {
     let ir = parse_artifact("Reserved", reserved_word_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("setConfig(_class: bigint, _delete: string)"));
+    assert!(out.contains("setConfig(_class: BigNumberish, _delete: AddressLike)"));
 }
 
 // ── Empty ABI contract ─────────────────────────────────────────────────────
@@ -534,7 +536,7 @@ fn pure_fn_returns_promise_value() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("compute(x: bigint): Promise<bigint>"),
+        eth.contains("compute(x: BigNumberish): Promise<bigint>"),
         "pure function should return Promise<T>"
     );
 }
@@ -740,4 +742,109 @@ fn yaml_config_yml_alias() {
     let toml = "[abi-typegen]\ntarget = \"yml\"\n";
     let cfg = Config::from_toml_str(toml).unwrap();
     assert_eq!(*cfg.target(), abi_typegen_config::Target::Yaml);
+}
+
+#[test]
+fn fetch_and_diff_honor_multiple_targets() {
+    use std::process::Command;
+    let dir = tempfile::tempdir().unwrap();
+    let config = dir.path().join("foundry.toml");
+    std::fs::write(
+        &config,
+        "[profile.default]\nout = 'out'\n[abi-typegen]\nout = 'gen'\ntarget = ['viem', 'python']\n",
+    )
+    .unwrap();
+    let abi = dir.path().join("abi.json");
+    std::fs::write(&abi, r#"[{"type":"function","name":"balanceOf","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}],"stateMutability":"view"}]"#).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_abi-typegen"))
+        .current_dir(dir.path())
+        .args(["fetch", "--file", "abi.json", "--name", "Token"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(dir.path().join("gen/viem/Token.abi.ts").is_file());
+    assert!(dir.path().join("gen/python/Token.py").is_file());
+    let diff = Command::new(env!("CARGO_BIN_EXE_abi-typegen"))
+        .current_dir(dir.path())
+        .arg("diff")
+        .output()
+        .unwrap();
+    assert!(
+        diff.status.success(),
+        "{}",
+        String::from_utf8_lossy(&diff.stdout)
+    );
+    std::fs::write(dir.path().join("gen/python/Token.py"), "stale").unwrap();
+    let diff = Command::new(env!("CARGO_BIN_EXE_abi-typegen"))
+        .current_dir(dir.path())
+        .arg("diff")
+        .output()
+        .unwrap();
+    assert!(!diff.status.success());
+    assert!(String::from_utf8_lossy(&diff.stdout).contains("M python/Token.py"));
+}
+
+#[test]
+fn adversarial_exclude_pattern_finishes_without_exponential_backtracking() {
+    use std::process::{Command, Stdio};
+    use std::time::{Duration, Instant};
+    let dir = tempfile::tempdir().unwrap();
+    let name = "a".repeat(128);
+    let artifact = dir.path().join(format!("{name}.sol"));
+    std::fs::create_dir(&artifact).unwrap();
+    std::fs::write(artifact.join(format!("{name}.json")), r#"{"abi":[]}"#).unwrap();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_abi-typegen"))
+        .args(["json", "--artifacts"])
+        .arg(dir.path())
+        .args(["--exclude", &format!("{}b", "*a".repeat(32))])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let start = Instant::now();
+    loop {
+        if let Some(status) = child.try_wait().unwrap() {
+            assert!(status.success());
+            break;
+        }
+        if start.elapsed() > Duration::from_secs(5) {
+            child.kill().unwrap();
+            child.wait().unwrap();
+            panic!("exclude matching did not finish within five seconds");
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+}
+
+#[test]
+fn ethers_overload_bindings_use_canonical_recursive_abi_types() {
+    let ir = parse_artifact(
+        "AllTypes",
+        r#"{"abi":[
+        {"type":"function","name":"all","inputs":[{"type":"tuple[]","components":[
+            {"type":"uint8"},{"type":"int16"},{"type":"bool"},{"type":"address"},
+            {"type":"bytes"},{"type":"bytes32"},{"type":"string"},{"type":"uint256[2]"}
+        ]}]},
+        {"type":"function","name":"all","inputs":[]}
+    ]}"#,
+    )
+    .unwrap();
+    for target in ["ethers", "ethers5"] {
+        let config = Config::from_toml_str(&format!("[abi-typegen]\ntarget = '{target}'")).unwrap();
+        let files = generate_contract_files(&ir, &config);
+        let source = &files[&format!("AllTypes.{target}.ts")];
+        assert!(
+            source.contains("all((uint8,int16,bool,address,bytes,bytes32,string,uint256[2])[])"),
+            "{source}"
+        );
+        assert!(
+            source.contains("all_2()"),
+            "zero-argument overload must have an unambiguous runtime alias: {source}"
+        );
+        assert!(source.contains("\"all()\""), "{source}");
+    }
 }

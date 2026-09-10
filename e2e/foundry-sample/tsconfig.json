@@ -9,5 +9,5 @@
     "esModuleInterop": true,
     "rootDir": "."
   },
-  "include": ["src/generated/**/*.ts", "src/validate-viem.ts"]
+  "include": ["src/generated/**/*.ts", "src/validate-viem.ts", "src/validate-ethers.ts"]
 }

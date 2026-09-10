@@ -175,34 +175,10 @@ fn run(cli: Cli) -> Result<()> {
             apply_contracts(&mut config, &contracts);
             apply_exclude(&mut config, &exclude);
 
-            if config.targets.len() > 1 {
-                // Multi-target: generate into per-target subdirectories
-                let base_out_dir = config.out_dir.clone();
-                let mut active_target_dirs = HashSet::new();
-                for target in config.targets.clone() {
-                    let mut target_config = config.clone();
-                    target_config.targets = vec![target.clone()];
-                    active_target_dirs.insert(target_dir_name(&target).to_string());
-                    target_config.out_dir = multi_target_out_dir(&base_out_dir, &target);
-                    if check {
-                        run_check(&target_config)?;
-                    } else {
-                        run_generate(&target_config, clean)?;
-                    }
-                }
-
-                if check {
-                    ensure_no_stale_target_dirs(&base_out_dir, &active_target_dirs)?;
-                } else if clean {
-                    clean_stale_target_dirs(&base_out_dir, &active_target_dirs)?;
-                }
+            if check {
+                run_check(&config)?;
             } else {
-                // Single target (existing behavior)
-                if check {
-                    run_check(&config)?;
-                } else {
-                    run_generate(&config, clean)?;
-                }
+                run_generate(&config, clean)?;
             }
         }
         Commands::Watch { artifacts } => {
@@ -328,6 +304,7 @@ fn run_fetch(source: FetchSource<'_>, name: &str, artifacts_dir: &Path, force: b
     };
 
     let json = fetch::build_artifact_json(abi)?;
+    parse_artifact(name, &json).context("fetched ABI is invalid")?;
 
     let dest_parent = dest
         .parent()
@@ -342,6 +319,28 @@ fn run_fetch(source: FetchSource<'_>, name: &str, artifacts_dir: &Path, force: b
 
 fn multi_target_out_dir(base_out_dir: &Path, target: &Target) -> PathBuf {
     base_out_dir.join(target_dir_name(target))
+}
+
+/// A relative output prefix and a config for each distinct target.
+fn target_configs(config: &Config) -> Vec<(String, Config)> {
+    if config.targets.len() <= 1 {
+        return vec![(String::new(), config.clone())];
+    }
+    let mut seen = HashSet::new();
+    config
+        .targets
+        .iter()
+        .filter_map(|target| {
+            let directory = target_dir_name(target);
+            if !seen.insert(directory) {
+                return None;
+            }
+            let mut target_config = config.clone();
+            target_config.targets = vec![target.clone()];
+            target_config.out_dir = multi_target_out_dir(&config.out_dir, target);
+            Some((format!("{directory}/"), target_config))
+        })
+        .collect()
 }
 
 fn target_dir_name(target: &Target) -> &'static str {
@@ -463,26 +462,27 @@ fn apply_contracts(config: &mut Config, contracts: &[String]) {
 fn matches_glob(name: &str, pattern: &str) -> bool {
     let name = name.as_bytes();
     let pattern = pattern.as_bytes();
-    glob_match(name, pattern, 0, 0)
-}
-
-fn glob_match(name: &[u8], pattern: &[u8], ni: usize, pi: usize) -> bool {
-    if pi == pattern.len() {
-        return ni == name.len();
-    }
-    if pattern[pi] == b'*' {
-        // '*' matches zero or more characters
-        for i in ni..=name.len() {
-            if glob_match(name, pattern, i, pi + 1) {
-                return true;
-            }
+    let (mut ni, mut pi) = (0, 0);
+    let mut star = None;
+    let mut retry = 0;
+    while ni < name.len() {
+        if pi < pattern.len() && pattern[pi] == b'*' {
+            star = Some(pi);
+            pi += 1;
+            retry = ni;
+        } else if pi < pattern.len() && (pattern[pi] == b'?' || pattern[pi] == name[ni]) {
+            ni += 1;
+            pi += 1;
+        } else if let Some(previous_star) = star {
+            // Extend only the latest star instead of exploring every partition.
+            retry += 1;
+            ni = retry;
+            pi = previous_star + 1;
+        } else {
+            return false;
         }
-        false
-    } else if ni < name.len() && (pattern[pi] == b'?' || pattern[pi] == name[ni]) {
-        glob_match(name, pattern, ni + 1, pi + 1)
-    } else {
-        false
     }
+    pattern[pi..].iter().all(|byte| *byte == b'*')
 }
 
 /// Returns true if a contract name matches any of the exclude patterns.
@@ -506,6 +506,7 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".cs",
     ".kt",
     ".sol",
+    ".yaml",
 ];
 
 /// Checks if a filename looks like a generated file (matches known patterns).
@@ -534,7 +535,18 @@ fn filter_excluded_artifacts(
 
 fn selected_artifacts(config: &Config) -> Result<Vec<(String, PathBuf)>> {
     let artifacts = discover_artifacts(&config.artifacts_dir, &config.contracts)?;
-    Ok(filter_excluded_artifacts(artifacts, &config.exclude))
+    let artifacts = filter_excluded_artifacts(artifacts, &config.exclude);
+    for pair in artifacts.windows(2) {
+        if pair[0].0 == pair[1].0 {
+            anyhow::bail!(
+                "duplicate contract name '{}' in '{}' and '{}'",
+                pair[0].0,
+                pair[0].1.display(),
+                pair[1].1.display()
+            );
+        }
+    }
+    Ok(artifacts)
 }
 
 fn run_generate(config: &Config, clean: bool) -> Result<()> {
@@ -545,58 +557,33 @@ fn run_generate(config: &Config, clean: bool) -> Result<()> {
         );
     }
 
-    std::fs::create_dir_all(&config.out_dir)
-        .with_context(|| format!("cannot create '{}'", config.out_dir.display()))?;
-
     let artifacts = selected_artifacts(config)?;
-
-    if artifacts.is_empty() {
-        println!(
-            "abi-typegen: no artifacts found in '{}'",
-            config.artifacts_dir.display()
-        );
-        return Ok(());
+    // Read and parse each artifact once, and render every target before writing.
+    let (contract_names, files) = render_artifacts(config, &artifacts)?;
+    let outputs = target_configs(config);
+    for (_, target_config) in &outputs {
+        std::fs::create_dir_all(&target_config.out_dir)
+            .with_context(|| format!("cannot create '{}'", target_config.out_dir.display()))?;
     }
-
-    let mut contract_names = Vec::new();
-    let mut generated_files = HashSet::new();
-
-    for (name, path) in &artifacts {
-        let json = std::fs::read_to_string(path)
-            .with_context(|| format!("cannot read artifact '{}'", path.display()))?;
-
-        let ir = match parse_artifact(name, &json) {
-            Ok(ir) => ir,
-            Err(e) => {
-                eprintln!("abi-typegen: skipping {} — {}", name, e);
-                continue;
-            }
-        };
-
-        let files = generate_contract_files(&ir, config);
-        for (filename, content) in &files {
-            let dest = config.out_dir.join(filename);
-            std::fs::write(&dest, content)
-                .with_context(|| format!("cannot write '{}'", dest.display()))?;
-            generated_files.insert(filename.clone());
-        }
-
-        contract_names.push(name.clone());
+    for (filename, content) in &files {
+        write_if_changed(&config.out_dir.join(filename), content)?;
     }
-
-    if contract_names.is_empty() {
-        println!("abi-typegen: no contracts generated");
-        return Ok(());
-    }
-
-    let barrel_content = barrel::render_barrel(&contract_names, config);
-    let barrel_path = config.out_dir.join("index.ts");
-    std::fs::write(&barrel_path, barrel_content)
-        .with_context(|| format!("cannot write '{}'", barrel_path.display()))?;
-    generated_files.insert("index.ts".to_string());
 
     if clean {
-        clean_stale_files(&config.out_dir, &generated_files)?;
+        for (prefix, target_config) in &outputs {
+            let generated_files = files
+                .keys()
+                .filter_map(|filename| filename.strip_prefix(prefix).map(str::to_string))
+                .collect();
+            clean_stale_files(&target_config.out_dir, &generated_files)?;
+        }
+        if config.targets.len() > 1 {
+            let active = outputs
+                .iter()
+                .map(|(_, config)| target_dir_name(config.target()).to_string())
+                .collect();
+            clean_stale_target_dirs(&config.out_dir, &active)?;
+        }
     }
 
     println!(
@@ -606,6 +593,63 @@ fn run_generate(config: &Config, clean: bool) -> Result<()> {
     );
 
     Ok(())
+}
+
+/// Renders one selection and rejects filenames shared by different contracts.
+fn render_artifacts(
+    config: &Config,
+    artifacts: &[(String, PathBuf)],
+) -> Result<(Vec<String>, std::collections::BTreeMap<String, String>)> {
+    let mut files = std::collections::BTreeMap::new();
+    let mut owners = std::collections::HashMap::new();
+    let mut contract_names = Vec::new();
+    let outputs = target_configs(config);
+    for (name, path) in artifacts {
+        let ir = read_artifact(name, path)?;
+        for (prefix, target_config) in &outputs {
+            for (filename, content) in generate_contract_files(&ir, target_config) {
+                let filename = format!("{prefix}{filename}");
+                if let Some(previous) = owners.insert(filename.clone(), name) {
+                    anyhow::bail!(
+                        "contracts '{}' and '{}' both generate '{}'",
+                        previous,
+                        name,
+                        filename
+                    );
+                }
+                files.insert(filename, content);
+            }
+        }
+        contract_names.push(name.clone());
+    }
+    for (prefix, target_config) in &outputs {
+        if !contract_names.is_empty() && target_config.target().emits_barrel() {
+            files.insert(
+                format!("{prefix}index.ts"),
+                barrel::render_barrel(&contract_names, target_config),
+            );
+        }
+    }
+    Ok((contract_names, files))
+}
+
+fn read_artifact(name: &str, path: &Path) -> Result<abi_typegen_core::types::ContractIr> {
+    let json = std::fs::read_to_string(path)
+        .with_context(|| format!("cannot read artifact '{}'", path.display()))?;
+    parse_artifact(name, &json)
+        .with_context(|| format!("cannot parse artifact '{}'", path.display()))
+}
+
+fn write_if_changed(path: &Path, content: &str) -> Result<()> {
+    match std::fs::read(path) {
+        Ok(existing) if existing == content.as_bytes() => return Ok(()),
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            return Err(error).with_context(|| format!("cannot read '{}'", path.display()));
+        }
+    }
+    std::fs::write(path, content).with_context(|| format!("cannot write '{}'", path.display()))
 }
 
 /// Removes files from `out_dir` that look like generated files but were not
@@ -648,25 +692,6 @@ fn clean_stale_target_dirs(
     Ok(())
 }
 
-fn ensure_no_stale_target_dirs(
-    base_out_dir: &Path,
-    active_target_dirs: &HashSet<String>,
-) -> Result<()> {
-    let stale_dirs = stale_target_dirs(base_out_dir, active_target_dirs)?;
-    if stale_dirs.is_empty() {
-        return Ok(());
-    }
-
-    for dir_name in &stale_dirs {
-        eprintln!("abi-typegen: stale: {}", dir_name);
-    }
-
-    anyhow::bail!(
-        "output is not up to date ({} path(s) stale)",
-        stale_dirs.len()
-    )
-}
-
 fn stale_target_dirs(
     base_out_dir: &Path,
     active_target_dirs: &HashSet<String>,
@@ -697,90 +722,29 @@ fn stale_target_dirs(
     Ok(stale_dirs)
 }
 
-/// Generates files to a temp directory and compares against existing output.
-/// Returns an error if any file differs or is missing.
+/// Compares generated content in memory against existing output.
+/// Returns an error if any generated file differs, is missing, or is stale.
 fn run_check(config: &Config) -> Result<()> {
-    if !config.artifacts_dir.exists() {
-        anyhow::bail!(
-            "Foundry out directory '{}' does not exist. Run `forge build` first.",
-            config.artifacts_dir.display()
-        );
-    }
-
-    let temp_dir = tempfile::tempdir().context("cannot create temp directory for --check")?;
-    let temp_config = Config {
-        artifacts_dir: config.artifacts_dir.clone(),
-        out_dir: temp_dir.path().to_path_buf(),
-        targets: config.targets.clone(),
-        wrappers: config.wrappers,
-        contracts: config.contracts.clone(),
-        exclude: config.exclude.clone(),
-    };
-
-    run_generate(&temp_config, false)?;
-
-    let mut stale = Vec::new();
-    let mut expected_files = HashSet::new();
-
-    // Compare each generated file against the existing output
-    let entries = match std::fs::read_dir(temp_dir.path()) {
-        Ok(e) => e,
-        Err(_) => {
-            println!("abi-typegen: output is up to date");
-            return Ok(());
-        }
-    };
-    for entry in entries {
-        let entry = entry?;
-        let filename = entry.file_name();
-        let filename_str = filename.to_string_lossy().to_string();
-        expected_files.insert(filename_str.clone());
-        let expected = std::fs::read_to_string(entry.path())?;
-        let existing_path = config.out_dir.join(&filename_str);
-        match std::fs::read_to_string(&existing_path) {
-            Ok(existing) if existing == expected => {}
-            Ok(_) => stale.push(filename_str),
-            Err(_) => stale.push(filename_str),
-        }
-    }
-
-    if let Ok(entries) = std::fs::read_dir(&config.out_dir) {
-        for entry in entries {
-            let entry = entry?;
-            let path = entry.path();
-            if !path.is_file() {
-                continue;
-            }
-
-            if let Some(filename) = path.file_name().and_then(|f| f.to_str())
-                && is_generated_filename(filename)
-                && !expected_files.contains(filename)
-            {
-                stale.push(filename.to_string());
-            }
-        }
-    }
-
+    let artifacts = selected_artifacts(config)?;
+    let stale = collect_diff_entries(config, &artifacts)?;
     if stale.is_empty() {
         println!("abi-typegen: output is up to date");
         Ok(())
     } else {
-        stale.sort();
-        stale.dedup();
-        for f in &stale {
-            eprintln!("abi-typegen: stale: {}", f);
+        for entry in &stale {
+            eprintln!("abi-typegen: stale: {}", entry);
         }
         anyhow::bail!("output is not up to date ({} file(s) stale)", stale.len())
     }
 }
 
-/// Discovers all `out/<Name>.sol/<Name>.json` artifacts.
+/// Discovers contract JSON files inside Foundry or Hardhat `.sol` directories.
 fn discover_artifacts(artifacts_dir: &Path, filter: &[String]) -> Result<Vec<(String, PathBuf)>> {
     let mut results = Vec::new();
 
     discover_artifacts_in_dir(artifacts_dir, filter, &mut results)?;
 
-    results.sort_by(|a, b| a.0.cmp(&b.0));
+    results.sort();
     Ok(results)
 }
 
@@ -806,15 +770,24 @@ fn discover_artifacts_in_dir(
             discover_artifacts_in_dir(&path, filter, results)?;
             continue;
         }
-        let contract_name = dir_name.trim_end_matches(".sol").to_string();
-
-        if !filter.is_empty() && !filter.contains(&contract_name) {
-            continue;
-        }
-
-        let artifact_file = path.join(format!("{}.json", contract_name));
-        if artifact_file.exists() {
-            results.push((contract_name, artifact_file));
+        for artifact in std::fs::read_dir(&path)? {
+            let artifact = artifact?;
+            if !artifact.file_type()?.is_file() {
+                continue;
+            }
+            let artifact_path = artifact.path();
+            let Some(filename) = artifact_path.file_name().and_then(|name| name.to_str()) else {
+                continue;
+            };
+            let Some(contract_name) = filename.strip_suffix(".json") else {
+                continue;
+            };
+            if filename.ends_with(".dbg.json") || contract_name.is_empty() {
+                continue;
+            }
+            if filter.is_empty() || filter.iter().any(|name| name == contract_name) {
+                results.push((contract_name.to_string(), artifact_path));
+            }
         }
     }
 
@@ -954,10 +927,6 @@ fn run_diff(config: &Config) -> Result<()> {
         );
     }
     let artifacts = selected_artifacts(config)?;
-    if artifacts.is_empty() {
-        println!("abi-typegen: no artifacts found");
-        return Ok(());
-    }
     let diffs = collect_diff_entries(config, &artifacts)?;
     if diffs.is_empty() {
         println!("abi-typegen: output is up to date");
@@ -972,64 +941,51 @@ fn run_diff(config: &Config) -> Result<()> {
 
 fn collect_diff_entries(config: &Config, artifacts: &[(String, PathBuf)]) -> Result<Vec<String>> {
     let mut diffs = Vec::new();
-    let mut expected_files = HashSet::new();
-    let mut contract_names = Vec::new();
+    let (_, expected_files) = render_artifacts(config, artifacts)?;
+    for (filename, content) in &expected_files {
+        let dest = config.out_dir.join(filename);
+        match std::fs::read_to_string(&dest) {
+            Ok(existing) if existing == *content => {}
+            Ok(_) => diffs.push(format!("M {}", filename)),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                diffs.push(format!("A {}", filename))
+            }
+            Err(error) => {
+                return Err(error).with_context(|| format!("cannot read '{}'", dest.display()));
+            }
+        }
+    }
 
-    for (name, path) in artifacts {
-        let json = std::fs::read_to_string(path)
-            .with_context(|| format!("cannot read artifact '{}'", path.display()))?;
-        let ir = match parse_artifact(name, &json) {
-            Ok(ir) => ir,
-            Err(e) => {
-                eprintln!("abi-typegen: skipping {} — {}", name, e);
-                continue;
+    let outputs = target_configs(config);
+    for (prefix, target_config) in &outputs {
+        let entries = match std::fs::read_dir(&target_config.out_dir) {
+            Ok(entries) => entries,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => {
+                return Err(error)
+                    .with_context(|| format!("cannot read '{}'", target_config.out_dir.display()));
             }
         };
-        let files = generate_contract_files(&ir, config);
-        for (filename, content) in &files {
-            expected_files.insert(filename.clone());
-            let dest = config.out_dir.join(filename);
-            if dest.exists() {
-                let existing = std::fs::read_to_string(&dest)?;
-                if existing != *content {
-                    diffs.push(format!("M {}", filename));
-                }
-            } else {
-                diffs.push(format!("A {}", filename));
-            }
-        }
-        contract_names.push(name.clone());
-    }
-
-    // Check the barrel file the same way run_generate does.
-    if !contract_names.is_empty() {
-        let barrel_content = barrel::render_barrel(&contract_names, config);
-        let barrel_path = config.out_dir.join("index.ts");
-        expected_files.insert("index.ts".to_string());
-        if barrel_path.exists() {
-            let existing = std::fs::read_to_string(&barrel_path)?;
-            if existing != barrel_content {
-                diffs.push("M index.ts".to_string());
-            }
-        } else {
-            diffs.push("A index.ts".to_string());
-        }
-    }
-
-    if let Ok(entries) = std::fs::read_dir(&config.out_dir) {
         for entry in entries {
             let entry = entry?;
-            let path = entry.path();
-            if !path.is_file() {
+            if !entry.file_type()?.is_file() {
                 continue;
             }
-
-            if let Some(filename) = path.file_name().and_then(|name| name.to_str())
-                && is_generated_filename(filename)
-                && !expected_files.contains(filename)
-            {
-                diffs.push(format!("D {}", filename));
+            if let Some(filename) = entry.file_name().to_str() {
+                let relative = format!("{prefix}{filename}");
+                if is_generated_filename(filename) && !expected_files.contains_key(&relative) {
+                    diffs.push(format!("D {relative}"));
+                }
             }
+        }
+    }
+    if config.targets.len() > 1 {
+        let active = outputs
+            .iter()
+            .map(|(_, config)| target_dir_name(config.target()).to_string())
+            .collect();
+        for directory in stale_target_dirs(&config.out_dir, &active)? {
+            diffs.push(format!("D {directory}"));
         }
     }
 
@@ -1060,19 +1016,13 @@ fn collect_json_summaries(config: &Config) -> Result<Vec<serde_json::Value>> {
     let mut ir_list = Vec::new();
 
     for (name, path) in &artifacts {
-        let json = std::fs::read_to_string(path)
-            .with_context(|| format!("cannot read artifact '{}'", path.display()))?;
-        match parse_artifact(name, &json) {
-            Ok(ir) => ir_list.push(serde_json::json!({
-                "name": ir.name, "abi": ir.raw_abi,
-                "functions": ir.functions.len(), "events": ir.events.len(),
-                "errors": ir.errors.len(), "has_constructor": ir.constructor.is_some(),
-                "has_fallback": ir.has_fallback, "has_receive": ir.has_receive,
-            })),
-            Err(e) => {
-                eprintln!("abi-typegen: skipping {} — {}", name, e);
-            }
-        }
+        let ir = read_artifact(name, path)?;
+        ir_list.push(serde_json::json!({
+            "name": ir.name, "abi": ir.raw_abi,
+            "functions": ir.functions.len(), "events": ir.events.len(),
+            "errors": ir.errors.len(), "has_constructor": ir.constructor.is_some(),
+            "has_fallback": ir.has_fallback, "has_receive": ir.has_receive,
+        }));
     }
 
     Ok(ir_list)

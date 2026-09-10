@@ -1,0 +1,16 @@
+[files]
+extend-exclude = [
+  "Cargo.lock",
+  "coverage/",
+  "e2e/foundry-sample/out-solidity-validation/",
+  "e2e/foundry-sample/pnpm-lock.yaml",
+  "e2e/foundry-sample/src/generated/",
+  "e2e/foundry-sample/src/generated-solidity/",
+  "e2e/foundry-sample/src/generated-zod/",
+  "e2e/hardhat-sample/abi-typegen-out/",
+  "e2e/hardhat-sample/pnpm-lock.yaml",
+  "fuzz/Cargo.lock",
+  "fuzz/artifacts/",
+  "fuzz/corpus/",
+  "npm/pnpm-lock.yaml",
+]

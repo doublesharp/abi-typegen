@@ -113,7 +113,19 @@ pub fn sol_type_to_ts(ty: &SolType, target: Target) -> String {
         SolType::Array(inner) => {
             let inner_ts = sol_type_to_ts(inner, target);
             match target {
-                Target::Viem => format!("readonly {}[]", inner_ts),
+                Target::Viem => match inner.as_ref() {
+                    SolType::Array(_) | SolType::FixedArray(_, _) => {
+                        format!("readonly ({})[]", inner_ts)
+                    }
+                    SolType::Uint(_)
+                    | SolType::Int(_)
+                    | SolType::Bool
+                    | SolType::Address
+                    | SolType::Bytes
+                    | SolType::BytesN(_)
+                    | SolType::StringType
+                    | SolType::Tuple(_) => format!("readonly {}[]", inner_ts),
+                },
                 Target::Ethers | Target::Web3 => format!("{}[]", inner_ts),
             }
         }
@@ -172,7 +184,10 @@ fn sol_type_short_name(ty: &SolType) -> String {
         SolType::StringType => "String".into(),
         SolType::Array(inner) => format!("{}Array", sol_type_short_name(inner)),
         SolType::FixedArray(inner, n) => format!("{}Array{}", sol_type_short_name(inner), n),
-        SolType::Tuple(_) => "Tuple".into(),
+        SolType::Tuple(components) => format!(
+            "Tuple{}EndTuple",
+            overload_suffix_from_sol_types(components.iter().map(|component| &component.ty))
+        ),
     }
 }
 
@@ -266,6 +281,56 @@ mod tests {
             "readonly [bigint, bigint, bigint]"
         );
         assert_eq!(sol_type_to_ts(&ty, Target::Ethers), "bigint[]");
+    }
+
+    #[test]
+    fn nested_arrays_preserve_each_readonly_level() {
+        let dynamic = SolType::Array(Box::new(SolType::Array(Box::new(SolType::Uint(256)))));
+        let fixed = SolType::Array(Box::new(SolType::FixedArray(Box::new(SolType::Bool), 2)));
+        assert_eq!(
+            sol_type_to_ts(&dynamic, Target::Viem),
+            "readonly (readonly bigint[])[]"
+        );
+        assert_eq!(
+            sol_type_to_ts(&fixed, Target::Viem),
+            "readonly (readonly [boolean, boolean])[]"
+        );
+        assert_eq!(sol_type_to_ts(&dynamic, Target::Ethers), "bigint[][]");
+    }
+
+    #[test]
+    fn tuple_overloads_distinguish_component_types_and_nesting() {
+        fn tuple(types: Vec<SolType>) -> SolType {
+            SolType::Tuple(
+                types
+                    .into_iter()
+                    .map(|ty| TupleComponent {
+                        name: String::new(),
+                        ty,
+                        internal_type: None,
+                    })
+                    .collect(),
+            )
+        }
+        let signatures = [
+            vec![tuple(vec![SolType::Uint(256)])],
+            vec![tuple(vec![SolType::Address])],
+            vec![tuple(vec![SolType::Uint(256), SolType::Address])],
+            vec![tuple(vec![SolType::Uint(256)]), SolType::Address],
+            vec![tuple(vec![
+                tuple(vec![SolType::Uint(256)]),
+                SolType::Address,
+            ])],
+            vec![tuple(vec![tuple(vec![
+                SolType::Uint(256),
+                SolType::Address,
+            ])])],
+        ];
+        let suffixes: std::collections::HashSet<_> = signatures
+            .iter()
+            .map(|types| overload_suffix_from_sol_types(types.iter()))
+            .collect();
+        assert_eq!(suffixes.len(), signatures.len());
     }
 
     #[test]
@@ -553,7 +618,7 @@ mod tests {
             }]),
             internal_type: None,
         }];
-        assert_eq!(overload_suffix(&inputs), "Tuple");
+        assert_eq!(overload_suffix(&inputs), "TupleUint256EndTuple");
     }
 
     #[test]
@@ -573,7 +638,10 @@ mod tests {
             sol_type_short_name(&SolType::FixedArray(Box::new(SolType::Bool), 3)),
             "BoolArray3"
         );
-        assert_eq!(sol_type_short_name(&SolType::Tuple(vec![])), "Tuple");
+        assert_eq!(
+            sol_type_short_name(&SolType::Tuple(vec![])),
+            "TupleEndTuple"
+        );
     }
 
     #[test]

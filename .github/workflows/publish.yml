@@ -7,8 +7,26 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  semver-checks:
+    name: SemVer ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - abi-typegen-core
+          - abi-typegen-config
+          - abi-typegen-codegen
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          package: ${{ matrix.package }}
+          rust-toolchain: stable
+
   crates-io:
     name: Publish to crates.io
+    needs: semver-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

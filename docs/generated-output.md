@@ -32,17 +32,20 @@ The `yaml` target emits a human-readable YAML description of each contract's fun
 Overloaded functions use signature-based disambiguation:
 
 ```
-deposit(uint256)           → depositUint
-deposit(uint256, address)  → depositUintAddress
+deposit(uint256)           → depositUint256
+deposit(uint256, address)  → depositUint256Address
 ```
 
 ## Named multi-returns
 
-View functions with named outputs return typed objects instead of tuples:
+View functions with named outputs preserve named fields. The ethers targets also preserve tuple positions to match decoded `Result` values:
 
 ```typescript
-// Named outputs → object
-getPosition(user: string): Promise<{ shares: bigint; depositedAt: bigint; token: string }>
+// ethers v6 named tuple output
+getPosition(user: AddressLike): Promise<[bigint, bigint, string] & { shares: bigint; depositedAt: bigint; token: string }>
+
+// ethers v5 named tuple output
+getPosition(user: string): Promise<[BigNumber, BigNumber, string] & { shares: BigNumber; depositedAt: BigNumber; token: string }>
 
 // Unnamed outputs → tuple
 getValues(): Promise<[bigint, bigint]>
@@ -71,9 +74,11 @@ All TypeScript imports use `.js` extensions for ESM compatibility.
 
 ## Type mappings
 
+The table shows decoded output types. For ethers inputs, integer types use `BigNumberish`; bytes use `BytesLike`; ethers v6 address inputs use `AddressLike`.
+
 | Solidity | Viem | Ethers v6 | Ethers v5 | Python | Go | Rust |
 |----------|------|-----------|-----------|--------|----|------|
-| `uint8`–`uint48` | `number` | `number` | `number` | `int` | `uint8`–`uint64` | `u8`–`u64` |
+| `uint8`–`uint48` | `number` | `bigint` | `number` | `int` | `uint8`–`uint64` | `u8`–`u64` |
 | `uint56`–`uint256` | `bigint` | `bigint` | `BigNumber` | `int` | `*big.Int` | `U256` |
 | `bool` | `boolean` | `boolean` | `boolean` | `bool` | `bool` | `bool` |
 | `address` | `` `0x${string}` `` | `string` | `string` | `ChecksumAddress` | `common.Address` | `Address` |

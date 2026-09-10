@@ -19,10 +19,24 @@
 /// <reference path="./type-extensions.d.ts" />
 
 const { execFileSync } = require("child_process");
+const { createRequire } = require("module");
+const { existsSync } = require("fs");
 const path = require("path");
 
-const { extendConfig, subtask } = require("hardhat/config");
-const { TASK_COMPILE_SOLIDITY_COMPILE_JOBS } = require("hardhat/builtin-tasks/task-names");
+const projectRequire = createRequire(path.join(process.cwd(), "package.json"));
+
+function requireHardhatModule(moduleName) {
+  try {
+    return projectRequire(moduleName);
+  } catch {
+    return require(moduleName);
+  }
+}
+
+const { extendConfig, subtask } = requireHardhatModule("hardhat/config");
+const { TASK_COMPILE_SOLIDITY_COMPILE_JOBS } = requireHardhatModule(
+  "hardhat/builtin-tasks/task-names",
+);
 
 // Resolve defaults for the typegen config so hre.config.typegen is always populated.
 extendConfig((config, userConfig) => {
@@ -41,11 +55,21 @@ const BINARY = (() => {
   try {
     // Try to find the binary via the companion package
     const binPkg = path.dirname(require.resolve("@0xdoublesharp/abi-typegen/package.json"));
-    return path.join(binPkg, "bin", "abi-typegen");
+    const packagedBinary = path.join(binPkg, "bin", "abi-typegen");
+    if (existsSync(packagedBinary)) {
+      return packagedBinary;
+    }
   } catch {
-    // Fallback: assume it's on PATH
-    return "abi-typegen";
+    // Continue to local-development and PATH fallbacks below.
   }
+
+  const sourceCheckoutBinary = path.join(__dirname, "..", "..", "target", "debug", "abi-typegen");
+  if (existsSync(sourceCheckoutBinary)) {
+    return sourceCheckoutBinary;
+  }
+
+  // Fallback: assume it's on PATH.
+  return "abi-typegen";
 })();
 
 subtask(TASK_COMPILE_SOLIDITY_COMPILE_JOBS).setAction(async (args, hre, runSuper) => {

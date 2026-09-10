@@ -17,10 +17,16 @@ import {
   type VaultDepositUint256Params,
   VaultGetPositionResultSchema,
   type VaultGetPositionResult,
+  VaultGetMatrixResultSchema,
+  type VaultGetMatrixResult,
   RegistryRegisterParamsSchema,
   type RegistryRegisterParams,
   RegistryGetEntryResultSchema,
   type RegistryGetEntryResult,
+  EdgeCasesFixedArrayOfAddressesResultSchema,
+  type EdgeCasesFixedArrayOfAddressesResult,
+  EdgeCasesSmallIntsResultSchema,
+  type EdgeCasesSmallIntsResult,
 } from './generated-zod/index.js';
 
 const _tokenAbi: readonly unknown[] = TokenAbi;
@@ -34,8 +40,12 @@ const _depositSchema: z.ZodType<VaultDepositUint256AddressParams> =
 const _depositOverloadSchema: z.ZodType<VaultDepositUint256Params> =
   VaultDepositUint256ParamsSchema;
 const _positionSchema: z.ZodType<VaultGetPositionResult> = VaultGetPositionResultSchema;
+const _matrixSchema: z.ZodType<VaultGetMatrixResult> = VaultGetMatrixResultSchema;
 const _registerSchema: z.ZodType<RegistryRegisterParams> = RegistryRegisterParamsSchema;
 const _entrySchema: z.ZodType<RegistryGetEntryResult> = RegistryGetEntryResultSchema;
+const _fixedAddressArraySchema: z.ZodType<EdgeCasesFixedArrayOfAddressesResult> =
+  EdgeCasesFixedArrayOfAddressesResultSchema;
+const _smallIntsSchema: z.ZodType<EdgeCasesSmallIntsResult> = EdgeCasesSmallIntsResultSchema;
 
 const transfer: TokenTransferParams = TokenTransferParamsSchema.parse({
   to: '0x0000000000000000000000000000000000000001',
@@ -56,6 +66,7 @@ const position: VaultGetPositionResult = VaultGetPositionResultSchema.parse({
   depositedAt: 2n,
   token: '0x0000000000000000000000000000000000000003',
 });
+const matrix: VaultGetMatrixResult = VaultGetMatrixResultSchema.parse([1n, 2n, 3n]);
 
 const register: RegistryRegisterParams = RegistryRegisterParamsSchema.parse({
   id: '0x0000000000000000000000000000000000000000000000000000000000000001',
@@ -71,6 +82,18 @@ const entry: RegistryGetEntryResult = RegistryGetEntryResultSchema.parse({
     active: true,
   },
 });
+const fixedAddressArray: EdgeCasesFixedArrayOfAddressesResult =
+  EdgeCasesFixedArrayOfAddressesResultSchema.parse([
+    '0x0000000000000000000000000000000000000001',
+    '0x0000000000000000000000000000000000000002',
+    '0x0000000000000000000000000000000000000003',
+  ]);
+const smallInts: EdgeCasesSmallIntsResult = EdgeCasesSmallIntsResultSchema.parse({
+  a: 1,
+  b: 2,
+  c: 3,
+  d: 4,
+});
 
 const safeTransfer = TokenTransferParamsSchema.safeParse({
   to: '0x0000000000000000000000000000000000000005',
@@ -84,8 +107,11 @@ if (safeTransfer.success) {
 
 const _shares: bigint = position.shares;
 const _token: string = position.token;
+const _matrix: [bigint, bigint, bigint] = matrix;
 const _entryOwner: string = entry.meta.owner;
 const _entryActive: boolean = entry.meta.active;
+const _fixedAddressArray: [string, string, string] = fixedAddressArray;
+const _smallA: number = smallInts.a;
 
 void _tokenAbi;
 void _vaultAbi;
@@ -95,8 +121,11 @@ void _balanceSchema;
 void _depositSchema;
 void _depositOverloadSchema;
 void _positionSchema;
+void _matrixSchema;
 void _registerSchema;
 void _entrySchema;
+void _fixedAddressArraySchema;
+void _smallIntsSchema;
 void transfer;
 void balance;
 void deposit;
@@ -104,5 +133,8 @@ void depositOverload;
 void register;
 void _shares;
 void _token;
+void _matrix;
 void _entryOwner;
 void _entryActive;
+void _fixedAddressArray;
+void _smallA;

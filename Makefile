@@ -28,11 +28,12 @@ lint:
 # and type-checks the output with tsc.
 # Requires: forge, pnpm, cargo
 
-e2e: e2e-foundry e2e-hardhat ## Run all e2e tests
+e2e: e2e-foundry e2e-hardhat e2e-hardhat3 ## Run all e2e tests
 
 e2e-foundry: build ## E2E: Foundry → abi-typegen → tsc
 	cd e2e/foundry-sample && forge build
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
+	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target ethers
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
@@ -44,6 +45,12 @@ e2e-hardhat: build ## E2E: Hardhat → abi-typegen --hardhat → tsc
 	cd e2e/hardhat-sample && pnpm exec hardhat compile --quiet
 	cd e2e/hardhat-sample && ../../target/debug/abi-typegen generate --hardhat --artifacts ./artifacts/contracts --out ./abi-typegen-out --target viem
 	@echo "e2e-hardhat: pass"
+
+e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
+	cd e2e/hardhat3-sample && pnpm exec hardhat compile
+	cd e2e/hardhat3-sample && test -f abi-typegen-out/Token.viem.ts
+	cd e2e/hardhat3-sample && pnpm exec tsc --noEmit
+	@echo "e2e-hardhat3: pass"
 
 bench: ## Benchmark abi-typegen vs TypeChain (10 runs each)
 	./e2e/bench.sh 10
