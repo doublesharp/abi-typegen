@@ -45,8 +45,10 @@ class ScratchTests(unittest.TestCase):
         pnpm = (self.repo / "npm/pnpm-workspace.yaml").read_text()
         self.assertIn(str(self.storage / "npm/node_modules"), pnpm)
         result = subprocess.check_output(
-            ["make", "-f", "-", "print"],
+            ["make", "--no-print-directory", "-f", "-", "print"],
             cwd=self.repo,
+            # Exercise recursive Make's inherited directory logging, as in CI.
+            env={**os.environ, "MAKEFLAGS": "w", "MAKELEVEL": "1"},
             input="include .cargo/scratch.local.mk\nprint:\n\t@printf '%s' \"$$TMPDIR\"\n",
             text=True,
         )
@@ -203,7 +205,10 @@ class ScratchTests(unittest.TestCase):
     def test_unconfigured_make_test_does_not_require_python_or_scratch(self):
         shutil.copy(Path(__file__).resolve().parents[1] / "Makefile", self.repo)
         output = subprocess.check_output(
-            ["make", "-n", "test"], cwd=self.repo, text=True
+            ["make", "--no-print-directory", "-n", "test"],
+            cwd=self.repo,
+            env={**os.environ, "MAKEFLAGS": "w", "MAKELEVEL": "1"},
+            text=True,
         )
         self.assertEqual(output.strip(), "cargo test --all")
         self.assertFalse((self.repo / scratch.SETTINGS).exists())
