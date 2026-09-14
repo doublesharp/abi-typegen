@@ -28,11 +28,12 @@
     "abi-typegen": "scripts/run.mjs"
   },
   "files": [
-    "bin/",
+    "checksums.json",
     "scripts/",
     "README.md"
   ],
   "scripts": {
-    "postinstall": "node scripts/install.mjs"
+    "postinstall": "node scripts/install.mjs",
+    "prepack": "node scripts/release-checksums.mjs validate"
   }
 }

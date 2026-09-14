@@ -67,6 +67,9 @@ jobs:
         run: npm install -g npm@latest
 
       # Binary package first (hardhat plugin depends on it)
+      - name: Verify release archives and pin checksums
+        run: node npm/abi-typegen/scripts/release-checksums.mjs prepare
+
       - name: Publish @0xdoublesharp/abi-typegen
         run: npm publish ./npm/abi-typegen --access public --provenance --ignore-scripts
 

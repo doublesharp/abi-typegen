@@ -14,6 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { archiveName, platformTargets } from "../abi-typegen/scripts/checksums.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -27,13 +28,29 @@ test("packed package links its command before the native binary is installed", (
     for (const name of ["package.json", "README.md", "scripts"]) {
       cpSync(join(source, name), join(staging, name), { recursive: true });
     }
-    const packed = JSON.parse(
-      execFileSync(
-        npm,
-        ["pack", staging, "--json", "--ignore-scripts", "--pack-destination", dir],
-        { encoding: "utf8" },
+    const version = JSON.parse(readFileSync(join(staging, "package.json"), "utf8")).version;
+    const manifest = {
+      version,
+      files: Object.fromEntries(
+        Object.values(platformTargets).map((target) => [archiveName(target), "0".repeat(64)]),
       ),
+    };
+    // Packing without pinned hashes must fail, even though installation runs later.
+    const missingHashes = spawnSync(npm, ["pack", staging, "--pack-destination", dir], {
+      encoding: "utf8",
+    });
+    assert.notEqual(missingHashes.status, 0);
+    assert.match(missingHashes.stderr, /checksums.json/);
+    writeFileSync(join(staging, "checksums.json"), JSON.stringify(manifest));
+    mkdirSync(join(staging, "bin"));
+    writeFileSync(join(staging, "bin", "unverified-local-binary"), "must not be packaged");
+    const packed = JSON.parse(
+      execFileSync(npm, ["pack", staging, "--json", "--pack-destination", dir], {
+        encoding: "utf8",
+      }),
     );
+    assert.ok(packed[0].files.some((file) => file.path === "checksums.json"));
+    assert.ok(!packed[0].files.some((file) => file.path.startsWith("bin/")));
     const consumer = join(dir, "consumer");
     execFileSync(npm, [
       "install",
@@ -55,12 +72,12 @@ test("packed package links its command before the native binary is installed", (
       "npm must link the command even before postinstall downloads a binary",
     );
     const installed = join(consumer, "node_modules", "@0xdoublesharp", "abi-typegen");
+    assert.deepEqual(JSON.parse(readFileSync(join(installed, "checksums.json"), "utf8")), manifest);
     const binary = process.platform === "win32" ? "abi-typegen.exe" : "abi-typegen";
     mkdirSync(join(installed, "bin"));
     cpSync(join(root, "target", "debug", binary), join(installed, "bin", binary));
     const executable = process.platform === "win32" ? process.execPath : command;
     const prefix = process.platform === "win32" ? [join(installed, "scripts", "run.mjs")] : [];
-    const version = JSON.parse(readFileSync(join(staging, "package.json"), "utf8")).version;
     assert.equal(
       execFileSync(executable, [...prefix, "--version"], { encoding: "utf8" }).trim(),
       `abi-typegen ${version}`,
