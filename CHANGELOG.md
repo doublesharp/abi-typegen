@@ -8,7 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-14
+
+### Fixed
+
+- Update rustls to 0.23.45 and rustls-webpki to 0.103.15 to resolve the
+  TLS handshake advisory RUSTSEC-2026-0285.
+- Make storage regression tests independent of recursive GNU Make directory logging.
+
 ## [0.4.0] - 2026-09-14
+
+Tagged, but publication was stopped after CI found the issues fixed in 0.4.1.
 
 ### Added
 
@@ -140,7 +150,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/doublesharp/abi-typegen/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/doublesharp/abi-typegen/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/doublesharp/abi-typegen/compare/v0.2.0...v0.3.1
