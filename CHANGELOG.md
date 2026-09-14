@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-Changes below target version `0.4.0`.
+## [0.4.0] - 2026-09-14
 
 ### Added
 
@@ -140,7 +140,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/doublesharp/abi-typegen/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/doublesharp/abi-typegen/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/doublesharp/abi-typegen/compare/v0.2.0...v0.3.1
 [0.2.0]: https://github.com/doublesharp/abi-typegen/compare/v0.1.0...v0.2.0
