@@ -1,8 +1,11 @@
 # Makefile — abi-typegen development targets
 
+# Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
+-include .cargo/scratch.local.mk
+
 .PHONY: build test check fmt lint e2e bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
-        fuzz-corpus fuzz-init-corpus
+        fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
 DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0
 
@@ -135,3 +138,12 @@ fuzz-corpus: ## Update seeds from test fixtures
 	cp tests/fixtures/erc20.json    fuzz/seeds/fuzz_codegen_full/erc20.json
 	cp tests/fixtures/vault.json    fuzz/seeds/fuzz_codegen_full/vault.json
 	cp tests/fixtures/minimal.json  fuzz/seeds/fuzz_codegen_full/minimal.json
+
+scratch-setup: ## Reapply the saved disposable-storage configuration
+	python3 .cargo/setup-scratch.py
+
+scratch-disable: ## Return to default paths, preserving external data
+	python3 .cargo/setup-scratch.py --disable
+
+test-storage: ## Test optional storage tooling (Python 3.11+)
+	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_scratch.py

@@ -18,6 +18,19 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
 
+  storage:
+    name: Optional storage tooling
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: make test-storage
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
