@@ -1,87 +1,131 @@
-# Generated Output
+# Generated output
 
-`abi-typegen` generates files based on the configured target.
+Output depends on the selected target. A single target writes directly into the
+configured output directory; multiple targets write into separate target-named
+subdirectories. See [configuration](configuration.md) for selection and overrides.
 
-## TypeScript targets
+## TypeScript files
 
-TypeScript wrapper targets (`viem`, `wagmi`, `ethers`, `ethers5`, `web3js`) emit:
-- `<Name>.abi.ts` — the ABI as an `as const` constant (always)
-- `<Name>.<target>.ts` — typed wrappers (when `wrappers = true`)
-- `index.ts` — barrel re-exporting all contracts
+Every TypeScript target emits `<Name>.abi.ts`, which exports an `as const` ABI.
+For a nonempty selection, `index.ts` re-exports the generated modules.
 
-The `zod` target emits:
-- `<Name>.abi.ts` — the ABI as an `as const` constant
-- `<Name>.zod.ts` — Zod 4 validation schemas using `import * as z from 'zod'`
-- `index.ts` — barrel re-exporting ABI and schema modules
+| Target               | Additional file     | Effect of `wrappers = false` |
+| -------------------- | ------------------- | ---------------------------- |
+| `viem`               | `<Name>.viem.ts`    | Omit the wrapper module      |
+| `wagmi`              | `<Name>.wagmi.ts`   | Omit the wrapper module      |
+| `ethers` / `ethers6` | `<Name>.ethers.ts`  | Omit the wrapper module      |
+| `ethers5`            | `<Name>.ethers5.ts` | Omit the wrapper module      |
+| `web3js` / `web3`    | `<Name>.web3.ts`    | Omit the wrapper module      |
+| `zod`                | `<Name>.zod.ts`     | Keep the schema module       |
 
-Install the latest `zod` package in the consuming project when using the `zod` target.
+Install the SDK used by your selected wrapper target in the consuming project.
+Zod output uses Zod 4 APIs and imports from `zod`; use a compatible Zod 4 version.
+Generation does not install SDK dependencies for you.
 
-## Non-TypeScript targets
+Generated relative TypeScript imports use `.js` extensions for ESM compatibility.
+SDK imports use their package names. Ensure your TypeScript/build configuration
+supports those import conventions.
 
-Non-TypeScript targets (`python`, `go`, `rust`, `swift`, `csharp`, `kotlin`, `solidity`, `yaml`) emit a single primary file per contract:
-- `<Name>.py`, `<Name>.go`, `<Name>.rs`, `<Name>.swift`, `<Name>.cs`, `<Name>.kt`
-- `I<Name>.sol` for the `solidity` target
-- `<Name>.yaml` for the `yaml` target
+## Other targets
 
-The `solidity` target reconstructs interface-compatible structs from ABI tuples and emits Solidity `interface` files with events, custom errors, overloads, and `external` function signatures.
+Each selected contract produces one primary file. These targets do not emit
+TypeScript ABI modules or an `index.ts` barrel.
 
-The `yaml` target emits a human-readable YAML description of each contract's functions, events, and errors with their parameter types.
+| Target     | File           | Output purpose                                                |
+| ---------- | -------------- | ------------------------------------------------------------- |
+| `python`   | `<Name>.py`    | Python type declarations compatible with web3.py usage        |
+| `go`       | `<Name>.go`    | ABI constant and typed structs for Go integration             |
+| `rust`     | `<Name>.rs`    | Data types using Rust and Alloy primitive types               |
+| `swift`    | `<Name>.swift` | Swift contract-related types                                  |
+| `csharp`   | `<Name>.cs`    | C# contract-related types                                     |
+| `kotlin`   | `<Name>.kt`    | Kotlin contract-related types                                 |
+| `solidity` | `I<Name>.sol`  | Solidity interface reconstructed from ABI data                |
+| `yaml`     | `<Name>.yaml`  | Human-readable functions, events, errors, and parameter types |
 
-## Overload naming
+The Solidity target reconstructs tuple structs and emits events, errors,
+overloads, and external function signatures. It cannot recover a contract's
+implementation from an ABI.
 
-Overloaded functions use signature-based disambiguation:
+Output APIs vary by language. In particular, Rust data types and Go structs are
+not a complete deployed-contract client or deployment factory. Inspect the output
+before integrating it with your runtime SDK.
 
+## Overloaded functions
+
+Generated wrapper/type names distinguish overloaded signatures. For example:
+
+```text
+deposit(uint256)          -> depositUint256
+deposit(uint256,address)  -> depositUint256Address
 ```
-deposit(uint256)           → depositUint256
-deposit(uint256, address)  → depositUint256Address
-```
 
-## Named multi-returns
+Ethers wrappers use canonical ABI signatures to select the runtime method. Tuple
+and array inputs participate in signature naming. When aliases would collide with
+another alias or an existing method name, the ethers renderer adds a numeric
+suffix. Treat generated names as part of the output API and recompile consumers
+when the ABI changes.
 
-View functions with named outputs preserve named fields. The ethers targets also preserve tuple positions to match decoded `Result` values:
+## Named return values
+
+Ethers named tuple results preserve both numeric positions and named properties.
+Representative result types are:
 
 ```typescript
-// ethers v6 named tuple output
-getPosition(user: AddressLike): Promise<[bigint, bigint, string] & { shares: bigint; depositedAt: bigint; token: string }>
+// ethers v6
+type Position = [bigint, bigint, string] & {
+  shares: bigint;
+  depositedAt: bigint;
+  token: string;
+};
 
-// ethers v5 named tuple output
-getPosition(user: string): Promise<[BigNumber, BigNumber, string] & { shares: BigNumber; depositedAt: BigNumber; token: string }>
-
-// Unnamed outputs → tuple
-getValues(): Promise<[bigint, bigint]>
+// ethers v5, with BigNumber imported from ethers
+type PositionV5 = [BigNumber, BigNumber, string] & {
+  shares: BigNumber;
+  depositedAt: BigNumber;
+  token: string;
+};
 ```
 
-## NatSpec
+Unnamed multi-return values use tuples. Input and output types can differ: ethers
+integer inputs use `BigNumberish`, bytes inputs use `BytesLike`, and ethers v6
+address inputs use `AddressLike`.
 
-`@notice`, `@param`, and `@return` tags from Solidity NatSpec are emitted as documentation comments in all targets (JSDoc, docstrings, doc comments, KDoc, XML docs, and Solidity NatSpec comments).
+## Integer output mappings
 
-## Reserved word escaping
+Unsigned examples below show the size boundaries. Go and Rust use the smallest
+supported native integer type that can hold the ABI width, then switch to a large
+integer type.
 
-Parameter names that are reserved words in the target language are automatically escaped with an underscore prefix:
+| Solidity  | Viem     | Ethers v6 | Ethers v5   | Go         | Rust   |
+| --------- | -------- | --------- | ----------- | ---------- | ------ |
+| `uint8`   | `number` | `bigint`  | `number`    | `uint8`    | `u8`   |
+| `uint24`  | `number` | `bigint`  | `number`    | `uint32`   | `u32`  |
+| `uint48`  | `number` | `bigint`  | `number`    | `uint64`   | `u64`  |
+| `uint56`  | `bigint` | `bigint`  | `BigNumber` | `uint64`   | `u64`  |
+| `uint64`  | `bigint` | `bigint`  | `BigNumber` | `uint64`   | `u64`  |
+| `uint128` | `bigint` | `bigint`  | `BigNumber` | `*big.Int` | `u128` |
+| `uint256` | `bigint` | `bigint`  | `BigNumber` | `*big.Int` | `U256` |
 
-| Language | Example reserved names | Escaped as |
-|----------|----------------------|------------|
-| Python | `from`, `lambda`, `yield` | `_from`, `_lambda`, `_yield` |
-| Rust | `type`, `fn`, `self`, `match` | `_type`, `_fn`, `_self`, `_match` |
-| Swift | `self`, `is`, `func`, `let` | `_self`, `_is`, `_func`, `_let` |
-| Kotlin | `fun`, `val`, `when`, `object` | `_fun`, `_val`, `_when`, `_object` |
+Python integer outputs use `int`. Other common mappings include Go
+`common.Address`, Rust `Address`/`Bytes`, and TypeScript hex-string address and
+byte values. Dynamic arrays and fixed arrays have target-specific forms; ethers
+fixed-size arrays are emitted as tuples.
 
-Go and C# are not affected because field names use PascalCase, which avoids collisions with lowercase keywords. Solidity parameter names originate from Solidity ABIs and are inherently valid.
+## Documentation and identifiers
 
-## Imports
+Renderers propagate available NatSpec into their language's documentation syntax.
+A raw ABI without documentation metadata cannot supply source comments.
 
-All TypeScript imports use `.js` extensions for ESM compatibility.
+Python, Rust, Swift, and Kotlin parameter names that match reserved words receive
+an underscore prefix:
 
-## Type mappings
+| Language | Examples                                           |
+| -------- | -------------------------------------------------- |
+| Python   | `from` becomes `_from`; `lambda` becomes `_lambda` |
+| Rust     | `type` becomes `_type`; `self` becomes `_self`     |
+| Swift    | `self` becomes `_self`; `func` becomes `_func`     |
+| Kotlin   | `fun` becomes `_fun`; `when` becomes `_when`       |
 
-The table shows decoded output types. For ethers inputs, integer types use `BigNumberish`; bytes use `BytesLike`; ethers v6 address inputs use `AddressLike`.
-
-| Solidity | Viem | Ethers v6 | Ethers v5 | Python | Go | Rust |
-|----------|------|-----------|-----------|--------|----|------|
-| `uint8`–`uint48` | `number` | `bigint` | `number` | `int` | `uint8`–`uint64` | `u8`–`u64` |
-| `uint56`–`uint256` | `bigint` | `bigint` | `BigNumber` | `int` | `*big.Int` | `U256` |
-| `bool` | `boolean` | `boolean` | `boolean` | `bool` | `bool` | `bool` |
-| `address` | `` `0x${string}` `` | `string` | `string` | `ChecksumAddress` | `common.Address` | `Address` |
-| `bytes` | `` `0x${string}` `` | `string` | `string` | `bytes` | `[]byte` | `Bytes` |
-| `string` | `string` | `string` | `string` | `str` | `string` | `String` |
-| `T[]` | `readonly T[]` | `T[]` | `T[]` | `list[T]` | `[]T` | `Vec<T>` |
+Compile or type-check generated files in the consuming project, especially after
+changing SDK versions, tuple shapes, overloads, or contract names. Regenerate from
+the ABI rather than editing generated output by hand.

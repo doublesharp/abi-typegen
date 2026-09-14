@@ -313,15 +313,10 @@ For deeper output examples across all targets, see [docs/generated-output.md](do
 
 ## Performance
 
-On the sample benchmark in this repo:
-
-```text
-abi-typegen:  25 ms
-TypeChain:   763 ms
-Speedup:     ~30x
-```
-
-See [full comparison](docs/comparison.md) with TypeChain, wagmi CLI, abigen, and others.
+Run `./e2e/bench.sh 10` to compare the sample generation workflows on your
+machine. Timings depend on tool versions, target output, contracts, and whether
+build/task overhead is included. See [comparison and benchmark guidance](docs/comparison.md)
+for the method and its limits.
 
 ## CI
 
@@ -341,10 +336,24 @@ See [full comparison](docs/comparison.md) with TypeChain, wagmi CLI, abigen, and
 
 ## Docs
 
-- [docs/configuration.md](docs/configuration.md) for configuration details and target selection
-- [docs/generated-output.md](docs/generated-output.md) for target-by-target generated output details
-- [docs/forge-integration.md](docs/forge-integration.md) for `forge typegen` shell integration
+Start with the [documentation index](docs/README.md):
+
+- [Installation](docs/installation.md) and download verification
+- [Configuration](docs/configuration.md) and [generated output](docs/generated-output.md)
+- [Forge integration](docs/forge-integration.md)
+- [Development](docs/development.md) and [optional build/cache storage](docs/development-storage.md)
+- [Release process](docs/releasing.md) and [changelog](CHANGELOG.md)
 
 ## Contributing
 
-Issues and PRs are welcome. If you change behavior, include a regression test with the change.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code conventions, tests, and
+pull-request guidance. Include a regression test when fixing a bug.
+
+## Disposable build storage
+
+Builds and package installs use their normal local paths by default; no Scratch
+volume or compiler cache is required. To opt in to a separate output/cache
+directory, run `python3 .cargo/setup-scratch.py --root PATH` once. Cargo, pnpm, and
+Make then use the saved local setting. Disable it with
+`python3 .cargo/setup-scratch.py --disable`. See [the storage guide](docs/development-storage.md)
+for requirements, changing locations, and data preservation.

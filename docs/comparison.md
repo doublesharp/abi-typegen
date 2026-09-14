@@ -1,61 +1,76 @@
-# Comparison
+# Choosing a binding tool
 
-## vs TypeChain
+Choose based on the output your application needs, the SDK it uses, and how
+artifacts enter your build. Compare generated files and runtime behavior before
+replacing an existing generator.
 
-[TypeChain](https://github.com/dethcrypto/TypeChain) is the most popular ABI codegen tool. Key differences:
+## Where abi-typegen fits
 
-| | abi-typegen | TypeChain |
-|---|---|---|
-| Runtime | Native Rust binary | Node.js |
-| Speed | ~25ms | ~763ms |
-| Targets | 11 (7 languages) | 4 (TypeScript only) |
-| ethers v6 | yes | yes |
-| ethers v5 | yes | yes |
-| viem | yes | no |
-| wagmi hooks | yes | no |
-| web3.js | yes | yes |
-| Python | yes | no |
-| Go | yes | no |
-| Rust | yes | no |
-| Swift | yes | no |
-| C# | yes | no |
-| Kotlin | yes | no |
-| Requires Node.js | no | yes |
-| Foundry support | yes | via plugin |
-| Hardhat support | yes | yes |
-| Named multi-returns | yes | yes |
-| Signature-based overloads | yes | no |
-| `--check` for CI | yes | no |
-| `--exclude` patterns | yes | no |
-| Watch mode | yes | no |
+abi-typegen reads Foundry and Hardhat artifacts and generates multiple targets
+from one configuration. Its CLI supports stale-output checks, contract filters,
+and artifact watching. The native binary runs without Node; the npm launcher and
+Hardhat plugin use Node.
 
-### Ethers Type Surface
+The [output guide](generated-output.md) describes the generated files. TypeScript
+wrapper targets provide SDK-specific helpers or interfaces. The Rust target
+provides Alloy-compatible data types, and the Go target provides ABI data and
+structs. These targets do not replace every RPC client, deployment factory, or
+helper supplied by an SDK-specific generator.
 
-abi-typegen's `ethers` target is checked against TypeChain's `ethers-v6` output on the e2e contracts. The `ethers5` target is validated against ethers v5 ABI decoding behavior. It intentionally matches SDK runtime behavior where that matters:
+## Related tools
 
-- Function inputs use ethers-compatible input aliases: `BigNumberish` for integers and `BytesLike` for bytes. Ethers v6 address inputs use `AddressLike`.
-- Ethers v6 integer outputs are `bigint`; ethers v5 integer outputs are `number` for <= 48-bit values and `BigNumber` for wider values.
-- Fixed-size arrays are emitted as tuple types, e.g. `uint256[3]` becomes `[bigint, bigint, bigint]`.
-- Named tuple and multi-return outputs expose tuple positions plus named object fields.
+| Tool                                                      | When to evaluate it                                                                                                                                                     |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [TypeChain](https://github.com/dethcrypto/TypeChain)      | You need its SDK-specific TypeScript output or compatibility with an existing TypeChain integration. Check its repository for maintenance status and supported targets. |
+| [ABIType](https://github.com/wevm/abitype)                | You need TypeScript type transformations and inference directly from ABI literals. abi-typegen's `as const` ABI modules can be inputs to this approach.                 |
+| [abigen](https://geth.ethereum.org/docs/tools/abigen)     | You need Go contract bindings and call/transact integration with go-ethereum. Compare that generated API with abi-typegen's Go structs.                                 |
+| [forge bind](https://getfoundry.sh/forge/reference/bind/) | You need Foundry's Rust binding workflow. Compare its contract interaction output with abi-typegen's Rust data types.                                                   |
 
-abi-typegen keeps a smaller wrapper surface than TypeChain: it does not generate factories, `BaseContract` subclasses, or encode/decode helper overloads. It improves the callable method surface with signature-based overload names such as `depositUint256Address`, avoiding quoted full-signature property names for overloaded functions.
+Use each tool's documentation for its supported SDK versions and output contract.
+Language coverage alone does not establish API compatibility.
 
-## vs abigen (Go)
+## Ethers migration considerations
 
-[abigen](https://geth.ethereum.org/docs/tools/abigen) is geth's built-in Go binding generator. It generates Go only. abi-typegen generates Go bindings plus 10 other targets from the same artifacts.
+abi-typegen's `ethers` target uses ethers v6 types; `ethers5` uses ethers v5 types.
+Both are exercised by generated-code compilation and decoding tests in the
+repository. When migrating, inspect:
 
-## vs wagmi CLI
+- Integer inputs and decoded outputs. Inputs use `BigNumberish`; v6 integer outputs
+  use `bigint`, while v5 uses `number` for widths up to 48 bits and `BigNumber` above
+  that boundary.
+- Bytes and address inputs, which use SDK input aliases rather than only decoded
+  output types.
+- Fixed-size arrays and named tuple results, including positional access.
+- Overloaded methods and aliases. Generated aliases dispatch through canonical
+  ABI signatures rather than assuming the alias exists on the SDK contract.
+- Factories, deployment helpers, and encode/decode overloads used by your app.
+  abi-typegen does not generate TypeChain's entire class/factory API.
 
-[wagmi CLI](https://wagmi.sh/cli) generates TypeScript types and React hooks from contract configs. It fetches ABIs from Etherscan or reads Foundry/Hardhat artifacts. abi-typegen is faster (native binary vs Node.js) and supports more targets, but wagmi CLI has deeper wagmi/viem integration.
+## Measuring generation time
 
-## vs ABIType
+Run comparisons on the same contracts, target SDK, and output requirements.
+Record tool versions, hardware, contract set, warmup, and whether compilation is
+included. A native executable by itself does not guarantee a particular speedup.
 
-[ABIType](https://abitype.dev/) is a TypeScript type-level library — no code generation. It infers types from `as const` ABI objects at compile time. abi-typegen generates those `as const` ABI objects. The two are complementary: abi-typegen outputs the ABI file, ABIType/viem infers types from it.
+The repository includes [e2e/bench.sh](../e2e/bench.sh). Install dependencies in
+both sample projects before running it:
 
-## vs forge bind
+```sh
+./e2e/bench.sh 10
+```
 
-[forge bind](https://book.getfoundry.sh/reference/forge/forge-bind) generates Rust/Alloy bindings from Foundry artifacts. It's built into Foundry and produces more complete Rust bindings (with contract call methods). abi-typegen generates struct types for Rust plus 10 other language targets.
+The script builds the release CLI and prepares the sample artifacts, then warms
+the tools and compares repeated abi-typegen ethers generation with TypeChain
+through Hardhat. It requires the sample projects' dependencies, Forge, pnpm, and
+Python.
 
-## vs web3j / Nethereum
+[TypeChain's Hardhat task](https://github.com/dethcrypto/TypeChain/blob/master/packages/hardhat/src/index.ts)
+invokes compilation internally. That path can also run other configured compile
+hooks; the repository's Hardhat sample loads the abi-typegen plugin too. Verify
+the actual artifact sets and enabled hooks before interpreting a timing ratio.
+These are workflow measurements, not an isolated comparison of renderer functions.
 
-[web3j](https://docs.web3j.io/) (Java/Kotlin) and [Nethereum](https://nethereum.com/) (C#) are full SDKs with built-in codegen. They generate complete contract wrappers with RPC methods. abi-typegen generates typed structs and interfaces — lighter output, but covers all languages from one tool.
+The script removes and regenerates sample output directories between runs. If
+using optional storage redirection, follow the [storage guide](development-storage.md)
+when restoring links after benchmarking. Treat results as local measurements;
+do not carry a fixed speedup claim across machines or future releases.

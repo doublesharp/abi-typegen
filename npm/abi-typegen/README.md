@@ -3,7 +3,7 @@
 </p>
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">14 targets &middot; 8 languages &middot; Foundry &amp; Hardhat &middot; ~30x faster than TypeChain</p>
+<p align="center">14 targets &middot; 8 languages &middot; Foundry &amp; Hardhat</p>
 
 # @0xdoublesharp/abi-typegen
 
@@ -16,6 +16,28 @@ npm install -D @0xdoublesharp/abi-typegen
 yarn add -D @0xdoublesharp/abi-typegen
 pnpm add -D @0xdoublesharp/abi-typegen
 ```
+
+The installer downloads the platform archive over HTTPS and checks its SHA-256
+against `checksums.json` bundled in the npm package before extracting it. Missing
+hashes, mismatches, and incomplete archives fail installation. Downloads retry
+transient HTTP errors, including 504, up to three times with exponential backoff.
+Connection, transfer, and overall download deadlines prevent indefinite waits.
+
+Hashes are pinned during npm publication after checking every GitHub release
+archive. This detects corruption and later archive replacement; it trusts the
+release and npm publishing process and is not independent build attestation.
+
+Re-running postinstall verifies a fresh archive before replacing the binary.
+Installations need `curl` and `tar`. Linux archives currently target glibc.
+
+For maintainers, release tags generate and publish `checksums.json`. Run
+`node npm/abi-typegen/scripts/release-checksums.mjs prepare` after the matching
+release is available and before packing or publishing the npm package. Ordinary
+`npm pack` refuses missing or invalid hashes. The publish workflow performs this
+preparation explicitly because it publishes with lifecycle scripts disabled.
+See the [installation guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/installation.md)
+and [release guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/releasing.md)
+for details.
 
 ## Usage
 
