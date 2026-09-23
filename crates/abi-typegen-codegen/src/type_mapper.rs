@@ -7,7 +7,8 @@ pub enum Target {
     Viem,
     /// ethers target — uses `bigint` for large integers, `string` for addresses and bytes.
     Ethers,
-    /// web3.js target — uses `string` for all numeric types.
+    /// web3.js v4 target — uses `bigint` for all numeric return values, matching
+    /// web3's default return format.
     Web3,
 }
 
@@ -90,7 +91,7 @@ pub fn sol_type_to_ts(ty: &SolType, target: Target) -> String {
         SolType::StringType => "string".into(),
 
         SolType::Uint(bits) | SolType::Int(bits) => match target {
-            Target::Web3 => "string".into(),
+            Target::Web3 => "bigint".into(),
             _ => {
                 if *bits <= 48 {
                     "number".into()
