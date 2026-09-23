@@ -5,11 +5,44 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
+  verify:
+    name: Verify versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag, manifests, and changelog agree
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          fail=0
+          check() {
+            if [ "$2" != "$version" ]; then
+              echo "::error::$1 is '$2', expected '$version' from tag $GITHUB_REF_NAME"
+              fail=1
+            fi
+          }
+          for crate in abi-typegen abi-typegen-core abi-typegen-config abi-typegen-codegen; do
+            check "$crate" "$(cargo metadata --no-deps --format-version 1 |
+              jq -r --arg c "$crate" '.packages[] | select(.name == $c) | .version')"
+          done
+          check "npm/abi-typegen" "$(jq -r .version npm/abi-typegen/package.json)"
+          check "npm/hardhat-abi-typegen" "$(jq -r .version npm/hardhat-abi-typegen/package.json)"
+          check "hardhat plugin dependency" "$(jq -r '.dependencies["@0xdoublesharp/abi-typegen"] | ltrimstr("^")' npm/hardhat-abi-typegen/package.json)"
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section"
+            fail=1
+          fi
+          exit "$fail"
+
   build:
     name: Build ${{ matrix.target }}
+    needs: verify
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -68,6 +101,8 @@ jobs:
     name: Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -89,3 +124,80 @@ jobs:
             release-assets/abi-typegen-*.tar.gz
             release-assets/abi-typegen-*.zip
             release-assets/checksums.json
+
+  semver-checks:
+    name: SemVer ${{ matrix.package }}
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - abi-typegen-core
+          - abi-typegen-config
+          - abi-typegen-codegen
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          package: ${{ matrix.package }}
+          rust-toolchain: stable
+
+  crates-io:
+    name: Publish to crates.io
+    needs: [release, semver-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Dependency order. Already-published versions are skipped so a failed
+      # run can be re-run. `cargo publish` waits until each crate is indexed.
+      - name: Publish crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for crate in abi-typegen-core abi-typegen-config abi-typegen-codegen abi-typegen; do
+            if curl -sf -A "abi-typegen-release (github.com/doublesharp/abi-typegen)" \
+              "https://crates.io/api/v1/crates/$crate/$version" >/dev/null; then
+              echo "$crate $version is already on crates.io; skipping"
+            else
+              cargo publish -p "$crate"
+            fi
+          done
+
+  npm:
+    name: Publish to npm
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Verify release archives and pin checksums
+        run: node npm/abi-typegen/scripts/release-checksums.mjs prepare
+
+      # Binary package first; the Hardhat plugin depends on it. Already-published
+      # versions are skipped so a failed run can be re-run.
+      - name: Publish packages
+        run: |
+          for dir in npm/abi-typegen npm/hardhat-abi-typegen; do
+            name=$(jq -r .name "$dir/package.json")
+            version=$(jq -r .version "$dir/package.json")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already on npm; skipping"
+            else
+              npm publish "./$dir" --access public --provenance --ignore-scripts
+            fi
+          done

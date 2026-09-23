@@ -1,8 +1,17 @@
 # Releasing
 
-The native release and package publication are separate workflows. Build and
-publish matching binary assets before publishing npm packages: npm postinstall
-uses the package version to select a GitHub release archive.
+Pushing a `v<version>` tag runs one workflow,
+[release.yml](../.github/workflows/release.yml). It verifies versions, builds the
+native archives, creates the GitHub release, and then publishes to crates.io and
+npm. npm publishing waits for the release because npm postinstall uses the package
+version to select a GitHub release archive.
+
+To release, commit the version bump and changelog on `main`, then:
+
+```sh
+git tag -a v<version> -m "Release <version>"
+git push origin v<version>
+```
 
 ## Versions and validation
 
@@ -12,9 +21,10 @@ manifest changes. Move the relevant Unreleased changelog entries into the releas
 section and use that version for the `v<version>` tag.
 
 Run the [development checks](development.md) and the generated-binding checks
-appropriate to the changes. Release and publication workflows are defined in
-[release.yml](../.github/workflows/release.yml) and
-[publish.yml](../.github/workflows/publish.yml).
+appropriate to the changes before tagging. The workflow's first job fails the
+release, before anything is built, if the tag disagrees with any crate version,
+either npm package version, the Hardhat plugin's dependency range, or a
+`## [<version>]` heading in `CHANGELOG.md`.
 
 ## Native release
 
@@ -44,8 +54,8 @@ uploads the archives and manifest to the tagged GitHub release.
 
 ## npm publication
 
-Once the native release is available, run the Publish workflow for the matching
-source revision. Its npm job prepares the binary package before publishing:
+After the GitHub release job succeeds, the npm job prepares the binary package
+before publishing:
 
 ```sh
 node npm/abi-typegen/scripts/release-checksums.mjs prepare
@@ -61,16 +71,26 @@ workflow uses `--ignore-scripts`, so it runs preparation explicitly first. Do no
 skip that step when reproducing the workflow manually.
 
 The npm package's file list includes the manifest, launcher, and installer scripts.
-It excludes local `bin/` output. Publish the binary package before the Hardhat
-plugin, which depends on it. Hashes remain fixed in that npm package even if a
-GitHub release asset is later replaced.
+It excludes local `bin/` output. The job publishes the binary package before the
+Hardhat plugin, which depends on it. Hashes remain fixed in that npm package even
+if a GitHub release asset is later replaced.
+
+npm publishing uses trusted publishing (OIDC) with provenance. The trusted
+publisher entry for both packages on npmjs.com must name `release.yml` as the
+workflow.
 
 ## Rust crate publication
 
-The Publish workflow runs semantic-version compatibility checks for the library
-crates, then publishes the core, configuration, code generation, and CLI crates in
-dependency order. It uses the configured crates.io token. The npm job uses the
-workflow's npm publishing identity and provenance configuration.
+The release workflow runs semantic-version compatibility checks for the library
+crates. After those checks and the GitHub release succeed, it publishes the core,
+configuration, code generation, and CLI crates in dependency order with the
+`CARGO_REGISTRY_TOKEN` secret.
+
+## Re-running a failed release
+
+Both publish jobs skip versions that are already on their registry. If a job fails
+partway through, fix the cause and use "Re-run failed jobs" on the same workflow
+run. Don't delete and re-push the tag to retry.
 
 ## Verifying a release
 
