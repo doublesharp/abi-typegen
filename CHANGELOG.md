@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-09-23
+
+### Fixed
+
+- ethers v6: `<Name>Contract` combines the generated methods with
+  `BaseContract`, so `getAddress()`, `interface`, `target`, `on()`, and
+  `queryFilter()` are typed and `connect()` returns the generated type. Event
+  filters return `DeferredTopicFilter`, which `queryFilter()` and `on()` accept.
+- web3.js: `<Name>Contract` is web3's `Contract<typeof <Name>Abi>` with typed
+  `methods`, so events, options, `send()`, `estimateGas()`, and `encodeABI()`
+  keep web3's types. The factory no longer casts the ABI to `any`.
+- web3.js: overloaded methods are typed under the keys web3 registers at
+  runtime (`deposit` and `'deposit(uint256)'`). The previous `depositUint256`
+  aliases did not exist on web3 contracts.
+- web3.js: methods with several outputs are typed as web3's result object, keyed
+  by position and name, instead of a tuple.
+
 ## [0.4.2] - 2026-09-23
 
 ### Fixed
@@ -172,7 +189,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/doublesharp/abi-typegen/compare/v0.3.2...v0.4.0
