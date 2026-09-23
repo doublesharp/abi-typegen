@@ -1,5 +1,5 @@
 use crate::type_mapper::{Target, overload_suffix, safe_param_name, sol_type_to_ts};
-use abi_typegen_core::types::{ContractIr, StateMutability};
+use abi_typegen_core::types::{AbiFunction, ContractIr, StateMutability};
 use heck::ToUpperCamelCase;
 use std::collections::{HashMap, HashSet};
 
@@ -18,18 +18,8 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
     ));
 
     // Collect which wagmi hooks we actually need
-    let has_read = ir.functions.iter().any(|f| {
-        matches!(
-            f.state_mutability,
-            StateMutability::Pure | StateMutability::View
-        )
-    });
-    let has_write = ir.functions.iter().any(|f| {
-        !matches!(
-            f.state_mutability,
-            StateMutability::Pure | StateMutability::View
-        )
-    });
+    let has_read = ir.functions.iter().any(is_read);
+    let has_write = ir.functions.iter().any(|f| !is_read(f));
     let has_events = !ir.events.is_empty();
 
     let mut wagmi_imports = Vec::new();
@@ -38,6 +28,7 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
     }
     if has_write {
         wagmi_imports.push("useWriteContract");
+        wagmi_imports.push("type UseWriteContractReturnType");
     }
     if has_events {
         wagmi_imports.push("useWatchContractEvent");
@@ -53,38 +44,19 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
     // Always import Address from viem for hook signatures
     out.push_str("import type { Address } from 'viem';\n");
 
-    // ── Read hooks ─────────────────────────────────────────────────────
-    let read_fns: Vec<_> = ir
-        .functions
-        .iter()
-        .filter(|f| {
-            matches!(
-                f.state_mutability,
-                StateMutability::Pure | StateMutability::View
-            )
-        })
-        .collect();
+    let (function_hooks, event_hooks) = hook_names(ir);
 
-    if !read_fns.is_empty() {
+    // ── Read hooks ─────────────────────────────────────────────────────
+    if has_read {
         out.push('\n');
         out.push_str(
             "// ── Read hooks ─────────────────────────────────────────────────────────\n",
         );
 
-        // Count overloaded names for read functions
-        let mut read_name_counts: HashMap<&str, u32> = HashMap::new();
-        for f in &read_fns {
-            *read_name_counts.entry(f.name.as_str()).or_insert(0) += 1;
-        }
-
-        for f in &read_fns {
-            let count = *read_name_counts.get(f.name.as_str()).unwrap_or(&1);
-            let suffix = if count > 1 {
-                overload_suffix(&f.inputs)
-            } else {
-                String::new()
-            };
-            let hook_name = format!("use{}{}{}", ir.name, f.name.to_upper_camel_case(), suffix);
+        for (f, hook_name) in ir.functions.iter().zip(&function_hooks) {
+            if !is_read(f) {
+                continue;
+            }
 
             out.push('\n');
 
@@ -100,34 +72,16 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
                 ));
                 out.push_str("}\n");
             } else {
-                // Build the args type inline
-                let args_fields: Vec<String> = f
-                    .inputs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, p)| {
-                        let ts_type = sol_type_to_ts(&p.ty, TARGET);
-                        let name = safe_param_name(&p.name, i);
-                        format!("{}: {}", name, ts_type)
-                    })
-                    .collect();
-
-                let args_type = format!("{{ {} }}", args_fields.join(", "));
-
-                let arg_names: Vec<String> = f
-                    .inputs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, p)| format!("args.{}", safe_param_name(&p.name, i)))
-                    .collect();
-
                 out.push_str(&format!(
                     "export function {}(address: Address, args: {}) {{\n",
-                    hook_name, args_type
+                    hook_name,
+                    args_type(f)
                 ));
                 out.push_str(&format!(
                     "  return useReadContract({{\n    address,\n    abi: {}Abi,\n    functionName: '{}',\n    args: [{}],\n  }});\n",
-                    ir.name, f.name, arg_names.join(", ")
+                    ir.name,
+                    f.name,
+                    arg_names(f)
                 ));
                 out.push_str("}\n");
             }
@@ -135,89 +89,49 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
     }
 
     // ── Write hooks ────────────────────────────────────────────────────
-    let write_fns: Vec<_> = ir
-        .functions
-        .iter()
-        .filter(|f| {
-            !matches!(
-                f.state_mutability,
-                StateMutability::Pure | StateMutability::View
-            )
-        })
-        .collect();
-
-    if !write_fns.is_empty() {
+    if has_write {
         out.push('\n');
         out.push_str(
             "// ── Write hooks ────────────────────────────────────────────────────────\n",
         );
 
-        // Count overloaded names for write functions
-        let mut write_name_counts: HashMap<&str, u32> = HashMap::new();
-        for f in &write_fns {
-            *write_name_counts.entry(f.name.as_str()).or_insert(0) += 1;
-        }
+        for (f, hook_name) in ir.functions.iter().zip(&function_hooks) {
+            if is_read(f) {
+                continue;
+            }
 
-        for f in &write_fns {
-            let count = *write_name_counts.get(f.name.as_str()).unwrap_or(&1);
-            let suffix = if count > 1 {
-                overload_suffix(&f.inputs)
-            } else {
-                String::new()
-            };
-            let hook_name = format!("use{}{}{}", ir.name, f.name.to_upper_camel_case(), suffix);
+            let payable = matches!(f.state_mutability, StateMutability::Payable);
+            let mut write_params = Vec::new();
+            if !f.inputs.is_empty() {
+                write_params.push(format!("args: {}", args_type(f)));
+            }
+            if payable {
+                write_params.push("options?: { value?: bigint }".to_string());
+            }
+            let write_params = write_params.join(", ");
 
             out.push('\n');
-
-            if f.inputs.is_empty() {
-                // No args — write hook without args parameter
-                out.push_str(&format!(
-                    "export function {}(address: Address) {{\n",
-                    hook_name
-                ));
-                out.push_str("  const { writeContract, ...rest } = useWriteContract();\n");
-                out.push_str("  return {\n    ...rest,\n");
-                out.push_str(&format!(
-                    "    write: () =>\n      writeContract({{\n        address,\n        abi: {}Abi,\n        functionName: '{}',\n      }}),\n",
-                    ir.name, f.name
-                ));
-                out.push_str("  };\n");
-                out.push_str("}\n");
-            } else {
-                // Build the args type inline
-                let args_fields: Vec<String> = f
-                    .inputs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, p)| {
-                        let ts_type = sol_type_to_ts(&p.ty, TARGET);
-                        let name = safe_param_name(&p.name, i);
-                        format!("{}: {}", name, ts_type)
-                    })
-                    .collect();
-
-                let args_type = format!("{{ {} }}", args_fields.join(", "));
-
-                let arg_names: Vec<String> = f
-                    .inputs
-                    .iter()
-                    .enumerate()
-                    .map(|(i, p)| format!("args.{}", safe_param_name(&p.name, i)))
-                    .collect();
-
-                out.push_str(&format!(
-                    "export function {}(address: Address) {{\n",
-                    hook_name
-                ));
-                out.push_str("  const { writeContract, ...rest } = useWriteContract();\n");
-                out.push_str("  return {\n    ...rest,\n");
-                out.push_str(&format!(
-                    "    write: (args: {}) =>\n      writeContract({{\n        address,\n        abi: {}Abi,\n        functionName: '{}',\n        args: [{}],\n      }}),\n",
-                    args_type, ir.name, f.name, arg_names.join(", ")
-                ));
-                out.push_str("  };\n");
-                out.push_str("}\n");
+            // The explicit return type keeps declaration emit from naming wagmi
+            // internals such as `WriteContractErrorType` (TS2883).
+            out.push_str(&format!(
+                "export function {}(\n  address: Address,\n): Omit<UseWriteContractReturnType, 'writeContract'> & {{\n  write: ({}) => void;\n}} {{\n",
+                hook_name, write_params
+            ));
+            out.push_str("  const { writeContract, ...rest } = useWriteContract();\n");
+            out.push_str("  return {\n    ...rest,\n");
+            out.push_str(&format!(
+                "    write: ({}) =>\n      writeContract({{\n        address,\n        abi: {}Abi,\n        functionName: '{}',\n",
+                write_params, ir.name, f.name
+            ));
+            if !f.inputs.is_empty() {
+                out.push_str(&format!("        args: [{}],\n", arg_names(f)));
             }
+            if payable {
+                out.push_str("        value: options?.value,\n");
+            }
+            out.push_str("      }),\n");
+            out.push_str("  };\n");
+            out.push_str("}\n");
         }
     }
 
@@ -228,15 +142,11 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
             "// ── Event hooks ────────────────────────────────────────────────────────\n",
         );
 
-        // Track seen names to skip overloads
-        let mut seen_events: HashSet<&str> = HashSet::new();
-
-        for ev in &ir.events {
-            if !seen_events.insert(ev.name.as_str()) {
+        for (ev, hook_name) in ir.events.iter().zip(&event_hooks) {
+            // Overloaded events share one hook; later overloads get none.
+            let Some(hook_name) = hook_name else {
                 continue;
-            }
-
-            let hook_name = format!("use{}{}Event", ir.name, ev.name.to_upper_camel_case());
+            };
 
             out.push('\n');
             out.push_str(&format!(
@@ -252,6 +162,117 @@ pub fn render_wagmi_file(ir: &ContractIr) -> String {
     }
 
     out
+}
+
+fn is_read(f: &AbiFunction) -> bool {
+    matches!(
+        f.state_mutability,
+        StateMutability::Pure | StateMutability::View
+    )
+}
+
+/// Inline TypeScript object type for a function's inputs.
+fn args_type(f: &AbiFunction) -> String {
+    let fields: Vec<String> = f
+        .inputs
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let ts_type = sol_type_to_ts(&p.ty, TARGET);
+            let name = safe_param_name(&p.name, i);
+            format!("{}: {}", name, ts_type)
+        })
+        .collect();
+    format!("{{ {} }}", fields.join(", "))
+}
+
+/// Positional argument list that reads each input from `args`.
+fn arg_names(f: &AbiFunction) -> String {
+    f.inputs
+        .iter()
+        .enumerate()
+        .map(|(i, p)| format!("args.{}", safe_param_name(&p.name, i)))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Allocates one hook name per function and per distinct event name.
+///
+/// Read and write hooks share one module namespace, so names are allocated
+/// across both. Overloads get a signature suffix. Distinct Solidity names that
+/// PascalCase identically (`PREMIUM_PERIOD` and `premiumPeriod`) keep their
+/// original spelling instead. Any name still taken gets a numeric suffix.
+/// Event entries are `None` for later overloads of an already-named event.
+fn hook_names(ir: &ContractIr) -> (Vec<String>, Vec<Option<String>>) {
+    let mut name_counts: HashMap<&str, usize> = HashMap::new();
+    for f in &ir.functions {
+        *name_counts.entry(f.name.as_str()).or_insert(0) += 1;
+    }
+    let overload = |f: &AbiFunction| {
+        if name_counts[f.name.as_str()] > 1 {
+            overload_suffix(&f.inputs)
+        } else {
+            String::new()
+        }
+    };
+
+    let mut stem_sources: HashMap<String, HashSet<&str>> = HashMap::new();
+    for f in &ir.functions {
+        stem_sources
+            .entry(format!("{}{}", f.name.to_upper_camel_case(), overload(f)))
+            .or_default()
+            .insert(f.name.as_str());
+    }
+
+    let mut used = HashSet::new();
+    let mut allocate = |base: String| {
+        let mut candidate = base.clone();
+        let mut n = 2;
+        while !used.insert(candidate.clone()) {
+            candidate = format!("{base}_{n}");
+            n += 1;
+        }
+        candidate
+    };
+
+    let functions = ir
+        .functions
+        .iter()
+        .map(|f| {
+            let camel = format!("{}{}", f.name.to_upper_camel_case(), overload(f));
+            let stem = if stem_sources[&camel].len() > 1 {
+                format!("{}{}", upper_first(&f.name), overload(f))
+            } else {
+                camel
+            };
+            allocate(format!("use{}{}", ir.name, stem))
+        })
+        .collect();
+
+    let mut seen_events = HashSet::new();
+    let events = ir
+        .events
+        .iter()
+        .map(|ev| {
+            seen_events.insert(ev.name.as_str()).then(|| {
+                allocate(format!(
+                    "use{}{}Event",
+                    ir.name,
+                    ev.name.to_upper_camel_case()
+                ))
+            })
+        })
+        .collect();
+
+    (functions, events)
+}
+
+fn upper_first(name: &str) -> String {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
 }
 
 #[cfg(test)]
@@ -341,7 +362,7 @@ mod tests {
         let out = render_wagmi_file(&erc20());
         // transfer is nonpayable with inputs
         assert!(
-            out.contains("export function useERC20Transfer(address: Address)"),
+            out.contains("export function useERC20Transfer(\n  address: Address,\n)"),
             "Missing useERC20Transfer hook"
         );
         assert!(
@@ -453,7 +474,7 @@ mod tests {
         let out = render_wagmi_file(&ir);
 
         assert!(
-            out.contains("export function useResettableReset(address: Address)"),
+            out.contains("export function useResettableReset(\n  address: Address,\n)"),
             "Missing useResettableReset hook"
         );
         // The write callback should have no args
@@ -521,5 +542,112 @@ mod tests {
             out.contains("args._class"),
             "Args reference should use sanitized name"
         );
+    }
+
+    fn function(
+        name: &str,
+        inputs: Vec<AbiParam>,
+        state_mutability: StateMutability,
+    ) -> AbiFunction {
+        AbiFunction {
+            name: name.into(),
+            inputs,
+            outputs: vec![],
+            state_mutability,
+            natspec: None,
+        }
+    }
+
+    fn uint_param(name: &str) -> AbiParam {
+        AbiParam {
+            name: name.into(),
+            ty: SolType::Uint(256),
+            internal_type: None,
+        }
+    }
+
+    #[test]
+    fn wagmi_write_hook_has_explicit_return_type() {
+        let out = render_wagmi_file(&erc20());
+        assert!(
+            out.contains("import { useReadContract, useWriteContract, type UseWriteContractReturnType, useWatchContractEvent } from 'wagmi';"),
+            "{out}"
+        );
+        assert!(
+            out.contains("): Omit<UseWriteContractReturnType, 'writeContract'> & {\n  write: (args: { to: `0x${string}`, amount: bigint }) => void;\n} {"),
+            "{out}"
+        );
+    }
+
+    #[test]
+    fn wagmi_payable_write_hook_forwards_value() {
+        let ir = make_ir(
+            "Staking",
+            vec![
+                function(
+                    "stake",
+                    vec![uint_param("toValidatorId")],
+                    StateMutability::Payable,
+                ),
+                function("deposit", vec![], StateMutability::Payable),
+                function(
+                    "unstake",
+                    vec![uint_param("amount")],
+                    StateMutability::NonPayable,
+                ),
+            ],
+            vec![],
+        );
+        let out = render_wagmi_file(&ir);
+        assert!(
+            out.contains(
+                "write: (args: { toValidatorId: bigint }, options?: { value?: bigint }) =>"
+            ),
+            "{out}"
+        );
+        assert!(
+            out.contains("write: (options?: { value?: bigint }) =>"),
+            "{out}"
+        );
+        assert_eq!(out.matches("value: options?.value,").count(), 2, "{out}");
+        assert!(
+            out.contains("write: (args: { amount: bigint }) =>"),
+            "{out}"
+        );
+    }
+
+    #[test]
+    fn wagmi_hook_names_are_unique_across_casing_and_mutability() {
+        let ir = make_ir(
+            "Registrar",
+            vec![
+                function("PREMIUM_PERIOD", vec![], StateMutability::View),
+                function("premiumPeriod", vec![], StateMutability::View),
+                function("renew", vec![], StateMutability::View),
+                function("renew", vec![uint_param("id")], StateMutability::Payable),
+                function("pingEvent", vec![], StateMutability::NonPayable),
+            ],
+            vec![AbiEvent {
+                name: "Ping".into(),
+                inputs: vec![],
+                anonymous: false,
+                natspec: None,
+            }],
+        );
+        let out = render_wagmi_file(&ir);
+        for hook in [
+            "useRegistrarPREMIUM_PERIOD(",
+            "useRegistrarPremiumPeriod(",
+            "useRegistrarRenew(",
+            "useRegistrarRenewUint256(",
+            "useRegistrarPingEvent(",
+            "useRegistrarPingEvent_2(",
+        ] {
+            assert_eq!(
+                out.matches(&format!("export function {hook}")).count(),
+                1,
+                "expected exactly one {hook} in:\n{out}"
+            );
+        }
     }
 }
