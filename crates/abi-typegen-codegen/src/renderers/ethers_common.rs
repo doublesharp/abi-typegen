@@ -1,4 +1,4 @@
-use crate::type_mapper::overload_suffix;
+use crate::type_mapper::{overload_suffix, safe_param_name};
 use abi_typegen_core::types::{AbiFunction, SolType};
 use std::collections::{HashMap, HashSet};
 
@@ -25,6 +25,20 @@ pub(super) fn method_names(functions: &[AbiFunction]) -> Vec<String> {
             candidate
         })
         .collect()
+}
+
+/// Name for the trailing overrides parameter that no ABI input already uses.
+pub(super) fn overrides_param_name(function: &AbiFunction) -> String {
+    let mut name = "overrides".to_string();
+    while function
+        .inputs
+        .iter()
+        .enumerate()
+        .any(|(i, input)| safe_param_name(&input.name, i) == name)
+    {
+        name.insert(0, '_');
+    }
+    name
 }
 
 /// Canonical ABI signature used to select the actual ethers runtime method.

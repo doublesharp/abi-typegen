@@ -155,9 +155,11 @@ fn erc20_ethers_file_correct_structure() {
     let eth = &files["ERC20.ethers.ts"];
     assert!(eth.contains("export interface ERC20Contract {"));
     assert!(eth.contains("export function connectERC20("));
-    assert!(eth.contains("balanceOf(account: AddressLike): Promise<bigint>"));
     assert!(eth.contains(
-        "transfer(to: AddressLike, amount: BigNumberish): Promise<ContractTransactionResponse>"
+        "balanceOf(account: AddressLike, overrides?: Omit<Overrides, 'value'>): Promise<bigint>"
+    ));
+    assert!(eth.contains(
+        "transfer(to: AddressLike, amount: BigNumberish, overrides?: Omit<Overrides, 'value'>): Promise<ContractTransactionResponse>"
     ));
     assert!(
         eth.contains("Transfer(from?: AddressLike | null, to?: AddressLike | null): EventFilter")
@@ -220,7 +222,9 @@ fn vault_tuple_output_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getPosition(user: AddressLike): Promise<["));
+    assert!(eth.contains(
+        "getPosition(user: AddressLike, overrides?: Omit<Overrides, 'value'>): Promise<["
+    ));
     assert!(eth.contains("shares: bigint"));
 }
 
@@ -229,7 +233,9 @@ fn vault_array_input_in_ethers() {
     let ir = parse_artifact("Vault", &fixture("vault.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["Vault.ethers.ts"];
-    assert!(eth.contains("getBalances(users: AddressLike[]): Promise<bigint[]>"));
+    assert!(eth.contains(
+        "getBalances(users: AddressLike[], overrides?: Omit<Overrides, 'value'>): Promise<bigint[]>"
+    ));
 }
 
 #[test]
@@ -315,7 +321,7 @@ fn unnamed_params_viem_uses_positional_names() {
 fn unnamed_params_ethers_uses_positional_names() {
     let ir = parse_artifact("Unnamed", unnamed_params_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("swap(arg0: AddressLike, arg1: BigNumberish)"));
+    assert!(out.contains("swap(arg0: AddressLike, arg1: BigNumberish, overrides?: "));
     // Event filter with unnamed indexed param
     assert!(out.contains("Swapped(arg0?: AddressLike | null)"));
 }
@@ -349,7 +355,7 @@ fn reserved_word_params_viem_escaped() {
 fn reserved_word_params_ethers_escaped() {
     let ir = parse_artifact("Reserved", reserved_word_json()).unwrap();
     let out = render_ethers_file(&ir);
-    assert!(out.contains("setConfig(_class: BigNumberish, _delete: AddressLike)"));
+    assert!(out.contains("setConfig(_class: BigNumberish, _delete: AddressLike, overrides?: "));
 }
 
 // ── Empty ABI contract ─────────────────────────────────────────────────────
@@ -536,7 +542,9 @@ fn pure_fn_returns_promise_value() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("compute(x: BigNumberish): Promise<bigint>"),
+        eth.contains(
+            "compute(x: BigNumberish, overrides?: Omit<Overrides, 'value'>): Promise<bigint>"
+        ),
         "pure function should return Promise<T>"
     );
 }
@@ -546,7 +554,7 @@ fn view_fn_returns_promise_value() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("getBalance(): Promise<bigint>"),
+        eth.contains("getBalance(overrides?: Omit<Overrides, 'value'>): Promise<bigint>"),
         "view function should return Promise<T>"
     );
 }
@@ -556,7 +564,7 @@ fn payable_fn_returns_transaction_response() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("donate(): Promise<ContractTransactionResponse>"),
+        eth.contains("donate(overrides?: Overrides): Promise<ContractTransactionResponse>"),
         "payable function should return Promise<ContractTransactionResponse>"
     );
 }
@@ -566,7 +574,9 @@ fn nonpayable_fn_returns_transaction_response() {
     let ir = parse_artifact("Mutability", all_mutabilities_json()).unwrap();
     let eth = render_ethers_file(&ir);
     assert!(
-        eth.contains("reset(): Promise<ContractTransactionResponse>"),
+        eth.contains(
+            "reset(overrides?: Omit<Overrides, 'value'>): Promise<ContractTransactionResponse>"
+        ),
         "nonpayable function should return Promise<ContractTransactionResponse>"
     );
 }
@@ -842,7 +852,7 @@ fn ethers_overload_bindings_use_canonical_recursive_abi_types() {
             "{source}"
         );
         assert!(
-            source.contains("all_2()"),
+            source.contains("all_2(overrides?: "),
             "zero-argument overload must have an unambiguous runtime alias: {source}"
         );
         assert!(source.contains("\"all()\""), "{source}");
