@@ -66,8 +66,26 @@ suffix. Wagmi read, write, and event hooks share one module namespace. Functions
 whose names differ only in casing or separators, such as `PREMIUM_PERIOD` and
 `premiumPeriod`, keep their original spelling in the hook name
 (`useTokenPREMIUM_PERIOD`, `useTokenPremiumPeriod`). Any remaining clash gets a
-numeric suffix. Treat generated names as part of the output API and recompile
-consumers when the ABI changes.
+numeric suffix. web3.js wrappers type overloads under the keys web3 registers at
+runtime: the plain name, which picks an overload by argument count, and the
+quoted signature, such as `methods['deposit(uint256)']`. Treat generated names as
+part of the output API and recompile consumers when the ABI changes.
+
+## Contract types
+
+Where the SDK has its own contract type, the wrapper builds on it, so SDK members
+stay available:
+
+- ethers v6: `<Name>Contract` is `BaseContract` combined with the generated
+  `<Name>Methods`, so `getAddress()`, `interface`, `target`, `on()`, and
+  `queryFilter()` are typed. `connect()` returns `<Name>Contract`. Event filters
+  return `DeferredTopicFilter`, which `queryFilter()` and `on()` accept.
+- ethers v5: `<Name>Contract` extends `ethers.Contract`.
+- web3.js: `<Name>Contract` is web3's `Contract<typeof <Name>Abi>` with `methods`
+  replaced by `<Name>Methods`. Events, `options`, and each method's `send()`,
+  `estimateGas()`, and `encodeABI()` keep web3's types. The wrapper narrows
+  arguments and `call()` results.
+- viem: `get<Name>Contract` returns viem's `GetContractReturnType`.
 
 ## Transaction options
 
@@ -79,7 +97,7 @@ state mutability:
 | ethers v6 | `overrides?: Omit<Overrides, 'value'>` | `overrides?: Omit<Overrides, 'value'>` | `overrides?: Overrides`                     |
 | ethers v5 | `overrides?: CallOverrides`            | `overrides?: Overrides`                | `overrides?: PayableOverrides`              |
 | wagmi     | n/a                                    | `write(args)`                          | `write(args, options?: { value?: bigint })` |
-| web3.js   | `call()`                               | `send({ from })`                       | `send({ from, value? })`                    |
+| web3.js   | `call(options?, block?)`               | web3's `send(options?)`                | web3's `send(options?)`, with `value`       |
 
 The trailing ethers parameter is named `overrides` unless an ABI input already
 uses that name, in which case it gets an underscore prefix. Viem helpers return
