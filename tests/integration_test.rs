@@ -143,7 +143,7 @@ fn erc20_viem_file_correct_structure() {
     let files = generate_contract_files(&ir, &viem_config());
     let viem = &files["ERC20.viem.ts"];
     assert!(viem.contains("import { ERC20Abi } from './ERC20.abi.js'"));
-    assert!(viem.contains("export function getERC20Contract("));
+    assert!(viem.contains("export function getERC20Contract<TClient extends Client>("));
     assert!(viem.contains("export type ERC20TransferParams = {"));
     assert!(viem.contains("to: `0x${string}`"));
 }
@@ -260,7 +260,7 @@ fn minimal_produces_abi_and_viem_wrapper() {
     let ir = parse_artifact("Minimal", &fixture("minimal.json")).unwrap();
     let files = generate_contract_files(&ir, &viem_config());
     let viem = &files["Minimal.viem.ts"];
-    assert!(viem.contains("export function getMinimalContract("));
+    assert!(viem.contains("export function getMinimalContract<TClient extends Client>("));
     // No write functions → no params types exported
     assert!(!viem.contains("export type"));
 }
@@ -369,7 +369,7 @@ fn empty_abi_produces_valid_abi_ts() {
 fn empty_abi_viem_has_get_contract_but_no_params() {
     let ir = parse_artifact("Empty", empty_abi_json()).unwrap();
     let viem = render_viem_file(&ir);
-    assert!(viem.contains("export function getEmptyContract("));
+    assert!(viem.contains("export function getEmptyContract<TClient extends Client>("));
     assert!(
         !viem.contains("export type"),
         "empty ABI should produce no param types"

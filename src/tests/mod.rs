@@ -494,7 +494,7 @@ fn run_generate_produces_ts_files() {
     assert!(abi.contains("] as const;"));
 
     let viem = std::fs::read_to_string(gen_dir.join("Token.viem.ts")).unwrap();
-    assert!(viem.contains("export function getTokenContract("));
+    assert!(viem.contains("export function getTokenContract<TClient extends Client>("));
 
     let barrel = std::fs::read_to_string(gen_dir.join("index.ts")).unwrap();
     assert!(barrel.contains("export * from './Token.abi.js'"));
@@ -598,7 +598,7 @@ fn run_generate_all_single_targets_write_expected_outputs() {
                 "Token.yaml",
             ],
             marker_file: "Token.viem.ts",
-            marker_text: "export function getTokenContract(",
+            marker_text: "export function getTokenContract<TClient extends Client>(",
         },
         TargetCase {
             name: "wagmi",

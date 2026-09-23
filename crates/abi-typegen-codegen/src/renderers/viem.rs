@@ -14,17 +14,20 @@ pub fn render_viem_file(ir: &ContractIr) -> String {
         "import {{ {}Abi }} from './{}.abi.js';\n",
         ir.name, ir.name
     ));
-    out.push_str("import { getContract, type Address, type Client } from 'viem';\n");
+    out.push_str(
+        "import { getContract, type Address, type Client, type GetContractReturnType } from 'viem';\n",
+    );
     out.push('\n');
 
     // Contract-level NatSpec
     if let Some(ns) = &ir.natspec {
-        out.push_str(&render_jsdoc(ns, &[]));
+        out.push_str(&render_jsdoc(ns, &[], &[]));
     }
 
-    // getContract helper
+    // getContract helper. The explicit return type keeps declaration emit from
+    // serializing the fully expanded contract type (TS7056 on large ABIs).
     out.push_str(&format!(
-        "export function get{}Contract(address: Address, client: Client) {{\n",
+        "export function get{0}Contract<TClient extends Client>(\n  address: Address,\n  client: TClient,\n): GetContractReturnType<typeof {0}Abi, TClient> {{\n",
         ir.name
     ));
     out.push_str(&format!(
@@ -65,11 +68,7 @@ pub fn render_viem_file(ir: &ContractIr) -> String {
             } else {
                 format!("{}{}Params", ir.name, f.name.to_upper_camel_case())
             };
-            out.push_str(&render_params_type(
-                &type_name,
-                &f.inputs,
-                f.natspec.as_ref(),
-            ));
+            out.push_str(&render_params_type(&type_name, f));
             out.push('\n');
         }
     }
@@ -77,16 +76,13 @@ pub fn render_viem_file(ir: &ContractIr) -> String {
     out
 }
 
-fn render_params_type(type_name: &str, inputs: &[AbiParam], natspec: Option<&NatSpec>) -> String {
+fn render_params_type(type_name: &str, f: &AbiFunction) -> String {
     let mut out = String::new();
-    if let Some(ns) = natspec {
-        let jsdoc = render_jsdoc(ns, inputs);
-        if !jsdoc.is_empty() {
-            out.push_str(&jsdoc);
-        }
+    if let Some(ns) = &f.natspec {
+        out.push_str(&render_jsdoc(ns, &f.inputs, &f.outputs));
     }
     out.push_str(&format!("export type {} = {{\n", type_name));
-    for (i, param) in inputs.iter().enumerate() {
+    for (i, param) in f.inputs.iter().enumerate() {
         let ts_type = sol_type_to_ts(&param.ty, TARGET);
         let name = safe_param_name(&param.name, i);
         out.push_str(&format!("  {}: {};\n", name, ts_type));
@@ -95,7 +91,7 @@ fn render_params_type(type_name: &str, inputs: &[AbiParam], natspec: Option<&Nat
     out
 }
 
-fn render_jsdoc(ns: &NatSpec, params: &[AbiParam]) -> String {
+fn render_jsdoc(ns: &NatSpec, params: &[AbiParam], outputs: &[AbiParam]) -> String {
     let mut lines = Vec::new();
     if let Some(notice) = &ns.notice {
         lines.push(format!(" * {}", notice));
@@ -109,8 +105,16 @@ fn render_jsdoc(ns: &NatSpec, params: &[AbiParam]) -> String {
             lines.push(format!(" * @param {} {}", name, desc));
         }
     }
-    for (name, desc) in &ns.returns {
-        lines.push(format!(" * @returns {} {}", name, desc));
+    // Follow ABI output order; solc keys unnamed outputs as `_0`, `_1`, ...
+    for (i, output) in outputs.iter().enumerate() {
+        let key = if output.name.is_empty() {
+            format!("_{i}")
+        } else {
+            output.name.clone()
+        };
+        if let Some(desc) = ns.returns.get(&key) {
+            lines.push(format!(" * @returns {} {}", key, desc));
+        }
     }
     if lines.is_empty() {
         return String::new();
@@ -152,7 +156,9 @@ mod tests {
     #[test]
     fn exports_get_contract_fn() {
         let out = render_viem_file(&erc20());
-        assert!(out.contains("export function getERC20Contract(address: Address, client: Client)"));
+        assert!(out.contains(
+            "export function getERC20Contract<TClient extends Client>(\n  address: Address,\n  client: TClient,\n): GetContractReturnType<typeof ERC20Abi, TClient> {"
+        ));
         assert!(out.contains("return getContract({ address, abi: ERC20Abi, client });"));
     }
 
@@ -361,8 +367,58 @@ mod tests {
         // Import present
         assert!(out.contains("import { EmptyAbi }"));
         // getContract helper present
-        assert!(out.contains("export function getEmptyContract("));
+        assert!(out.contains("export function getEmptyContract<TClient extends Client>("));
         // No params section at all
         assert!(!out.contains("export type"));
+    }
+
+    #[test]
+    fn returns_follow_abi_output_order() {
+        let names = ["activated", "hasMore", "zeta", "alpha", "", "middle"];
+        let outputs: Vec<AbiParam> = names
+            .iter()
+            .map(|name| AbiParam {
+                name: (*name).into(),
+                ty: abi_typegen_core::types::SolType::Bool,
+                internal_type: None,
+            })
+            .collect();
+        let returns = names
+            .iter()
+            .enumerate()
+            .map(|(i, name)| {
+                let key = if name.is_empty() {
+                    format!("_{i}")
+                } else {
+                    (*name).to_string()
+                };
+                (key.clone(), format!("{key} doc"))
+            })
+            .collect();
+        let f = AbiFunction {
+            name: "triggerSpotStops".into(),
+            inputs: vec![AbiParam {
+                name: "max".into(),
+                ty: abi_typegen_core::types::SolType::Uint(256),
+                internal_type: None,
+            }],
+            outputs,
+            state_mutability: StateMutability::NonPayable,
+            natspec: Some(NatSpec {
+                returns,
+                ..Default::default()
+            }),
+        };
+        let out = render_viem_file(&make_ir("Book", None, vec![f]));
+        let expected = [
+            " * @returns activated activated doc\n",
+            " * @returns hasMore hasMore doc\n",
+            " * @returns zeta zeta doc\n",
+            " * @returns alpha alpha doc\n",
+            " * @returns _4 _4 doc\n",
+            " * @returns middle middle doc\n",
+        ]
+        .concat();
+        assert!(out.contains(&expected), "{out}");
     }
 }

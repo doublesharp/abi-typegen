@@ -289,7 +289,10 @@ Overloaded functions get signature-based names so the output stays unambiguous:
 **viem**
 
 ```ts
-export function getTokenContract(address: Address, client: Client) {
+export function getTokenContract<TClient extends Client>(
+  address: Address,
+  client: TClient,
+): GetContractReturnType<typeof TokenAbi, TClient> {
   return getContract({ address, abi: TokenAbi, client });
 }
 
