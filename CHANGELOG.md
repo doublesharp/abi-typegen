@@ -30,12 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Numbers`, matching web3 v4. Payable `send` accepts `value`. Import `Contract`
   from `web3` instead of `web3-eth-contract`.
 
-### Changed
-
-- Rewrite the README in plainer language, opening each section with a sentence
-  that explains it without assuming prior knowledge. Correct the overload naming example (`depositUint256`) and list wagmi
-  v2 and v3 support.
-
 ## [0.4.1] - 2026-09-14
 
 ### Fixed
