@@ -62,8 +62,33 @@ deposit(uint256,address)  -> depositUint256Address
 Ethers wrappers use canonical ABI signatures to select the runtime method. Tuple
 and array inputs participate in signature naming. When aliases would collide with
 another alias or an existing method name, the ethers renderer adds a numeric
-suffix. Treat generated names as part of the output API and recompile consumers
-when the ABI changes.
+suffix. Wagmi read, write, and event hooks share one module namespace. Functions
+whose names differ only in casing or separators, such as `PREMIUM_PERIOD` and
+`premiumPeriod`, keep their original spelling in the hook name
+(`useTokenPREMIUM_PERIOD`, `useTokenPremiumPeriod`). Any remaining clash gets a
+numeric suffix. Treat generated names as part of the output API and recompile
+consumers when the ABI changes.
+
+## Transaction options
+
+Wrappers type the value and overrides each SDK accepts, based on the function's
+state mutability:
+
+| Target    | View / pure                            | Nonpayable                             | Payable                                     |
+| --------- | -------------------------------------- | -------------------------------------- | ------------------------------------------- |
+| ethers v6 | `overrides?: Omit<Overrides, 'value'>` | `overrides?: Omit<Overrides, 'value'>` | `overrides?: Overrides`                     |
+| ethers v5 | `overrides?: CallOverrides`            | `overrides?: Overrides`                | `overrides?: PayableOverrides`              |
+| wagmi     | n/a                                    | `write(args)`                          | `write(args, options?: { value?: bigint })` |
+| web3.js   | `call()`                               | `send({ from })`                       | `send({ from, value? })`                    |
+
+The trailing ethers parameter is named `overrides` unless an ABI input already
+uses that name, in which case it gets an underscore prefix. Viem helpers return
+viem's `GetContractReturnType`, so `contract.write.<fn>(args, { value })` accepts
+a value for payable functions.
+
+Wrapper return types are written out explicitly, so projects that emit
+declarations (`declaration: true`) can re-export generated wrappers for large
+ABIs.
 
 ## Named return values
 
@@ -96,15 +121,18 @@ Unsigned examples below show the size boundaries. Go and Rust use the smallest
 supported native integer type that can hold the ABI width, then switch to a large
 integer type.
 
-| Solidity  | Viem     | Ethers v6 | Ethers v5   | Go         | Rust   |
-| --------- | -------- | --------- | ----------- | ---------- | ------ |
-| `uint8`   | `number` | `bigint`  | `number`    | `uint8`    | `u8`   |
-| `uint24`  | `number` | `bigint`  | `number`    | `uint32`   | `u32`  |
-| `uint48`  | `number` | `bigint`  | `number`    | `uint64`   | `u64`  |
-| `uint56`  | `bigint` | `bigint`  | `BigNumber` | `uint64`   | `u64`  |
-| `uint64`  | `bigint` | `bigint`  | `BigNumber` | `uint64`   | `u64`  |
-| `uint128` | `bigint` | `bigint`  | `BigNumber` | `*big.Int` | `u128` |
-| `uint256` | `bigint` | `bigint`  | `BigNumber` | `*big.Int` | `U256` |
+| Solidity  | Viem     | Ethers v6 | Ethers v5   | web3.js  | Go         | Rust   |
+| --------- | -------- | --------- | ----------- | -------- | ---------- | ------ |
+| `uint8`   | `number` | `bigint`  | `number`    | `bigint` | `uint8`    | `u8`   |
+| `uint24`  | `number` | `bigint`  | `number`    | `bigint` | `uint32`   | `u32`  |
+| `uint48`  | `number` | `bigint`  | `number`    | `bigint` | `uint64`   | `u64`  |
+| `uint56`  | `bigint` | `bigint`  | `BigNumber` | `bigint` | `uint64`   | `u64`  |
+| `uint64`  | `bigint` | `bigint`  | `BigNumber` | `bigint` | `uint64`   | `u64`  |
+| `uint128` | `bigint` | `bigint`  | `BigNumber` | `bigint` | `*big.Int` | `u128` |
+| `uint256` | `bigint` | `bigint`  | `BigNumber` | `bigint` | `*big.Int` | `U256` |
+
+web3.js outputs follow web3 v4's default return format. web3.js integer inputs
+accept web3's `Numbers` type (`number | bigint | string`).
 
 Python integer outputs use `int`. Other common mappings include Go
 `common.Address`, Rust `Address`/`Bytes`, and TypeScript hex-string address and

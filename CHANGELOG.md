@@ -8,6 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- viem: emit NatSpec `@returns` tags in ABI output order so repeated runs
+  produce identical files.
+- viem: give `get<Name>Contract` an explicit, client-generic
+  `GetContractReturnType`, fixing TS7056 declaration emit on large ABIs.
+- wagmi: give write hooks an explicit return type built from
+  `UseWriteContractReturnType`, fixing TS2883 declaration emit.
+- wagmi: payable write hooks accept `{ value }` and forward it to
+  `writeContract`.
+- wagmi: allocate unique hook names when function names differ only in casing
+  (`PREMIUM_PERIOD` and `premiumPeriod`) or overloads span read and write hooks.
+- ethers v6 and v5: methods take a trailing `overrides` argument typed by state
+  mutability, so payable calls can pass `value`.
+- ethers v5: import `BigNumber`, `BigNumberish`, and `BytesLike` as types for
+  `verbatimModuleSyntax` compatibility.
+- web3.js: type integer return values as `bigint` and integer inputs as
+  `Numbers`, matching web3 v4. Payable `send` accepts `value`. Import `Contract`
+  from `web3` instead of `web3-eth-contract`.
+
 ## [0.4.1] - 2026-09-14
 
 ### Fixed
