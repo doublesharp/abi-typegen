@@ -4,8 +4,8 @@
   <img src="docs/abi-typegen.png" alt="abi-typegen" width="360" />
 </p>
 
-<p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">Foundry or Hardhat in, production-ready client bindings out.</p>
+<p align="center"><strong>Typed bindings from Solidity ABI artifacts.</strong></p>
+<p align="center">Point it at Foundry or Hardhat output and get client code for the SDK you use.</p>
 <p align="center">
   <a href="https://github.com/doublesharp/abi-typegen/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/doublesharp/abi-typegen/ci.yml?branch=main&label=ci"></a>
   <a href="https://github.com/doublesharp/abi-typegen/actions/workflows/coverage.yml"><img alt="Coverage workflow" src="https://img.shields.io/github/actions/workflow/status/doublesharp/abi-typegen/coverage.yml?branch=main&label=coverage"></a>
@@ -14,23 +14,30 @@
   <a href="https://www.npmjs.com/package/@0xdoublesharp/abi-typegen"><img alt="npm" src="https://img.shields.io/npm/v/@0xdoublesharp/abi-typegen?label=npm"></a>
 </p>
 
-`abi-typegen` is a native Rust CLI that reads compiled Solidity artifacts and generates typed bindings for 14 targets across 8 languages. It works with Foundry and Hardhat, supports single-target and multi-target workflows, and includes the command surface you need for local iteration and CI: `generate`, `watch`, `diff`, `json`, `fetch`, `--check`, and `--clean`.
-
-It is designed to be easy to drop into an existing project: point it at your artifacts, pick a target, and generate code that matches the ecosystem you actually use.
+`abi-typegen` is a Rust CLI. It reads compiled Solidity artifacts and writes typed
+bindings for 14 targets: six TypeScript SDKs, Python, Go, Rust, Swift, C#, Kotlin,
+Solidity interfaces, and YAML. It reads Foundry and Hardhat layouts, and it can
+generate several targets in one run.
 
 ## Why abi-typegen
 
-- Native Rust CLI with very low overhead
-- Works with Foundry `out/` and Hardhat `artifacts/contracts/`
-- Generates bindings for TypeScript, Python, Go, Rust, Swift, C#, Kotlin, and Solidity
-- Supports comma-separated multi-target generation into isolated output directories
-- CI-friendly stale-output detection with `generate --check`
-- Dry-run inspection with `diff` and parsed ABI inspection with `json`
-- Fetch verified contract ABIs from any Etherscan-compatible explorer with `fetch`
-- Hardhat plugin for automatic generation on compile
-- Forge shell integration for `forge typegen`
+When you compile a contract, the compiler writes a JSON file called the ABI
+that lists its functions, events, and errors. abi-typegen turns that file into typed
+code, so your editor and compiler catch a wrong argument before it reaches the
+chain.
+
+- One native binary. No Node or Python runtime is needed to generate.
+- Reads Foundry `out/` and Hardhat `artifacts/contracts/`.
+- `generate --check` fails CI when committed bindings are stale.
+- `diff` shows what would change. `json` prints the parsed ABI.
+- `fetch` downloads a verified ABI from any Etherscan-compatible explorer.
+- A Hardhat plugin regenerates on every compile. For Foundry,
+  `abi-typegen forge-install` prints a shell function that adds `forge typegen`.
 
 ## Install
+
+Install the CLI with cargo, download a prebuilt binary, or add the npm package
+to a JavaScript project.
 
 ### Rust CLI
 
@@ -38,7 +45,7 @@ It is designed to be easy to drop into an existing project: point it at your art
 cargo install abi-typegen
 ```
 
-Pre-built binaries are available on [GitHub Releases](https://github.com/doublesharp/abi-typegen/releases).
+Prebuilt binaries are on [GitHub Releases](https://github.com/doublesharp/abi-typegen/releases).
 
 ### Hardhat plugin
 
@@ -46,24 +53,27 @@ Pre-built binaries are available on [GitHub Releases](https://github.com/doubles
 pnpm add -D @0xdoublesharp/hardhat-abi-typegen
 ```
 
-If you only want the packaged binary in a Node project, you can install:
+To add only the packaged binary to a Node project:
 
 ```sh
 pnpm add -D @0xdoublesharp/abi-typegen
 ```
 
-## Quick Start
+## Quick start
+
+After your contracts compile, one command writes the typed files into your
+project.
 
 ### Foundry
 
-Build your contracts, then generate bindings:
+Build the contracts, then generate:
 
 ```sh
 forge build
 abi-typegen generate
 ```
 
-Minimal `foundry.toml` configuration:
+Minimal `foundry.toml`:
 
 ```toml
 [abi-typegen]
@@ -71,13 +81,13 @@ out = "src/generated"
 target = "viem"            # or "viem,python" or ["viem", "python"]
 ```
 
-Watch mode is useful while iterating:
+`watch` regenerates whenever the artifacts change:
 
 ```sh
 abi-typegen watch
 ```
 
-For Zod output, install the latest `zod` package in the consuming project.
+The `zod` target emits Zod 4 code, so install `zod@4` in the consuming project.
 
 ### Hardhat
 
@@ -97,17 +107,19 @@ export default defineConfig({
 });
 ```
 
-Bindings are generated automatically on every compile:
+The plugin generates bindings on every compile:
 
 ```sh
 npx hardhat compile
 ```
 
-Hardhat 2 is still supported through the CommonJS fallback used by `import "@0xdoublesharp/hardhat-abi-typegen"` in Hardhat 2 configs. The explicit fallback subpath is `@0xdoublesharp/hardhat-abi-typegen/hardhat2`.
+Hardhat 2 configs can still `import "@0xdoublesharp/hardhat-abi-typegen"`, which
+loads a CommonJS fallback. The fallback is also available directly at
+`@0xdoublesharp/hardhat-abi-typegen/hardhat2`.
 
 ### Multi-target generation
 
-Multiple targets can be specified in the config file or on the command line:
+Set several targets in the config file or on the command line:
 
 ```toml
 # foundry.toml
@@ -116,11 +128,10 @@ target = ["viem", "python", "rust"]   # also accepts "viem,python,rust"
 ```
 
 ```sh
-# CLI
 abi-typegen generate --target viem,python,rust
 ```
 
-Multi-target output is written to one subdirectory per target under the configured output path:
+Each target gets its own subdirectory under the output path:
 
 ```text
 src/generated/
@@ -131,14 +142,16 @@ src/generated/
 
 ## Fetch and generate from a block explorer
 
-`fetch` pulls a verified ABI, saves it as a local artifact, and immediately generates typed bindings — all in one command:
+You can generate bindings for a contract you didn't compile, as long as its
+source is verified on an Etherscan-compatible explorer. `fetch` downloads the
+ABI, saves it as a local artifact, and generates bindings in one command:
 
 ```sh
 abi-typegen fetch --name WETH --network mainnet \
   0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
 ```
 
-Output (using configured target, defaults to `viem`):
+With the default `viem` target, that writes:
 
 ```text
 out/WETH.sol/WETH.json      ← saved artifact
@@ -149,7 +162,8 @@ src/generated/index.ts
 
 ### From a local ABI file
 
-If you already have a raw ABI JSON file (either a bare array `[...]` or a Foundry/Hardhat artifact `{"abi": [...]}`), use `--file` to skip the network request entirely:
+`--file` skips the network request. It accepts a bare ABI array (`[...]`) or a
+Foundry/Hardhat artifact (`{"abi": [...]}`):
 
 ```sh
 abi-typegen fetch --name WETH --file ./WETH.abi.json
@@ -157,14 +171,15 @@ abi-typegen fetch --name WETH --file ./WETH.abi.json
 
 ### API key
 
-Most explorers require an API key. Set it once in `.env` in the working directory or in the environment:
+Most explorers need an API key. Put it in `.env` in the working directory or
+export it:
 
 ```sh
 # .env
 ETHERSCAN_API_KEY=your_key_here
 ```
 
-Or pass it directly:
+You can also pass it per command:
 
 ```sh
 abi-typegen fetch --name WETH --network mainnet --api-key $KEY 0xc02aaa...
@@ -172,48 +187,56 @@ abi-typegen fetch --name WETH --network mainnet --api-key $KEY 0xc02aaa...
 
 ### Supported networks
 
-Built-in shortcuts for 80+ networks via the `--network` flag:
+`--network` has shortcuts for more than 80 networks, including these:
 
-| Group | Names |
-|---|---|
-| Ethereum | `mainnet`, `sepolia`, `holesky`, `hoodi` |
-| OP Stack | `optimism`, `base`, `blast`, `fraxtal`, `worldchain`, `unichain` |
-| Arbitrum | `arbitrum`, `arbitrum-nova`, `arbitrum-sepolia` |
-| Polygon | `polygon`, `polygon-amoy` |
-| BNB Chain | `bsc`, `opbnb` |
-| Avalanche | `avalanche`, `fuji` |
-| Other L2s | `linea`, `scroll`, `zksync`, `mantle`, `sonic`, `taiko` |
-| Alt L1s | `gnosis`, `moonbeam`, `moonriver`, `celo`, `fantom`, `cronos`, `berachain`, `sei` |
-| Newer chains | `hyperevm`, `abstract`, `monad`, `megaeth`, `apechain`, `katana` |
+| Group        | Names                                                                             |
+| ------------ | --------------------------------------------------------------------------------- |
+| Ethereum     | `mainnet`, `sepolia`, `holesky`, `hoodi`                                          |
+| OP Stack     | `optimism`, `base`, `blast`, `fraxtal`, `worldchain`, `unichain`                  |
+| Arbitrum     | `arbitrum`, `arbitrum-nova`, `arbitrum-sepolia`                                   |
+| Polygon      | `polygon`, `polygon-amoy`                                                         |
+| BNB Chain    | `bsc`, `opbnb`                                                                    |
+| Avalanche    | `avalanche`, `fuji`                                                               |
+| Other L2s    | `linea`, `scroll`, `zksync`, `mantle`, `sonic`, `taiko`                           |
+| Alt L1s      | `gnosis`, `moonbeam`, `moonriver`, `celo`, `fantom`, `cronos`, `berachain`, `sei` |
+| Newer chains | `hyperevm`, `abstract`, `monad`, `megaeth`, `apechain`, `katana`                  |
 
-Pass `--url` to use any explorer not in the list:
+For an explorer that isn't listed, pass its API URL with `--url`:
 
 ```sh
 abi-typegen fetch --name MyToken --url https://api.sonicscan.org/api 0xabc...
 ```
 
-All networks listed at [docs.etherscan.io/supported-chains](https://docs.etherscan.io/supported-chains) are supported via the Etherscan V2 unified endpoint.
+The tool uses the Etherscan V2 unified endpoint, so every chain on
+[docs.etherscan.io/supported-chains](https://docs.etherscan.io/supported-chains)
+works.
 
 ## Targets
 
-| Target | Flag | Language | Primary ecosystem |
-|---|---|---|---|
-| viem | `--target viem` | TypeScript | [viem](https://viem.sh/) contract helpers |
-| zod | `--target zod` | TypeScript | [Zod](https://zod.dev/) 4 validation schemas |
-| wagmi | `--target wagmi` | TypeScript | [wagmi](https://wagmi.sh/) v2 React hooks |
-| ethers v6 | `--target ethers` | TypeScript | [ethers](https://docs.ethers.org/v6/) v6 |
-| ethers v5 | `--target ethers5` | TypeScript | ethers v5 |
-| web3.js | `--target web3js` | TypeScript | [web3.js](https://docs.web3js.org/) v4 |
-| Python | `--target python` | Python | [web3.py](https://web3py.readthedocs.io/) |
-| Go | `--target go` | Go | [go-ethereum](https://geth.ethereum.org/) |
-| Rust | `--target rust` | Rust | [alloy](https://alloy.rs/) |
-| Swift | `--target swift` | Swift | [web3swift](https://github.com/web3swift-team/web3swift) |
-| C# | `--target csharp` | C# | [Nethereum](https://nethereum.com/) |
-| Kotlin | `--target kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
-| Solidity interfaces | `--target solidity` | Solidity | External contract interfaces |
-| YAML | `--target yaml` | YAML | Human-readable ABI descriptions |
+Each target writes code for a specific library, so pick the one your app
+already uses.
+
+| Target              | Flag                | Language   | Primary ecosystem                                        |
+| ------------------- | ------------------- | ---------- | -------------------------------------------------------- |
+| viem                | `--target viem`     | TypeScript | [viem](https://viem.sh/) contract helpers                |
+| zod                 | `--target zod`      | TypeScript | [Zod](https://zod.dev/) 4 validation schemas             |
+| wagmi               | `--target wagmi`    | TypeScript | [wagmi](https://wagmi.sh/) v2 and v3 React hooks         |
+| ethers v6           | `--target ethers`   | TypeScript | [ethers](https://docs.ethers.org/v6/) v6                 |
+| ethers v5           | `--target ethers5`  | TypeScript | ethers v5                                                |
+| web3.js             | `--target web3js`   | TypeScript | [web3.js](https://docs.web3js.org/) v4                   |
+| Python              | `--target python`   | Python     | [web3.py](https://web3py.readthedocs.io/)                |
+| Go                  | `--target go`       | Go         | [go-ethereum](https://geth.ethereum.org/)                |
+| Rust                | `--target rust`     | Rust       | [alloy](https://alloy.rs/)                               |
+| Swift               | `--target swift`    | Swift      | [web3swift](https://github.com/web3swift-team/web3swift) |
+| C#                  | `--target csharp`   | C#         | [Nethereum](https://nethereum.com/)                      |
+| Kotlin              | `--target kotlin`   | Kotlin     | [web3j](https://docs.web3j.io/)                          |
+| Solidity interfaces | `--target solidity` | Solidity   | External contract interfaces                             |
+| YAML                | `--target yaml`     | YAML       | Human-readable ABI descriptions                          |
 
 ## Configuration
+
+Settings live in `foundry.toml` or `hardhat.config.ts`, so every run uses the
+same options. Command-line flags override them for a single run.
 
 ### Foundry (`foundry.toml`)
 
@@ -253,6 +276,9 @@ abi-typegen generate \
 
 ## Commands
 
+`generate` writes the bindings. The other commands check, preview, watch, or
+fetch.
+
 ```sh
 abi-typegen generate             # write generated bindings
 abi-typegen generate --hardhat   # use Hardhat artifact layout
@@ -269,24 +295,33 @@ abi-typegen init                 # scaffold [abi-typegen] in foundry.toml
 abi-typegen forge-install        # install Forge shell integration
 ```
 
-## What Gets Generated
+## What gets generated
 
-For each contract, `abi-typegen` generates files based on the selected target.
+Each contract produces one or two files. TypeScript targets get the ABI plus a
+typed wrapper, and other languages get a single file:
 
-- TypeScript wrapper targets emit `<Name>.abi.ts` plus a target-specific wrapper file such as `<Name>.viem.ts` or `<Name>.ethers.ts`
-- `zod` emits `<Name>.abi.ts` plus `<Name>.zod.ts` with schemas targeting the current Zod 4 API (`import * as z from 'zod'`)
-- `solidity` emits `I<Name>.sol` with interface declarations, events, custom errors, and reconstructed structs from ABI tuples
-- Non-TypeScript targets emit one primary file per contract such as `.py`, `.go`, `.rs`, `.swift`, `.cs`, or `.kt`
-- Multi-target runs keep each target isolated in its own output directory
+- TypeScript wrapper targets emit `<Name>.abi.ts` and a wrapper such as
+  `<Name>.viem.ts` or `<Name>.ethers.ts`.
+- `zod` emits `<Name>.abi.ts` and `<Name>.zod.ts`, written against Zod 4
+  (`import * as z from 'zod'`).
+- `solidity` emits `I<Name>.sol` with the interface, events, custom errors, and
+  structs rebuilt from ABI tuples.
+- Other targets emit one file per contract (`.py`, `.go`, `.rs`, `.swift`, `.cs`,
+  `.kt`, or `.yaml`).
+- Multi-target runs write each target to its own directory.
 
-Overloaded functions get signature-based names so the output stays unambiguous:
+Overloaded functions get a suffix built from their parameter types:
 
-- `deposit(uint256)` -> `depositUint`
-- `deposit(uint256,address)` -> `depositUintAddress`
+- `deposit(uint256)` -> `depositUint256`
+- `deposit(uint256,address)` -> `depositUint256Address`
+
+Wrappers also type transaction options. Payable functions accept a `value` in
+every TypeScript wrapper: ethers `overrides`, the wagmi `write` options, web3
+`send`, and viem's own `write` options.
 
 ### Example output
 
-**viem**
+viem:
 
 ```ts
 export function getTokenContract<TClient extends Client>(
@@ -302,7 +337,7 @@ export type TokenTransferParams = {
 };
 ```
 
-**Rust**
+Rust:
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -312,16 +347,22 @@ pub struct TokenTransferParams {
 }
 ```
 
-For deeper output examples across all targets, see [docs/generated-output.md](docs/generated-output.md).
+[docs/generated-output.md](docs/generated-output.md) covers every target in more
+detail.
 
 ## Performance
 
-Run `./e2e/bench.sh 10` to compare the sample generation workflows on your
-machine. Timings depend on tool versions, target output, contracts, and whether
-build/task overhead is included. See [comparison and benchmark guidance](docs/comparison.md)
-for the method and its limits.
+Generation speed depends on your machine and contracts, so the repo includes a
+benchmark you can run yourself. `./e2e/bench.sh 10` compares the sample
+generation workflows.
+Results depend on tool versions, targets, contracts, and whether you count
+build and task overhead. [Comparison and benchmark guidance](docs/comparison.md)
+explains the method and its limits.
 
 ## CI
+
+A CI check catches a contract change that was committed without regenerated
+bindings.
 
 ### Foundry
 
@@ -339,7 +380,8 @@ for the method and its limits.
 
 ## Docs
 
-Start with the [documentation index](docs/README.md):
+This README covers the basics, and `docs/` has the details. Start with the
+[documentation index](docs/README.md):
 
 - [Installation](docs/installation.md) and download verification
 - [Configuration](docs/configuration.md) and [generated output](docs/generated-output.md)
@@ -349,14 +391,16 @@ Start with the [documentation index](docs/README.md):
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code conventions, tests, and
-pull-request guidance. Include a regression test when fixing a bug.
+Bug reports and fixes are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers
+setup, code conventions, tests, and pull requests. Bug fixes need a regression
+test.
 
 ## Disposable build storage
 
-Builds and package installs use their normal local paths by default; no Scratch
-volume or compiler cache is required. To opt in to a separate output/cache
-directory, run `python3 .cargo/setup-scratch.py --root PATH` once. Cargo, pnpm, and
-Make then use the saved local setting. Disable it with
-`python3 .cargo/setup-scratch.py --disable`. See [the storage guide](docs/development-storage.md)
-for requirements, changing locations, and data preservation.
+This section is optional and only matters if you work on abi-typegen itself.
+Builds and package installs use their normal local paths by default, and nothing
+requires a Scratch volume or compiler cache. To send build output and caches to
+another directory, run `python3 .cargo/setup-scratch.py --root PATH` once. Cargo,
+pnpm, and Make then read that saved setting. `python3 .cargo/setup-scratch.py --disable`
+turns it off. [The storage guide](docs/development-storage.md) covers requirements,
+moving the location, and keeping existing data.
