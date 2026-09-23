@@ -153,7 +153,7 @@ fn erc20_ethers_file_correct_structure() {
     let ir = parse_artifact("ERC20", &fixture("erc20.json")).unwrap();
     let files = generate_contract_files(&ir, &ethers_config());
     let eth = &files["ERC20.ethers.ts"];
-    assert!(eth.contains("export interface ERC20Contract {"));
+    assert!(eth.contains("export interface ERC20Methods {"));
     assert!(eth.contains("export function connectERC20("));
     assert!(eth.contains(
         "balanceOf(account: AddressLike, overrides?: Omit<Overrides, 'value'>): Promise<bigint>"
@@ -161,9 +161,9 @@ fn erc20_ethers_file_correct_structure() {
     assert!(eth.contains(
         "transfer(to: AddressLike, amount: BigNumberish, overrides?: Omit<Overrides, 'value'>): Promise<ContractTransactionResponse>"
     ));
-    assert!(
-        eth.contains("Transfer(from?: AddressLike | null, to?: AddressLike | null): EventFilter")
-    );
+    assert!(eth.contains(
+        "Transfer(from?: AddressLike | null, to?: AddressLike | null): DeferredTopicFilter"
+    ));
 }
 
 #[test]
@@ -418,7 +418,7 @@ fn error_only_abi_contains_error() {
 fn error_only_ethers_has_empty_interface() {
     let ir = parse_artifact("AuthGate", error_only_json()).unwrap();
     let eth = render_ethers_file(&ir);
-    assert!(eth.contains("export interface AuthGateContract {"));
+    assert!(eth.contains("export interface AuthGateMethods {"));
     // Interface should close immediately with no function signatures inside
     assert!(!eth.contains("): Promise<"));
     // No event filters either

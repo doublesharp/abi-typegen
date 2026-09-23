@@ -662,7 +662,7 @@ fn run_generate_all_single_targets_write_expected_outputs() {
                 "Token.yaml",
             ],
             marker_file: "Token.ethers.ts",
-            marker_text: "export interface TokenContract {",
+            marker_text: "export type TokenContract = Omit<BaseContract, keyof TokenMethods | 'connect'> &",
         },
         TargetCase {
             name: "ethers5",
