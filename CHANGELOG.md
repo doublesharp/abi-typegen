@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-09-23
+
 ### Fixed
 
 - viem: emit NatSpec `@returns` tags in ABI output order so repeated runs
@@ -27,6 +29,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - web3.js: type integer return values as `bigint` and integer inputs as
   `Numbers`, matching web3 v4. Payable `send` accepts `value`. Import `Contract`
   from `web3` instead of `web3-eth-contract`.
+
+### Changed
+
+- Rewrite the README in plainer language, opening each section with a sentence
+  that explains it without assuming prior knowledge. Correct the overload naming example (`depositUint256`) and list wagmi
+  v2 and v3 support.
 
 ## [0.4.1] - 2026-09-14
 
@@ -170,7 +178,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/doublesharp/abi-typegen/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/doublesharp/abi-typegen/compare/v0.3.1...v0.3.2
