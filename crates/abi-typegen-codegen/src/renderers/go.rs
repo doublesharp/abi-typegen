@@ -22,8 +22,11 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
     let mut imports = Imports::default();
     let mut scope = Scope::default();
     let contract = exported(&ir.name);
+    // The documented ABI constant keeps its name; anything else that clashes
+    // with it takes the suffix.
+    let abi_name = scope.claim(&format!("{contract}ABI"));
 
-    // Name every tuple before anything else so their names are stable.
+    // Name every tuple before other types so their names are stable.
     let tuple_names: HashMap<String, String> = registry
         .defs()
         .iter()
@@ -157,7 +160,6 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
 
     // Contract NatSpec documents the ABI constant. Above the package clause it
     // would become the package doc, and every contract file would compete for it.
-    let abi_name = scope.claim(&format!("{contract}ABI"));
     out.push_str(&doc_comment(
         &format!("{abi_name} is the JSON ABI of the {} contract.", ir.name),
         ir.natspec.as_ref(),
@@ -188,17 +190,20 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
     out
 }
 
-/// Names items the way abigen does: the first keeps its name and later
-/// items with the same name get `0`, `1`, ...
+/// Names items the way abigen does: the first item with a given ABI name
+/// keeps it and later ones get `0`, `1`, ...
+///
+/// Like go-ethereum, this groups by the raw ABI name, so `foo_bar` and
+/// `fooBar` are not overloads. The caller's [`Scope`] separates them.
 fn abigen_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<String> {
-    let mut seen: HashMap<String, usize> = HashMap::new();
+    let mut seen: HashMap<&str, usize> = HashMap::new();
     names
         .into_iter()
         .map(|name| {
             let base = exported(name);
-            let count = seen.entry(base.clone()).or_insert(0);
+            let count = seen.entry(name).or_insert(0);
             let result = if *count == 0 {
-                base.clone()
+                base
             } else {
                 format!("{base}{}", *count - 1)
             };
@@ -208,24 +213,64 @@ fn abigen_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<String> {
         .collect()
 }
 
+/// One field of a rendered Go struct.
+#[derive(Debug)]
+struct Field {
+    name: String,
+    ty: String,
+    /// The ABI name, as an `abi:"..."` tag, when go-ethereum cannot derive it
+    /// from the Go field name.
+    tag: Option<String>,
+}
+
 fn struct_fields<'a>(
     params: impl IntoIterator<Item = (&'a str, &'a SolType, Option<&'a str>)>,
     registry: &TupleRegistry,
     go_type: &mut dyn FnMut(&SolType, Option<&str>) -> String,
-) -> Vec<(String, String)> {
+) -> Vec<Field> {
     let params: Vec<_> = params.into_iter().collect();
     let names =
         param_names(params.iter().map(|(name, ty, internal_type)| {
             (*name, *ty, registry.name_of_type(ty, *internal_type))
         }));
     let mut scope = Scope::default();
-    names
+    let mut fields: Vec<Field> = names
         .iter()
         .zip(&params)
-        .map(|(name, (_, ty, internal_type))| {
-            (scope.claim(&exported(name)), go_type(ty, *internal_type))
+        .map(|(name, (abi_name, ty, internal_type))| {
+            let mut base = exported(name);
+            if base.is_empty() {
+                // A name of only underscores has no letters to export.
+                base = format!("Field{}", fields_index(&params, abi_name));
+            }
+            let field = scope.claim(&base);
+            // go-ethereum maps ABI names to fields by exporting them. A
+            // suffixed field no longer matches, so it names its ABI field.
+            let tag = (!abi_name.is_empty() && field != exported(abi_name))
+                .then(|| (*abi_name).to_string());
+            Field {
+                name: field,
+                ty: go_type(ty, *internal_type),
+                tag,
+            }
         })
-        .collect()
+        .collect();
+    // Tag every named field once any needs a tag, so the struct maps consistently.
+    if fields.iter().any(|field| field.tag.is_some()) {
+        for (field, (abi_name, _, _)) in fields.iter_mut().zip(&params) {
+            if !abi_name.is_empty() {
+                field.tag = Some((*abi_name).to_string());
+            }
+        }
+    }
+    fields
+}
+
+fn fields_index(params: &[(&str, &SolType, Option<&str>)], name: &str) -> usize {
+    params
+        .iter()
+        .position(|(candidate, _, _)| std::ptr::eq(*candidate, name))
+        .unwrap_or(0)
 }
 
 fn sol_type_to_go(
@@ -289,18 +334,46 @@ fn render_imports(imports: &Imports) -> String {
 }
 
 /// Renders a struct with gofmt's column alignment.
-fn render_struct(name: &str, fields: &[(String, String)]) -> String {
+///
+/// gofmt pads each column to the widest cell in a run of consecutive lines
+/// that have that column. Every field has a name column. Only tagged fields
+/// have a type column, so type widths come from each run of tagged fields.
+fn render_struct(name: &str, fields: &[Field]) -> String {
     if fields.is_empty() {
         return format!("type {name} struct{{}}\n\n");
     }
-    let width = fields
+    let name_width = fields
         .iter()
-        .map(|(field, _)| field.len())
+        .map(|field| field.name.len())
         .max()
         .unwrap_or(0);
+    let mut type_widths = vec![0; fields.len()];
+    let mut start = 0;
+    while start < fields.len() {
+        if fields[start].tag.is_none() {
+            start += 1;
+            continue;
+        }
+        let end = (start..fields.len())
+            .find(|&index| fields[index].tag.is_none())
+            .unwrap_or(fields.len());
+        let width = fields[start..end]
+            .iter()
+            .map(|field| field.ty.len())
+            .max()
+            .unwrap_or(0);
+        type_widths[start..end].fill(width);
+        start = end;
+    }
     let mut out = format!("type {name} struct {{\n");
-    for (field, ty) in fields {
-        out.push_str(&format!("\t{field:<width$} {ty}\n"));
+    for (field, type_width) in fields.iter().zip(type_widths) {
+        match &field.tag {
+            Some(tag) => out.push_str(&format!(
+                "\t{:<name_width$} {:<type_width$} `abi:\"{tag}\"`\n",
+                field.name, field.ty
+            )),
+            None => out.push_str(&format!("\t{:<name_width$} {}\n", field.name, field.ty)),
+        }
     }
     out.push_str("}\n\n");
     out
@@ -349,8 +422,28 @@ fn comment_line(text: &str) -> String {
     }
 }
 
+/// Quotes `value` as a Go interpreted string literal.
 fn go_string(value: &str) -> String {
-    format!("{value:?}")
+    let mut out = String::with_capacity(value.len() + 2);
+    out.push('"');
+    for c in value.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            '\r' => out.push_str("\\r"),
+            c if c.is_control() => {
+                let mut units = [0u16; 2];
+                for unit in c.encode_utf16(&mut units) {
+                    out.push_str(&format!("\\u{unit:04x}"));
+                }
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
 }
 
 fn go_raw_or_quoted(value: &str) -> String {
@@ -528,7 +621,9 @@ mod tests {
             r#"[{"type":"function","name":"f","inputs":[{"name":"_owner","type":"address"},{"name":"owner","type":"address"}],"outputs":[],"stateMutability":"nonpayable"}]"#,
         );
         assert!(
-            out.contains("\tOwner  common.Address\n\tOwner2 common.Address\n"),
+            out.contains(
+                "\tOwner  common.Address `abi:\"_owner\"`\n\tOwner2 common.Address `abi:\"owner\"`\n"
+            ),
             "{out}"
         );
     }
@@ -550,6 +645,52 @@ mod tests {
     fn empty_event_renders_empty_struct() {
         let out = render(r#"[{"type":"event","name":"Ping","inputs":[],"anonymous":false}]"#);
         assert!(out.contains("type TokenPingEvent struct{}"), "{out}");
+    }
+
+    #[test]
+    fn go_strings_use_go_escapes() {
+        assert_eq!(go_string("a\"b\\c"), "\"a\\\"b\\\\c\"");
+        assert_eq!(go_string("x\u{7f}y\u{1}"), "\"x\\u007fy\\u0001\"");
+        assert_eq!(go_string("é"), "\"é\"");
+    }
+
+    #[test]
+    fn tuple_declared_in_contract_is_not_double_prefixed() {
+        let out = render(
+            r#"[{"type":"function","name":"get","inputs":[],"outputs":[{"name":"p","type":"tuple","internalType":"struct Token.Position","components":[{"name":"x","type":"bool"}]}],"stateMutability":"view"}]"#,
+        );
+        assert!(out.contains("type TokenPosition struct"), "{out}");
+        assert!(!out.contains("TokenTokenPosition"), "{out}");
+    }
+
+    #[test]
+    fn abi_constant_keeps_its_name_when_a_tuple_clashes() {
+        let out = render(
+            r#"[{"type":"function","name":"f","inputs":[{"name":"p","type":"tuple","internalType":"struct ABI","components":[{"name":"x","type":"bool"}]}],"outputs":[],"stateMutability":"nonpayable"}]"#,
+        );
+        assert!(out.contains("const TokenABI = `"), "{out}");
+        assert!(out.contains("type TokenABI2 struct"), "{out}");
+    }
+
+    #[test]
+    fn differently_spelled_names_are_not_overloads() {
+        let out = render(
+            r#"[
+            {"type":"function","name":"foo_bar","inputs":[{"name":"x","type":"bool"}],"outputs":[],"stateMutability":"nonpayable"},
+            {"type":"function","name":"fooBar","inputs":[{"name":"x","type":"bool"}],"outputs":[],"stateMutability":"nonpayable"}
+        ]"#,
+        );
+        assert!(out.contains("type TokenFooBarParams struct"), "{out}");
+        assert!(out.contains("type TokenFooBarParams2 struct"), "{out}");
+        assert!(!out.contains("FooBar0"), "{out}");
+    }
+
+    #[test]
+    fn underscore_only_names_still_export() {
+        let out = render(
+            r#"[{"type":"function","name":"f","inputs":[{"name":"_","type":"bool"}],"outputs":[],"stateMutability":"nonpayable"}]"#,
+        );
+        assert!(out.contains("\tField0 bool"), "{out}");
     }
 
     #[test]

@@ -20,27 +20,38 @@ pub struct TupleDef {
 /// All named tuple types in one contract, in dependency order.
 #[derive(Debug, Clone, Default)]
 pub struct TupleRegistry {
+    contract: String,
     defs: Vec<TupleDef>,
 }
 
 /// Returns the struct name encoded in an `internalType`, with dots removed.
 ///
-/// `struct Vault.Position[]` becomes `VaultPosition`. Returns `None` when the
+/// `struct Vault.Position[]` becomes `VaultPosition`, or `Position` when
+/// `contract` is `Vault`: a struct declared in the contract being rendered
+/// does not repeat the contract name, as with abigen. Returns `None` when the
 /// internal type does not name a struct.
-pub fn internal_struct_name(internal_type: &str) -> Option<String> {
+pub fn internal_struct_name(internal_type: &str, contract: &str) -> Option<String> {
     let mut stripped = internal_type.strip_prefix("struct ")?;
     while stripped.ends_with(']') {
         let open = stripped.rfind('[')?;
         stripped = &stripped[..open];
     }
-    let name: String = stripped.split('.').map(exported).collect();
+    let segments: Vec<&str> = stripped.split('.').collect();
+    let segments = match segments.split_first() {
+        Some((first, rest)) if *first == contract && !rest.is_empty() => rest,
+        _ => &segments[..],
+    };
+    let name: String = segments.iter().map(|segment| exported(segment)).collect();
     (!name.is_empty()).then_some(name)
 }
 
 impl TupleRegistry {
     /// Collects every tuple in the contract's functions, events, errors, and constructor.
     pub fn new(ir: &ContractIr) -> Self {
-        let mut registry = Self::default();
+        let mut registry = Self {
+            contract: ir.name.clone(),
+            defs: Vec::new(),
+        };
         if let Some(constructor) = &ir.constructor {
             for (index, input) in constructor.inputs.iter().enumerate() {
                 registry.visit(
@@ -105,7 +116,7 @@ impl TupleRegistry {
     /// Panics if the tuple was not part of the contract the registry was built
     /// from. Renderers only look up tuples from that same contract.
     pub fn name(&self, components: &[TupleComponent], internal_type: Option<&str>) -> &str {
-        let source = internal_type.and_then(internal_struct_name);
+        let source = internal_type.and_then(|it| internal_struct_name(it, &self.contract));
         &self
             .defs
             .iter()
@@ -134,7 +145,7 @@ impl TupleRegistry {
     fn visit(&mut self, ty: &SolType, internal_type: Option<&str>, fallback: &str) {
         match ty {
             SolType::Tuple(components) => {
-                let source = internal_type.and_then(internal_struct_name);
+                let source = internal_type.and_then(|it| internal_struct_name(it, &self.contract));
                 if self
                     .defs
                     .iter()
@@ -210,14 +221,18 @@ mod tests {
     #[test]
     fn internal_type_names_drop_dots_and_arrays() {
         assert_eq!(
-            internal_struct_name("struct Vault.Position[][2]").as_deref(),
+            internal_struct_name("struct Vault.Position[][2]", "Token").as_deref(),
             Some("VaultPosition")
         );
         assert_eq!(
-            internal_struct_name("struct URIData").as_deref(),
+            internal_struct_name("struct Vault.Position", "Vault").as_deref(),
+            Some("Position")
+        );
+        assert_eq!(
+            internal_struct_name("struct URIData", "Token").as_deref(),
             Some("URIData")
         );
-        assert_eq!(internal_struct_name("address"), None);
+        assert_eq!(internal_struct_name("address", "Token"), None);
     }
 
     #[test]

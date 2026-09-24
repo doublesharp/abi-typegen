@@ -45,7 +45,7 @@ func Check() error {
 	if err != nil {
 		return err
 	}
-	want := contracts.VaultVaultPosition{Shares: big.NewInt(7), DepositedAt: 9, Token: common.HexToAddress("0x02")}
+	want := contracts.VaultPosition{Shares: big.NewInt(7), DepositedAt: 9, Token: common.HexToAddress("0x02")}
 	encoded, err := vault.Methods["getPosition"].Outputs.Pack(want)
 	if err != nil {
 		return err
@@ -54,7 +54,7 @@ func Check() error {
 	if err != nil {
 		return err
 	}
-	got := *abi.ConvertType(values[0], new(contracts.VaultVaultPosition)).(*contracts.VaultVaultPosition)
+	got := *abi.ConvertType(values[0], new(contracts.VaultPosition)).(*contracts.VaultPosition)
 	if got.Shares.Cmp(want.Shares) != 0 || got.DepositedAt != want.DepositedAt || got.Token != want.Token {
 		return errMismatch("decoded tuple")
 	}
