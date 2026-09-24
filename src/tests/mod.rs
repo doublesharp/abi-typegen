@@ -900,7 +900,7 @@ fn run_generate_all_single_targets_write_expected_outputs() {
                 "Token.yaml",
             ],
             marker_file: "Token.kt",
-            marker_text: "data class TokenBalanceOfParams(",
+            marker_text: "data class BalanceOfParams(",
         },
         TargetCase {
             name: "solidity",

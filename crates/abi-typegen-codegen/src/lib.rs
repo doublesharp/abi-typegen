@@ -104,7 +104,10 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             files.insert(format!("{}.cs", ir.name), csharp::render_csharp_file(ir));
         }
         Target::Kotlin => {
-            files.insert(format!("{}.kt", ir.name), kotlin::render_kotlin_file(ir));
+            files.insert(
+                format!("{}.kt", ir.name),
+                kotlin::render_kotlin_file(ir, &config.package),
+            );
         }
         Target::Solidity => {
             let interface_name = solidity::interface_name(&ir.name);

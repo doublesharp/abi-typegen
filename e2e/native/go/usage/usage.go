@@ -59,6 +59,37 @@ func Check() error {
 		return errMismatch("decoded tuple")
 	}
 
+	// Nested tuples with arrays, fixed arrays, and bytes round-trip.
+	native, err := abi.JSON(stringsReader(contracts.NativeCasesABI))
+	if err != nil {
+		return err
+	}
+	batch := contracts.NativeCasesBatch{
+		Calls: []contracts.NativeCasesCall3Value{{
+			Target: common.HexToAddress("0x03"), AllowFailure: true, Value: big.NewInt(10), CallData: []byte{1, 2},
+		}},
+		Grid: contracts.NativeCasesGrid{
+			Rows: [][]*big.Int{{big.NewInt(1)}, {}}, Flags: [2]bool{true, false}, Tags: [][32]byte{{7}},
+		},
+		Fee:   big.NewInt(3000),
+		Delta: big.NewInt(-5),
+	}
+	packed, err := native.Pack("aggregate", batch)
+	if err != nil {
+		return err
+	}
+	if [4]byte(packed[:4]) != contracts.NativeCasesAggregateSelector {
+		return errMismatch("aggregate selector")
+	}
+	args, err := native.Methods["aggregate"].Inputs.Unpack(packed[4:])
+	if err != nil {
+		return err
+	}
+	decoded := *abi.ConvertType(args[0], new(contracts.NativeCasesBatch)).(*contracts.NativeCasesBatch)
+	if decoded.Fee.Cmp(batch.Fee) != 0 || decoded.Grid.Flags != batch.Grid.Flags || decoded.Calls[0].Value.Cmp(big.NewInt(10)) != 0 {
+		return errMismatch("decoded batch")
+	}
+
 	params := contracts.TokenTransferParams{To: common.Address{}, Amount: big.NewInt(1)}
 	if _, err := parsed.Pack("transfer", params.To, params.Amount); err != nil {
 		return err
