@@ -29,14 +29,17 @@ pnpm, and Make configuration from it. After setup, use ordinary commands:
 cargo build
 cargo test
 make coverage
-cd npm && pnpm install --frozen-lockfile
+cd npm && pnpm install --frozen-lockfile --ignore-scripts
 ```
 
 No repeated storage flag or wrapper is required. Cargo sends builds, docs, compiler
 cache, and temporary files to the saved root. Make loads the generated environment
-for every recipe. The local pnpm settings route its dependencies, package store,
-and metadata cache. Existing relative paths such as `target/debug/abi-typegen`
-continue to work through directory symlinks.
+for every recipe. The local pnpm settings route its package store, metadata cache,
+and installed packages (pnpm's virtual store) to the saved root. Each project's
+`node_modules` stays a real local directory, because pnpm 12 writes links into it
+and rejects a symlinked one; it holds only links into storage. Existing relative
+paths such as `target/debug/abi-typegen` continue to work through directory
+symlinks.
 
 For unrelated commands or plain npm, load the environment once per shell:
 
@@ -75,7 +78,7 @@ inspect both copies before removing either disposable copy.
 ## What moves
 
 `.cargo/setup-scratch.py` lists all redirected directories: Cargo and fuzz output,
-coverage reports and history, discovered fuzz corpus, Node dependencies, the npm
+coverage reports and history, discovered fuzz corpus, installed Node packages, the npm
 CLI binary, and untracked Foundry/Hardhat artifacts and bindings. Existing local
 disposable directories are preserved when initially moved.
 
@@ -101,7 +104,8 @@ python3 .cargo/setup-scratch.py --disable
 # or: make scratch-disable
 ```
 
-This removes only recognized links and unchanged generated settings. It copies
+This removes only recognized links and unchanged generated settings, plus each
+project's local `node_modules`, whose links point into storage. It copies
 the discovered fuzz corpus and coverage history back into the checkout first.
 All external storage data remains in place. Build output and dependencies use
 normal local paths on subsequent commands; reinstall dependencies as needed.
@@ -113,3 +117,10 @@ two copies of corpus/history: the restored local copy and the retained external
 copy. Setup refuses to merge them automatically; reconcile them first or use a
 fresh root. It also refuses modified generated configuration or unexpected links
 instead of deleting them.
+
+Checkouts configured before pnpm 12 support linked each `node_modules` into
+storage. Rerunning `make scratch-setup` replaces those links with local
+directories and keeps the installed packages; then rerun `pnpm install`. Install
+with `--ignore-scripts` as shown: an install that meets an unapproved build script
+adds an `allowBuilds` placeholder to the generated `pnpm-workspace.yaml`, and
+rerunning setup restores the file.

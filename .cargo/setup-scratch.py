@@ -20,24 +20,28 @@ PATHS = (
     "fuzz/target",
     "fuzz/logs",
     "fuzz/corpus",
-    "npm/node_modules",
-    "npm/hardhat-abi-typegen/node_modules",
     "npm/abi-typegen/bin",
-    "e2e/foundry-sample/node_modules",
     "e2e/foundry-sample/out",
     "e2e/foundry-sample/cache",
     "e2e/foundry-sample/src/generated",
-    "e2e/hardhat-sample/node_modules",
     "e2e/hardhat-sample/artifacts",
     "e2e/hardhat-sample/cache",
     "e2e/hardhat-sample/typechain-types",
     "e2e/hardhat-sample/abi-typegen-out",
-    "e2e/hardhat3-sample/node_modules",
     "e2e/hardhat3-sample/artifacts",
     "e2e/hardhat3-sample/cache",
     "e2e/hardhat3-sample/abi-typegen-out",
 )
 PRESERVED = ("fuzz/corpus", ".doublcov")
+# pnpm 12 writes links into each project's own node_modules, so these stay real
+# directories. The generated pnpm settings move the packages themselves to storage.
+NODE_MODULES = (
+    "npm/node_modules",
+    "npm/hardhat-abi-typegen/node_modules",
+    "e2e/foundry-sample/node_modules",
+    "e2e/hardhat-sample/node_modules",
+    "e2e/hardhat3-sample/node_modules",
+)
 
 
 def check_parents(root, relative):
@@ -111,6 +115,11 @@ def environment(storage):
     }
 
 
+def virtual_store(storage, project):
+    """Return where pnpm keeps a project's installed packages."""
+    return storage / project / "node_modules/.pnpm"
+
+
 def generated_files(storage):
     """Render local tool settings without embedding paths in tracked files."""
     env = environment(storage)
@@ -135,7 +144,7 @@ def generated_files(storage):
     }
     for project in PROJECTS:
         files[project + "/pnpm-workspace.yaml"] = (
-            f"modulesDir: {json.dumps(str(storage / project / 'node_modules'), ensure_ascii=False)}\n"
+            f"virtualStoreDir: {json.dumps(str(virtual_store(storage, project)), ensure_ascii=False)}\n"
             f"storeDir: {json.dumps(str(storage / 'cache/pnpm'), ensure_ascii=False)}\n"
             f"cacheDir: {json.dumps(str(storage / 'cache/pnpm-metadata'), ensure_ascii=False)}\n"
         )
@@ -175,7 +184,15 @@ def configure(repo, storage=None, volume=None):
         if not storage.is_relative_to(volume):
             raise ValueError("Storage must be within the required volume.")
     files = generated_files(storage)
-    check_untracked(repo, (*PATHS, *files, SETTINGS))
+    check_untracked(repo, (*PATHS, *NODE_MODULES, *files, SETTINGS))
+    for relative in NODE_MODULES:
+        check_parents(repo, relative)
+        source = repo / relative
+        if source.is_symlink() and source.readlink() not in (
+            storage / relative,
+            *((old_root / relative,) if old_root else ()),
+        ):
+            raise ValueError(f"Unexpected symlink: {source}")
     for relative in files:
         path = repo / relative
         if path.is_symlink() or (
@@ -229,6 +246,12 @@ def configure(repo, storage=None, volume=None):
         if not source.is_symlink():
             source.parent.mkdir(parents=True, exist_ok=True)
             source.symlink_to(destination, target_is_directory=True)
+    for relative in NODE_MODULES:
+        # Earlier versions linked node_modules into storage. Drop the link; the
+        # packages stay in storage and the next pnpm install links them again.
+        source = repo / relative
+        if source.is_symlink():
+            source.unlink()
     for relative, content in files.items():
         path = repo / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -250,7 +273,7 @@ def disable(repo):
         return
     storage = Path(previous["root"])
     files = generated_files(storage)
-    check_untracked(repo, (*PATHS, *files, SETTINGS))
+    check_untracked(repo, (*PATHS, *NODE_MODULES, *files, SETTINGS))
     for relative, expected in files.items():
         path = repo / relative
         if path.is_symlink() or (path.exists() and path.read_text() != expected):
@@ -258,6 +281,11 @@ def disable(repo):
                 f"Refusing to remove modified or unrelated configuration: {path}"
             )
     for relative in PATHS:
+        path = repo / relative
+        if path.is_symlink() and path.readlink() != storage / relative:
+            raise ValueError(f"Unexpected symlink: {path}")
+    for relative in NODE_MODULES:
+        check_parents(repo, relative)
         path = repo / relative
         if path.is_symlink() and path.readlink() != storage / relative:
             raise ValueError(f"Unexpected symlink: {path}")
@@ -277,6 +305,14 @@ def disable(repo):
             restored = staged / relative
             if restored.exists():
                 restored.rename(path)
+        for relative in NODE_MODULES:
+            # Its links point into storage's virtual store, which pnpm will no
+            # longer use. Removing it lets the next pnpm install start clean.
+            path = repo / relative
+            if path.is_symlink():
+                path.unlink()
+            elif path.is_dir():
+                shutil.rmtree(path)
         for relative in files:
             (repo / relative).unlink(missing_ok=True)
         (repo / SETTINGS).unlink()

@@ -43,7 +43,13 @@ class ScratchTests(unittest.TestCase):
         self.assertEqual(cargo["build"]["target-dir"], str(self.storage / "target"))
         self.assertEqual(cargo["env"]["TMPDIR"]["value"], str(self.storage / "tmp"))
         pnpm = (self.repo / "npm/pnpm-workspace.yaml").read_text()
-        self.assertIn(str(self.storage / "npm/node_modules"), pnpm)
+        self.assertIn(
+            f"virtualStoreDir: {json.dumps(str(self.storage / 'npm/node_modules/.pnpm'), ensure_ascii=False)}",
+            pnpm,
+        )
+        self.assertNotIn("modulesDir", pnpm)
+        # pnpm 12 writes links into node_modules itself, so it is never linked.
+        self.assertFalse((self.repo / "npm/node_modules").is_symlink())
         result = subprocess.check_output(
             ["make", "--no-print-directory", "-f", "-", "print"],
             cwd=self.repo,
@@ -53,6 +59,38 @@ class ScratchTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result, str(self.storage / "tmp"))
+
+    def test_legacy_node_modules_links_are_replaced(self):
+        # Earlier versions linked node_modules into storage.
+        linked = self.storage / "e2e/foundry-sample/node_modules"
+        linked.mkdir(parents=True)
+        (linked / ".pnpm").mkdir()
+        project = self.repo / "e2e/foundry-sample"
+        project.mkdir(parents=True)
+        (project / "node_modules").symlink_to(linked, target_is_directory=True)
+        self.configure(self.storage)
+        self.assertFalse((project / "node_modules").exists())
+        # Installed packages stay in storage as the virtual store.
+        self.assertTrue((linked / ".pnpm").is_dir())
+
+    def test_unexpected_node_modules_link_is_rejected(self):
+        external = self.base / "elsewhere"
+        external.mkdir()
+        (self.repo / "npm").mkdir()
+        (self.repo / "npm/node_modules").symlink_to(external, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self.configure(self.storage)
+        self.assertTrue((self.repo / "npm/node_modules").is_symlink())
+        self.assertFalse(self.storage.exists())
+
+    def test_disable_removes_node_modules_linked_to_storage(self):
+        self.configure(self.storage)
+        modules = self.repo / "npm/node_modules"
+        modules.mkdir(parents=True)
+        (modules / "pkg").symlink_to(self.storage / "npm/node_modules/.pnpm/pkg")
+        scratch.disable(self.repo)
+        self.assertFalse(modules.exists())
+        self.assertFalse((self.repo / "npm/pnpm-workspace.yaml").exists())
 
     def test_switching_roots_preserves_existing_corpus(self):
         self.configure(self.storage)
