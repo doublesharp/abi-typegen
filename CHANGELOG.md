@@ -8,6 +8,108 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-23
+
+This release reworks the Go, Rust, Swift, and Kotlin targets so their output
+compiles, embeds the ABI and selectors, and names every tuple. Generated names
+and layouts change for these four targets. The migration tables below map old
+names to new ones. TypeScript, Python, C#, Solidity, and YAML output is unchanged.
+
+### Added
+
+- Rust, Swift, and Kotlin output embeds the JSON ABI (Go already did). All four
+  embed the canonical signature and selector of every function, event, and
+  error, and the topic of every non-anonymous event.
+- `package` setting and `--package` flag (on `generate` and `diff`) for the Go
+  package name and Kotlin package. The default stays `contracts`. Invalid values
+  are rejected when the configuration is read.
+- Rust output includes alloy's contract instance (`#[sol(rpc)]`), typed
+  `…Call`/`…Return` structs, and event and error decoding. `--no-wrappers`
+  removes only the contract instance.
+- CI builds generated bindings in Go, Rust, Swift, and Kotlin consumer projects
+  (`make e2e-go`, `e2e-rust`, `e2e-swift`, `e2e-kotlin`).
+
+### Changed
+
+- Rust: files are snake_case (`tuple_cases.rs`) with a generated `mod.rs`. Each
+  file is an alloy `sol!` invocation, so types derive `PartialEq`, `Eq`, `Hash`,
+  `Default` (where possible), and serde with ABI field names, events keep their
+  indexed fields, and overloads follow alloy (`deposit_0Call`). NatSpec becomes
+  rustdoc that passes `-D warnings`. Contracts with a fixed array longer than 32
+  elements omit the serde derives, which serde cannot provide for such arrays.
+- Go: output is gofmt-clean, imports only what it uses, and leaves a blank line
+  between the generated-code header and the package clause. Integer widths other
+  than 8, 16, 32, and 64 bits use `*big.Int`, which is what go-ethereum decodes.
+  Overloads follow abigen (`Deposit`, `Deposit0`). Contract NatSpec documents the
+  ABI constant instead of the package.
+- Swift: every type, property, and initializer is `public`, and every struct is
+  `Sendable` and `Hashable`. Types and constants nest in `public enum <Name>`.
+  Imports `Web3Core` instead of `web3swift`.
+- Kotlin: types and constants nest in `object <Name>` in the configured package.
+  Tuples extend web3j's `StaticStruct`/`DynamicStruct`. Integers are
+  `BigInteger`; `bytesN` and `bytes` use web3j's `BytesN` and `DynamicBytes`,
+  which compare by value and keep their size. No `UInt`/`ULong`, so Java calls
+  every getter by its plain name.
+- All four targets keep acronyms (`TokenURI`, not `TokenUri`), name unnamed
+  parameters after their types (`address`, `address2`) instead of `arg0`, and
+  render tuples as named types from the struct's `internalType`.
+
+### Fixed
+
+- Rust rendered single-field tuples as parenthesized types (`(Address)`).
+- Go reported unused `math/big` and `common` imports, and decoded `uint24`-style
+  fields into native integers that go-ethereum rejects.
+- Swift output needed `import Web3Core` and could not be used from another module.
+- Kotlin tuples were `Map<String, Any>`, `ByteArray` fields compared by identity,
+  and events and errors kept their ABI casing while parameter types did not.
+- The fuzz targets built `Config` with a removed field.
+
+### Migration
+
+Go (`TupleCases`, `Vault`, and `Token` from the sample project):
+
+| 0.4                                                  | 0.5                                   |
+| ---------------------------------------------------- | ------------------------------------- |
+| `package contracts` (fixed)                          | `package <package>`                   |
+| Inline `struct { Account common.Address }`           | `TupleCasesTupleAccountPosition`      |
+| `VaultDepositUint256AddressParams`                   | `VaultDepositParams`                  |
+| `VaultDepositUint256Params`                          | `VaultDeposit0Params`                 |
+| `uint24` field as `uint32`                           | `*big.Int`                            |
+| `TokenTokenUriParams`                                | `TokenTokenURIParams`                 |
+| Field `Arg0`                                         | Field named after its type (`Address`) |
+
+Rust:
+
+| 0.4                                          | 0.5                                          |
+| -------------------------------------------- | -------------------------------------------- |
+| `Token.rs`, no module file                   | `token.rs` plus `mod.rs` re-exporting `Token` |
+| `TokenTransferParams`                        | `Token::transferCall`                        |
+| `TokenTransferEvent`                         | `Token::Transfer`                            |
+| `TokenInsufficientBalanceError`              | `Token::InsufficientBalance`                 |
+| `TupleCasesDepositTupleAddressEndTupleParams` | `TupleCases::deposit_0Call`                  |
+| Serde `deposited_at`                         | Serde `depositedAt`                          |
+
+Swift:
+
+| 0.4                                     | 0.5                                        |
+| --------------------------------------- | ------------------------------------------ |
+| `struct TokenTransferParams` (internal) | `public struct Token.TransferParams`       |
+| `struct TokenTransferEvent`             | `Token.TransferEvent`                      |
+| Tuple field `(account: EthereumAddress)` | `TupleCases.TupleAccountPosition`         |
+| `VaultDepositUint256Params`             | `Vault.Deposit1Params`                     |
+
+Kotlin:
+
+| 0.4                                        | 0.5                                          |
+| ------------------------------------------ | -------------------------------------------- |
+| `package contracts` (fixed)                | `package <package>`                          |
+| `data class TokenTransferParams`           | `Token.TransferParams`                       |
+| `data class TokenTransferEvent`            | `Token.TransferEvent`                        |
+| `TokenpausedEvent` (event `paused`)        | `Token.PausedEvent`                          |
+| Tuple as `Map<String, Any>`                | `Vault.Position` (a web3j `StaticStruct`)    |
+| `ByteArray` for `bytes32` / `bytes`        | web3j `Bytes32` / `DynamicBytes`             |
+| `UInt` / `ULong` for small integers        | `BigInteger`                                 |
+
 ## [0.4.3] - 2026-09-23
 
 ### Fixed
@@ -189,7 +291,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/doublesharp/abi-typegen/compare/v0.4.0...v0.4.1
