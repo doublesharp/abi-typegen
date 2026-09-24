@@ -73,8 +73,11 @@ of every function, event, and error. Each tuple becomes a named type.
   and a `<NAME>_ABI` string constant. alloy generates the structs, `…Call`
   and `…Return` types, events with indexed fields, errors, and selectors. Types
   derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`, `Default` (where every field
-  supports it), and serde with ABI field names. `wrappers = false` removes only
-  `rpc`. NatSpec becomes rustdoc that passes `-D warnings`.
+  supports it), and serde with ABI field names. serde supports arrays of at most
+  32 elements, so a contract with a longer fixed array omits the serde derives.
+  `wrappers = false` removes only `rpc`. NatSpec becomes rustdoc that passes
+  `-D warnings`. A contract whose module name is a Rust keyword uses a raw
+  identifier (`pub mod r#override;`).
 - **Swift** types are `public struct <Type>: Sendable, Hashable` with a public
   memberwise initializer. Constants are static lets such as
   `Token.transferSelector` (`Data`) and `Token.TransferEventTopic`. Output builds
@@ -83,12 +86,16 @@ of every function, event, and error. Each tuple becomes a named type.
   `DynamicStruct`, so they encode directly. Integers are `BigInteger`, addresses
   are `String`, `bytesN` is web3j's `BytesN`, and `bytes` is `DynamicBytes`, all
   compared by value. Constants are `const val` strings such as
-  `Token.TRANSFER_SELECTOR`, and Java reads them, the `Token.JSON` ABI, and every
+  `Token.TRANSFER_SELECTOR`. Names that shout to the same constant get a numeric
+  suffix in ABI order (`premiumPeriod` after `PREMIUM_PERIOD` gives
+  `PREMIUM_PERIOD_SIGNATURE2`). Java reads the constants, the `Token.JSON` ABI, and every
   getter without name mangling. A struct field named `value`, `typeAsString`, or
   `componentType` gets a trailing underscore because web3j's `Array` already
   defines those getters. web3j cannot encode fixed arrays longer than 32 elements.
 
-Anonymous events have no topic constant, since they do not log their signature
+In Swift and Kotlin, a tuple named like a type the generated code uses (`Data`,
+`Address`, `Uint256`) gets a suffix (`Data2`, `Uint256Tuple`) so it cannot shadow
+that type. Anonymous events have no topic constant, since they do not log their signature
 hash. A struct declared in the rendered contract drops the contract qualifier:
 `struct Vault.Position` in `Vault` is `Position` (Go `VaultPosition`). Structs from
 other contracts and libraries keep it (`TupleAccountPosition`). Unnamed parameters

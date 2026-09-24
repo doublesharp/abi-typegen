@@ -237,11 +237,12 @@ fn struct_fields<'a>(
     let mut fields: Vec<Field> = names
         .iter()
         .zip(&params)
-        .map(|(name, (abi_name, ty, internal_type))| {
+        .enumerate()
+        .map(|(index, (name, (abi_name, ty, internal_type)))| {
             let mut base = exported(name);
             if base.is_empty() {
                 // A name of only underscores has no letters to export.
-                base = format!("Field{}", fields_index(&params, abi_name));
+                base = format!("Field{index}");
             }
             let field = scope.claim(&base);
             // go-ethereum maps ABI names to fields by exporting them. A
@@ -264,13 +265,6 @@ fn struct_fields<'a>(
         }
     }
     fields
-}
-
-fn fields_index(params: &[(&str, &SolType, Option<&str>)], name: &str) -> usize {
-    params
-        .iter()
-        .position(|(candidate, _, _)| std::ptr::eq(*candidate, name))
-        .unwrap_or(0)
 }
 
 fn sol_type_to_go(

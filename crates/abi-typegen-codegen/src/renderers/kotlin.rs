@@ -48,6 +48,23 @@ const KOTLIN_KEYWORDS: &[&str] = &[
 /// with one of these names would clash, so it gets a trailing underscore.
 const STRUCT_RESERVED: &[&str] = &["value", "typeAsString", "componentType"];
 
+/// Names the generated code refers to. A nested class with one of these
+/// names would shadow the import inside the contract object.
+const SDK_NAMES: &[&str] = &[
+    "Address",
+    "BigInteger",
+    "Bool",
+    "Boolean",
+    "DynamicArray",
+    "DynamicBytes",
+    "DynamicStruct",
+    "List",
+    "StaticArray",
+    "StaticStruct",
+    "String",
+    "Utf8String",
+];
+
 /// Longest JSON chunk, in characters. At most three modified-UTF-8 bytes per
 /// character keeps each chunk below the JVM's 65,535-byte constant limit.
 const JSON_CHUNK_CHARS: usize = 16_384;
@@ -69,12 +86,23 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
     let registry = TupleRegistry::new(ir);
     let contract = exported(&ir.name);
     let mut imports = BTreeSet::new();
-    let mut scope = Scope::with_reserved([contract.as_str(), "JSON"]);
+    let mut scope = Scope::with_reserved(
+        [contract.as_str(), "JSON"]
+            .into_iter()
+            .chain(SDK_NAMES.iter().copied()),
+    );
 
     let tuple_names: HashMap<String, String> = registry
         .defs()
         .iter()
-        .map(|def| (def.name.clone(), scope.claim(&def.name)))
+        .map(|def| {
+            let name = if is_web3j_generated_name(&def.name) {
+                format!("{}Tuple", def.name)
+            } else {
+                def.name.clone()
+            };
+            (def.name.clone(), scope.claim(&name))
+        })
         .collect();
     let kotlin = Kotlin {
         registry: &registry,
@@ -399,6 +427,17 @@ impl Kotlin<'_> {
             }
         }
     }
+}
+
+/// Whether `name` is a web3j generated class such as `Uint256`, `Bytes32`, or
+/// `StaticArray2`, which a nested class of that name would shadow.
+fn is_web3j_generated_name(name: &str) -> bool {
+    ["Uint", "Int", "Bytes", "StaticArray"]
+        .iter()
+        .any(|prefix| {
+            name.strip_prefix(prefix)
+                .is_some_and(|rest| !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()))
+        })
 }
 
 /// Whether a type is dynamic in the ABI encoding.
@@ -791,6 +830,19 @@ mod tests {
         );
         assert!(out.contains("val `in`: Boolean,"), "{out}");
         assert!(out.contains("val address: String,"), "{out}");
+    }
+
+    #[test]
+    fn tuples_named_like_sdk_types_do_not_shadow_them() {
+        let out = render(
+            r#"[{"type":"function","name":"f","inputs":[
+                {"name":"a","type":"tuple","internalType":"struct Token.Address","components":[{"name":"target","type":"address"}]},
+                {"name":"b","type":"tuple","internalType":"struct Token.Uint256","components":[{"name":"x","type":"uint256"}]}
+            ],"outputs":[],"stateMutability":"nonpayable"}]"#,
+        );
+        assert!(out.contains("data class Address2("), "{out}");
+        assert!(out.contains(") : StaticStruct(Address(target))"), "{out}");
+        assert!(out.contains("data class Uint256Tuple("), "{out}");
     }
 
     #[test]

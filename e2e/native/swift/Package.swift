@@ -2,6 +2,9 @@
 // Compile check for generated Swift bindings.
 import PackageDescription
 
+// Warnings fail the build for our targets only, not for dependencies.
+let strict: [SwiftSetting] = [.unsafeFlags(["-warnings-as-errors"])]
+
 let package = Package(
     name: "AbiTypegenE2E",
     platforms: [.macOS(.v12), .iOS(.v15)],
@@ -14,9 +17,10 @@ let package = Package(
         // exercises `public` access across a module boundary.
         .target(
             name: "Generated",
-            dependencies: [.product(name: "web3swift", package: "web3swift")]
+            dependencies: [.product(name: "web3swift", package: "web3swift")],
+            swiftSettings: strict
         ),
-        .target(name: "Consumer", dependencies: ["Generated"]),
+        .target(name: "Consumer", dependencies: ["Generated"], swiftSettings: strict),
         .testTarget(name: "ConsumerTests", dependencies: ["Consumer", "Generated"]),
     ]
 )

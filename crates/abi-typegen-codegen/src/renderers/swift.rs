@@ -65,6 +65,20 @@ const SWIFT_KEYWORDS: &[&str] = &[
     "while",
 ];
 
+/// Types the generated code refers to. A nested struct with one of these names
+/// would shadow them inside the contract enum.
+const SDK_NAMES: &[&str] = &[
+    "Array",
+    "BigInt",
+    "BigUInt",
+    "Bool",
+    "Data",
+    "EthereumAddress",
+    "Hashable",
+    "Sendable",
+    "String",
+];
+
 /// Imports a rendered file needs beyond Foundation.
 #[derive(Debug, Default)]
 struct Imports {
@@ -84,7 +98,11 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
     let registry = TupleRegistry::new(ir);
     let mut imports = Imports::default();
     let contract = exported(&ir.name);
-    let mut scope = Scope::with_reserved([contract.as_str(), "abi"]);
+    let mut scope = Scope::with_reserved(
+        [contract.as_str(), "abi"]
+            .into_iter()
+            .chain(SDK_NAMES.iter().copied()),
+    );
 
     let tuple_names: HashMap<String, String> = registry
         .defs()
@@ -490,6 +508,18 @@ mod tests {
         );
         assert!(!out.contains("PingEventTopic"), "{out}");
         assert!(!out.contains("import BigInt"), "{out}");
+    }
+
+    #[test]
+    fn tuples_named_like_sdk_types_do_not_shadow_them() {
+        let out = render(
+            r#"[{"type":"function","name":"f","inputs":[{"name":"d","type":"tuple","internalType":"struct Token.Data","components":[{"name":"x","type":"bytes"}]}],"outputs":[],"stateMutability":"nonpayable"}]"#,
+        );
+        assert!(
+            out.contains("public struct Data2: Sendable, Hashable {\n        public let x: Data\n"),
+            "{out}"
+        );
+        assert!(out.contains("public let d: Data2"), "{out}");
     }
 
     #[test]

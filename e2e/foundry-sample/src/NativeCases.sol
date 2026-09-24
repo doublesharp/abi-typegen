@@ -25,6 +25,11 @@ interface NativeCases {
         int128 delta;
     }
 
+    /// Named like SDK types (`Data` in Swift and Foundation).
+    struct Data {
+        bytes payload;
+    }
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Logged(bytes data) anonymous;
 
@@ -34,6 +39,12 @@ interface NativeCases {
     function tokenURI(uint256 id) external view returns (string memory);
     function aggregate(Batch calldata batch) external payable returns (bytes[] memory);
     function record(address, address, uint256) external;
+    function store(Data calldata data, uint256[40] calldata window) external;
     function PREMIUM_PERIOD() external view returns (uint256);
     function premiumPeriod() external view returns (uint256);
+}
+
+/// A contract whose snake_case module name is a Rust keyword.
+interface Override {
+    function ping() external;
 }

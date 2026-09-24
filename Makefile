@@ -84,7 +84,7 @@ e2e-rust: e2e-native-artifacts ## E2E: Rust bindings → rustfmt, clippy, rustdo
 
 e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across modules, tests
 	cd e2e/native/swift && rm -rf Sources/Generated && $(NATIVE_TYPEGEN) --out ./Sources/Generated --target swift
-	cd e2e/native/swift && swift build --build-tests -Xswiftc -warnings-as-errors
+	cd e2e/native/swift && swift build --build-tests
 	cd e2e/native/swift && swift test
 	@echo "e2e-swift: pass"
 
