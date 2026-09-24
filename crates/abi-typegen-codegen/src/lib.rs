@@ -86,7 +86,10 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             files.insert(format!("{}.py", ir.name), python::render_python_file(ir));
         }
         Target::Go => {
-            files.insert(format!("{}.go", ir.name), go::render_go_file(ir));
+            files.insert(
+                format!("{}.go", ir.name),
+                go::render_go_file(ir, &config.package),
+            );
         }
         Target::Rust => {
             files.insert(format!("{}.rs", ir.name), rust::render_rust_file(ir));

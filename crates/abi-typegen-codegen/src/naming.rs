@@ -36,8 +36,9 @@ pub fn lower_first(name: &str) -> String {
 /// Returns the base name for an unnamed parameter of type `ty`.
 ///
 /// Scalars use their Solidity spelling (`address`, `uint256`, `bytes32`).
-/// Arrays append `Array`. Tuples use `tuple_name` in lower camel case.
-pub fn unnamed_base(ty: &SolType, tuple_name: &dyn Fn(&SolType) -> Option<String>) -> String {
+/// Arrays append `Array`. Tuples use `tuple_name`, the name of the tuple at
+/// the core of `ty`, in lower camel case.
+pub fn unnamed_base(ty: &SolType, tuple_name: Option<&str>) -> String {
     match ty {
         SolType::Uint(bits) => format!("uint{bits}"),
         SolType::Int(bits) => format!("int{bits}"),
@@ -49,8 +50,8 @@ pub fn unnamed_base(ty: &SolType, tuple_name: &dyn Fn(&SolType) -> Option<String
         SolType::Array(inner) | SolType::FixedArray(inner, _) => {
             format!("{}Array", unnamed_base(inner, tuple_name))
         }
-        SolType::Tuple(_) => tuple_name(ty)
-            .map(|name| lower_first(&name))
+        SolType::Tuple(_) => tuple_name
+            .map(lower_first)
             .unwrap_or_else(|| "tuple".to_string()),
     }
 }
@@ -60,24 +61,26 @@ pub fn unnamed_base(ty: &SolType, tuple_name: &dyn Fn(&SolType) -> Option<String
 /// Named parameters keep their ABI names. Unnamed parameters take
 /// [`unnamed_base`], and repeats of a base get `2`, `3`, ... in order.
 /// Any clash with another parameter gets the next free numeric suffix.
+///
+/// Each item is a parameter's ABI name, type, and the name of the tuple at
+/// the core of its type, if any.
 pub fn param_names<'a>(
-    params: impl IntoIterator<Item = (&'a str, &'a SolType)>,
-    tuple_name: &dyn Fn(&SolType) -> Option<String>,
+    params: impl IntoIterator<Item = (&'a str, &'a SolType, Option<&'a str>)>,
 ) -> Vec<String> {
     let params: Vec<_> = params.into_iter().collect();
     let mut used: HashSet<String> = params
         .iter()
-        .filter(|(name, _)| !name.is_empty())
-        .map(|(name, _)| (*name).to_string())
+        .filter(|(name, _, _)| !name.is_empty())
+        .map(|(name, _, _)| (*name).to_string())
         .collect();
     let mut seen: HashMap<String, usize> = HashMap::new();
     params
         .iter()
-        .map(|(name, ty)| {
+        .map(|(name, ty, tuple_name)| {
             if !name.is_empty() {
                 return (*name).to_string();
             }
-            let base = unnamed_base(ty, tuple_name);
+            let base = unnamed_base(ty, *tuple_name);
             let count = seen.entry(base.clone()).or_insert(0);
             *count += 1;
             let mut suffix = *count;
@@ -158,10 +161,6 @@ mod tests {
     use super::*;
     use abi_typegen_core::types::{AbiParam, StateMutability};
 
-    fn no_tuple(_: &SolType) -> Option<String> {
-        None
-    }
-
     #[test]
     fn exported_keeps_acronyms() {
         assert_eq!(exported("tokenURI"), "TokenURI");
@@ -187,22 +186,22 @@ mod tests {
             SolType::Uint(256),
             SolType::Array(Box::new(SolType::BytesN(32))),
         ];
-        let names = param_names(types.iter().map(|ty| ("", ty)), &no_tuple);
+        let names = param_names(types.iter().map(|ty| ("", ty, None)));
         assert_eq!(names, ["address", "address2", "uint256", "bytes32Array"]);
     }
 
     #[test]
     fn unnamed_params_avoid_named_ones() {
         let params = [("address", SolType::Address), ("", SolType::Address)];
-        let names = param_names(params.iter().map(|(n, t)| (*n, t)), &no_tuple);
+        let names = param_names(params.iter().map(|(n, t)| (*n, t, None)));
         assert_eq!(names, ["address", "address2"]);
     }
 
     #[test]
     fn unnamed_tuple_uses_struct_name() {
-        let tuple = SolType::Tuple(vec![]);
-        let names = param_names([("", &tuple)], &|_| Some("VaultPosition".to_string()));
-        assert_eq!(names, ["vaultPosition"]);
+        let tuple = SolType::Array(Box::new(SolType::Tuple(vec![])));
+        let names = param_names([("", &tuple, Some("VaultPosition"))]);
+        assert_eq!(names, ["vaultPositionArray"]);
     }
 
     #[test]
