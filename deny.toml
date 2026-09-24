@@ -22,3 +22,11 @@ wildcards = "allow"
 unknown-git = "deny"
 unknown-registry = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+[advisories]
+ignore = [
+  # `paste` is unmaintained but has no known vulnerability. It is a compile-time
+  # proc-macro dependency of alloy-primitives, which abi-typegen-core uses for
+  # keccak-256 selectors and B256/FixedBytes types.
+  { id = "RUSTSEC-2024-0436", reason = "unmaintained proc-macro pulled in by alloy-primitives; no vulnerability" },
+]
