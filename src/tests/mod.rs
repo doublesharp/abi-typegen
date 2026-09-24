@@ -49,6 +49,7 @@ fn generated_config(
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     }
 }
 
@@ -139,6 +140,7 @@ fn apply_overrides_artifacts_overrides_artifacts_dir() {
         None,
         None,
         false,
+        None,
     )
     .unwrap();
     assert_eq!(cfg.artifacts_dir, PathBuf::from("custom-artifacts"));
@@ -147,52 +149,107 @@ fn apply_overrides_artifacts_overrides_artifacts_dir() {
 #[test]
 fn apply_overrides_out_overrides_out_dir() {
     let mut cfg = default_config();
-    apply_overrides(&mut cfg, None, Some(PathBuf::from("my-types")), None, false).unwrap();
+    apply_overrides(
+        &mut cfg,
+        None,
+        Some(PathBuf::from("my-types")),
+        None,
+        false,
+        None,
+    )
+    .unwrap();
     assert_eq!(cfg.out_dir, PathBuf::from("my-types"));
 }
 
 #[test]
 fn apply_overrides_target_viem() {
     let mut cfg = default_config();
-    apply_overrides(&mut cfg, None, None, Some("viem".to_string()), false).unwrap();
+    apply_overrides(&mut cfg, None, None, Some("viem".to_string()), false, None).unwrap();
     assert_eq!(*cfg.target(), abi_typegen_config::Target::Viem);
 }
 
 #[test]
 fn apply_overrides_target_zod() {
     let mut cfg = default_config();
-    apply_overrides(&mut cfg, None, None, Some("zod".to_string()), false).unwrap();
+    apply_overrides(&mut cfg, None, None, Some("zod".to_string()), false, None).unwrap();
     assert_eq!(*cfg.target(), abi_typegen_config::Target::Zod);
 }
 
 #[test]
 fn apply_overrides_target_ethers() {
     let mut cfg = default_config();
-    apply_overrides(&mut cfg, None, None, Some("ethers".to_string()), false).unwrap();
+    apply_overrides(
+        &mut cfg,
+        None,
+        None,
+        Some("ethers".to_string()),
+        false,
+        None,
+    )
+    .unwrap();
     assert_eq!(*cfg.target(), abi_typegen_config::Target::Ethers);
 }
 
 #[test]
 fn apply_overrides_target_solidity() {
     let mut cfg = default_config();
-    apply_overrides(&mut cfg, None, None, Some("solidity".to_string()), false).unwrap();
+    apply_overrides(
+        &mut cfg,
+        None,
+        None,
+        Some("solidity".to_string()),
+        false,
+        None,
+    )
+    .unwrap();
     assert_eq!(*cfg.target(), abi_typegen_config::Target::Solidity);
 }
 
 #[test]
 fn apply_overrides_unknown_target_returns_error() {
     let mut cfg = default_config();
-    let result = apply_overrides(&mut cfg, None, None, Some("truffle".to_string()), false);
+    let result = apply_overrides(
+        &mut cfg,
+        None,
+        None,
+        Some("truffle".to_string()),
+        false,
+        None,
+    );
     assert!(result.is_err());
     let msg = format!("{}", result.unwrap_err());
     assert!(msg.contains("truffle"));
 }
 
 #[test]
+fn apply_overrides_sets_package() {
+    let mut cfg = default_config();
+    apply_overrides(
+        &mut cfg,
+        None,
+        None,
+        Some("kotlin".to_string()),
+        false,
+        Some("com.example.bindings".to_string()),
+    )
+    .unwrap();
+    assert_eq!(cfg.package, "com.example.bindings");
+}
+
+#[test]
+fn apply_overrides_rejects_package_invalid_for_cli_target() {
+    // The config file's default target accepts any package; a CLI target must re-check it.
+    let mut cfg = Config::from_toml_str("[abi-typegen]\npackage = \"com.example\"\n").unwrap();
+    let result = apply_overrides(&mut cfg, None, None, Some("go".to_string()), false, None);
+    let msg = result.unwrap_err().to_string();
+    assert!(msg.contains("com.example"), "{msg}");
+}
+
+#[test]
 fn apply_overrides_no_wrappers_sets_false() {
     let mut cfg = default_config();
     assert!(cfg.wrappers); // default is true
-    apply_overrides(&mut cfg, None, None, None, true).unwrap();
+    apply_overrides(&mut cfg, None, None, None, true, None).unwrap();
     assert!(!cfg.wrappers);
 }
 
@@ -204,7 +261,7 @@ fn apply_overrides_no_flags_leaves_config_unchanged() {
     let original_targets = cfg.targets.clone();
     let original_wrappers = cfg.wrappers;
 
-    apply_overrides(&mut cfg, None, None, None, false).unwrap();
+    apply_overrides(&mut cfg, None, None, None, false, None).unwrap();
 
     assert_eq!(cfg.artifacts_dir, original_out);
     assert_eq!(cfg.out_dir, original_gen);
@@ -479,6 +536,7 @@ fn run_generate_produces_ts_files() {
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -927,6 +985,7 @@ fn run_generate_missing_artifacts_dir_errors() {
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let result = run_generate(&config, false);
@@ -950,6 +1009,7 @@ fn run_generate_empty_artifacts_dir_prints_no_artifacts() {
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     // Should succeed but not create any files
@@ -1002,6 +1062,7 @@ fn run_generate_with_contract_filter() {
         wrappers: false,
         contracts: vec!["Alpha".to_string()],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1063,6 +1124,7 @@ fn run_dispatches_generate() {
             out: None,
             target: None,
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -1125,6 +1187,7 @@ fn run_dispatches_generate_with_overrides() {
             out: Some(gen_dir.clone()),
             target: Some("viem".into()),
             no_wrappers: true,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -1157,6 +1220,7 @@ fn run_dispatches_generate_with_contract_overrides() {
             out: Some(gen_dir.clone()),
             target: Some("viem".into()),
             no_wrappers: true,
+            package: None,
             contracts: vec!["Beta".into()],
             exclude: None,
             check: false,
@@ -1194,6 +1258,7 @@ fn run_dispatches_diff_with_overrides() {
             out: Some(gen_dir),
             target: Some("viem".into()),
             no_wrappers: true,
+            package: None,
             contracts: vec!["Token".into()],
             exclude: None,
         },
@@ -1306,6 +1371,7 @@ fn watch_loop_exits_on_channel_disconnect() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let (tx, rx) = std::sync::mpsc::channel::<notify::Result<notify::Event>>();
@@ -1334,6 +1400,7 @@ fn watch_loop_handles_event_and_regenerates() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let (tx, rx) = std::sync::mpsc::channel();
@@ -1364,6 +1431,7 @@ fn watch_loop_handles_watch_error() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let (tx, rx) = std::sync::mpsc::channel();
@@ -1396,6 +1464,7 @@ fn watch_loop_regenerate_error_is_logged_not_fatal() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let (tx, rx) = std::sync::mpsc::channel();
@@ -1471,6 +1540,7 @@ fn exclude_filters_contracts_ending_in_test() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1501,6 +1571,7 @@ fn exclude_filters_interfaces() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["I*".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1532,6 +1603,7 @@ fn exclude_multiple_patterns() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string(), "I*".to_string(), "Mock*".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1563,6 +1635,7 @@ fn selected_artifacts_applies_exclude_patterns() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string(), "I*".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let artifacts = selected_artifacts(&config).unwrap();
@@ -1591,6 +1664,7 @@ fn collect_diff_entries_ignores_excluded_contracts() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1619,6 +1693,7 @@ fn collect_diff_entries_reports_deleted_generated_files() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1678,6 +1753,7 @@ fn collect_json_summaries_ignores_excluded_contracts() {
         wrappers: false,
         contracts: vec![],
         exclude: vec!["*Test".to_string()],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     let summaries = collect_json_summaries(&config).unwrap();
@@ -1708,6 +1784,7 @@ fn check_returns_ok_when_output_matches() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     // Generate first
@@ -1737,6 +1814,7 @@ fn check_returns_err_when_output_is_stale() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     // Generate first
@@ -1772,6 +1850,7 @@ fn check_returns_err_when_extra_generated_file_exists() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     run_generate(&config, false).unwrap();
@@ -1807,6 +1886,7 @@ fn clean_removes_stale_files() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     // Pre-create a stale generated file
@@ -1847,6 +1927,7 @@ fn clean_removes_stale_web3_files() {
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     std::fs::create_dir_all(&gen_dir).unwrap();
@@ -1877,6 +1958,7 @@ fn clean_removes_stale_zod_files() {
         wrappers: false,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     std::fs::create_dir_all(&gen_dir).unwrap();
@@ -1924,6 +2006,7 @@ fn run_dispatches_comma_separated_targets() {
             out: Some(gen_dir.clone()),
             target: Some("viem, ethers".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -1996,6 +2079,7 @@ fn run_dispatches_comma_separated_targets_no_spaces() {
             out: Some(gen_dir.clone()),
             target: Some("ethers5,viem".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -2044,6 +2128,7 @@ fn run_dispatches_comma_separated_targets_clean_stale_target_dirs() {
             out: Some(gen_dir.clone()),
             target: Some("viem,ethers".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -2076,6 +2161,7 @@ fn run_multi_target_check_reports_stale_target_dirs() {
             out: Some(gen_dir.clone()),
             target: Some("viem,ethers".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,
@@ -2096,6 +2182,7 @@ fn run_multi_target_check_reports_stale_target_dirs() {
             out: Some(gen_dir),
             target: Some("viem,ethers".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: true,
@@ -2124,6 +2211,7 @@ fn run_comma_separated_target_with_invalid_target_errors() {
             out: Some(dir.join("gen")),
             target: Some("viem,invalid_target".into()),
             no_wrappers: false,
+            package: None,
             contracts: vec![],
             exclude: None,
             check: false,

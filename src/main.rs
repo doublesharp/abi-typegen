@@ -3,7 +3,7 @@
 mod fetch;
 
 use abi_typegen_codegen::{barrel, generate_contract_files};
-use abi_typegen_config::{Config, Target, parse_target};
+use abi_typegen_config::{Config, Target, parse_target, validate_package};
 use abi_typegen_core::parser::parse_artifact;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -43,6 +43,9 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
+        /// Package for Go and Kotlin output (default: "contracts")
+        #[arg(long)]
+        package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
         #[arg(long, value_delimiter = ',')]
         contracts: Vec<String>,
@@ -76,6 +79,9 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
+        /// Package for Go and Kotlin output (default: "contracts")
+        #[arg(long)]
+        package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
         #[arg(long, value_delimiter = ',')]
         contracts: Vec<String>,
@@ -165,13 +171,14 @@ fn run(cli: Cli) -> Result<()> {
             out,
             target,
             no_wrappers,
+            package,
             contracts,
             exclude,
             check,
             clean,
         } => {
             let mut config = load_config(&config_path, cli.hardhat)?;
-            apply_overrides(&mut config, artifacts, out, target, no_wrappers)?;
+            apply_overrides(&mut config, artifacts, out, target, no_wrappers, package)?;
             apply_contracts(&mut config, &contracts);
             apply_exclude(&mut config, &exclude);
 
@@ -193,11 +200,12 @@ fn run(cli: Cli) -> Result<()> {
             out,
             target,
             no_wrappers,
+            package,
             contracts,
             exclude,
         } => {
             let mut config = load_config(&config_path, cli.hardhat)?;
-            apply_overrides(&mut config, artifacts, out, target, no_wrappers)?;
+            apply_overrides(&mut config, artifacts, out, target, no_wrappers, package)?;
             apply_contracts(&mut config, &contracts);
             apply_exclude(&mut config, &exclude);
             run_diff(&config)?;
@@ -403,6 +411,7 @@ fn apply_overrides(
     out: Option<PathBuf>,
     target: Option<String>,
     no_wrappers: bool,
+    package: Option<String>,
 ) -> Result<()> {
     if let Some(a) = artifacts {
         config.artifacts_dir = a;
@@ -427,6 +436,11 @@ fn apply_overrides(
     if no_wrappers {
         config.wrappers = false;
     }
+    if let Some(package) = package {
+        config.package = package;
+    }
+    // A CLI target or package can invalidate a package the config file accepted.
+    validate_package(&config.package, &config.targets)?;
     Ok(())
 }
 

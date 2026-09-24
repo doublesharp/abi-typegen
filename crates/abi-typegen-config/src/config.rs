@@ -16,6 +16,136 @@ pub enum ConfigError {
     /// The TOML content was invalid or contained an unknown configuration value.
     #[error("failed to parse foundry.toml: {0}")]
     TomlParse(#[from] toml::de::Error),
+    /// The `package` value is not a valid package name for a selected target.
+    #[error("invalid package '{package}' for target {target}: {reason}")]
+    InvalidPackage {
+        /// The rejected package value.
+        package: String,
+        /// Target whose package rules the value breaks.
+        target: &'static str,
+        /// Why the value is invalid.
+        reason: &'static str,
+    },
+}
+
+/// Package name used by the Go and Kotlin targets when none is configured.
+pub const DEFAULT_PACKAGE: &str = "contracts";
+
+const GO_KEYWORDS: &[&str] = &[
+    "break",
+    "case",
+    "chan",
+    "const",
+    "continue",
+    "default",
+    "defer",
+    "else",
+    "fallthrough",
+    "for",
+    "func",
+    "go",
+    "goto",
+    "if",
+    "import",
+    "interface",
+    "map",
+    "package",
+    "range",
+    "return",
+    "select",
+    "struct",
+    "switch",
+    "type",
+    "var",
+];
+
+const KOTLIN_HARD_KEYWORDS: &[&str] = &[
+    "as",
+    "break",
+    "class",
+    "continue",
+    "do",
+    "else",
+    "false",
+    "for",
+    "fun",
+    "if",
+    "in",
+    "interface",
+    "is",
+    "null",
+    "object",
+    "package",
+    "return",
+    "super",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typealias",
+    "typeof",
+    "val",
+    "var",
+    "when",
+    "while",
+];
+
+fn is_identifier(segment: &str) -> bool {
+    let mut chars = segment.chars();
+    matches!(chars.next(), Some(c) if c.is_ascii_alphabetic() || c == '_')
+        && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Checks `package` against the rules of each target that uses it.
+///
+/// Go needs a lowercase identifier that is not a keyword. Kotlin needs
+/// dot-separated identifiers, none of them a hard keyword. Other targets
+/// ignore the package.
+pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigError> {
+    let invalid = |target, reason| ConfigError::InvalidPackage {
+        package: package.to_string(),
+        target,
+        reason,
+    };
+    for target in targets {
+        match target {
+            Target::Go => {
+                if !is_identifier(package) {
+                    return Err(invalid("go", "expected a single Go identifier"));
+                }
+                if package.chars().any(|c| c.is_ascii_uppercase()) {
+                    return Err(invalid("go", "Go package names are lowercase"));
+                }
+                if GO_KEYWORDS.contains(&package) {
+                    return Err(invalid("go", "package name is a Go keyword"));
+                }
+            }
+            Target::Kotlin => {
+                if !package.split('.').all(is_identifier) {
+                    return Err(invalid("kotlin", "expected dot-separated identifiers"));
+                }
+                if package
+                    .split('.')
+                    .any(|segment| KOTLIN_HARD_KEYWORDS.contains(&segment))
+                {
+                    return Err(invalid("kotlin", "a package segment is a Kotlin keyword"));
+                }
+            }
+            Target::Viem
+            | Target::Zod
+            | Target::Wagmi
+            | Target::Ethers
+            | Target::Ethers5
+            | Target::Web3js
+            | Target::Python
+            | Target::Rust
+            | Target::Swift
+            | Target::CSharp
+            | Target::Solidity
+            | Target::Yaml => {}
+        }
+    }
+    Ok(())
 }
 
 /// Parses a target name string into a [`Target`] enum variant.
@@ -156,6 +286,8 @@ struct AbiTypegenSection {
     contracts: Vec<String>,
     #[serde(default)]
     exclude: Vec<String>,
+    #[serde(default = "default_package")]
+    package: String,
 }
 
 /// Serde field alias so that the TOML key `target` maps to the `targets` field.
@@ -232,6 +364,10 @@ fn default_out_dir() -> PathBuf {
     PathBuf::from("src/generated")
 }
 
+fn default_package() -> String {
+    DEFAULT_PACKAGE.to_string()
+}
+
 fn default_true() -> bool {
     true
 }
@@ -286,6 +422,8 @@ pub struct Config {
     pub contracts: Vec<String>,
     /// Exclude contracts matching these glob patterns.
     pub exclude: Vec<String>,
+    /// Package for Go and Kotlin output. See [`validate_package`].
+    pub package: String,
 }
 
 impl Config {
@@ -309,7 +447,9 @@ impl Config {
             wrappers: true,
             contracts: vec![],
             exclude: vec![],
+            package: default_package(),
         });
+        validate_package(&section.package, &section.targets)?;
         Ok(Config {
             artifacts_dir,
             out_dir: section.out,
@@ -317,6 +457,7 @@ impl Config {
             wrappers: section.wrappers,
             contracts: section.contracts,
             exclude: section.exclude,
+            package: section.package,
         })
     }
 
@@ -596,5 +737,56 @@ target = "viem,badtarget"
         assert_eq!(parse_target("cs"), Some(Target::CSharp));
         assert_eq!(parse_target("kt"), Some(Target::Kotlin));
         assert_eq!(parse_target("unknown"), None);
+    }
+
+    #[test]
+    fn package_defaults_to_contracts() {
+        let cfg = Config::from_toml_str("").unwrap();
+        assert_eq!(cfg.package, "contracts");
+    }
+
+    #[test]
+    fn package_reads_from_toml() {
+        let cfg = Config::from_toml_str(
+            "[abi-typegen]\ntarget = \"kotlin\"\npackage = \"com.example.contracts\"\n",
+        )
+        .unwrap();
+        assert_eq!(cfg.package, "com.example.contracts");
+    }
+
+    #[test]
+    fn go_package_rejects_dots_uppercase_and_keywords() {
+        for bad in ["com.example", "Contracts", "type", "1abc", ""] {
+            assert!(
+                validate_package(bad, &[Target::Go]).is_err(),
+                "{bad} should be rejected for go"
+            );
+        }
+        assert!(validate_package("bindings", &[Target::Go]).is_ok());
+    }
+
+    #[test]
+    fn kotlin_package_rejects_bad_segments() {
+        for bad in ["com..example", "com.class", "com.1x", ".com", ""] {
+            assert!(
+                validate_package(bad, &[Target::Kotlin]).is_err(),
+                "{bad} should be rejected for kotlin"
+            );
+        }
+        assert!(validate_package("com.example.contracts", &[Target::Kotlin]).is_ok());
+    }
+
+    #[test]
+    fn package_is_checked_against_every_selected_target() {
+        let err = Config::from_toml_str(
+            "[abi-typegen]\ntarget = [\"kotlin\", \"go\"]\npackage = \"com.example\"\n",
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("target go"), "{err}");
+    }
+
+    #[test]
+    fn package_is_ignored_by_other_targets() {
+        assert!(validate_package("Not A Package", &[Target::Viem, Target::Rust]).is_ok());
     }
 }
