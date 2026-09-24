@@ -3,6 +3,7 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 pub mod parser;
+pub mod signature;
 pub mod types;
 
 pub use parser::ParseError;

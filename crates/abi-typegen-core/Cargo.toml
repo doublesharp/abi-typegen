@@ -11,6 +11,7 @@ repository = "https://github.com/doublesharp/abi-typegen"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)', 'cfg(coverage_nightly)'] }
 
 [dependencies]
+alloy-primitives = { version = "1.7.3", default-features = false, features = ["std"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
