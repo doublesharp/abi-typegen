@@ -8,6 +8,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-24
+
+Fixes tuple decoding and generated bindings across native and TypeScript targets.
+Regenerate bindings after upgrading; collision fixes can change generated names,
+and Swift event/error constants now use lower camel case.
+
+### Fixed
+
+- Go event fields for indexed strings, bytes, arrays, and tuples use topic hashes,
+  matching go-ethereum decoding.
+- Kotlin and Swift contract namespaces avoid SDK type names. Kotlin also reserves
+  `JvmField` tuple names and escapes underscore-only fields; Swift renames `_` and `self` fields.
+- Rust reserves `mod.rs` for the module index and disambiguates event and unnamed
+  parameter names after keyword conversion.
+- TypeScript parameter names and normalized viem/Zod export names remain unique.
+  Tuple input and output properties retain their ABI names, including keywords.
+- Native identifiers beginning with an underscore and digit stay valid after
+  case conversion. Swift/Kotlin namespace collisions fail before output changes.
+- Solidity preserves its own parameter and struct field names instead of applying
+  TypeScript keyword escaping, and keeps unnamed parameters collision-free.
+- Parsing rejects signed type sizes such as `uint+8` and `uint256[+2]`.
+- Kotlin tuples include web3j-typed decoding constructors while retaining the
+  existing convenience constructors and property types.
+- Generated Rust bindings allow Clippy's `too_many_arguments` lint for ABI
+  functions and preserve NatSpec inline code in rustdoc.
+- Go documentation emits gofmt-compatible quotes. Go and Swift collapse
+  NatSpec alignment whitespace.
+- Kotlin and Swift collision numbers precede role suffixes, such as
+  `Deploy2Params` and `DEFAULT_YEAR_PRICE2_SIGNATURE`. Repeated unnamed numeric
+  parameters use a separator, such as `uint256_2`, in Go, Kotlin, and Swift.
+- Swift event and error constants use lower camel case, such as
+  `transferEventTopic` and `failedErrorSelector`.
+
 ## [0.5.0] - 2026-09-23
 
 This release reworks the Go, Rust, Swift, and Kotlin targets so their output
@@ -291,7 +324,8 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/doublesharp/abi-typegen/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/doublesharp/abi-typegen/compare/v0.4.1...v0.4.2

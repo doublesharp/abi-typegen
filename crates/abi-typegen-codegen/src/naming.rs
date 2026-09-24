@@ -11,7 +11,8 @@ use std::collections::{HashMap, HashSet};
 ///
 /// Splits on `_`, uppercases the first character of each part, and keeps the
 /// rest unchanged: `tokenURI` becomes `TokenURI`, `PREMIUM_PERIOD` becomes
-/// `PREMIUMPERIOD`, and `_owner` becomes `Owner`. This matches abigen.
+/// `PREMIUMPERIOD`, and `_owner` becomes `Owner`. Digit-leading results get an
+/// `X` prefix so valid Solidity names such as `_0` remain valid identifiers.
 pub fn exported(name: &str) -> String {
     let mut out = String::with_capacity(name.len());
     for part in name.split('_') {
@@ -20,6 +21,9 @@ pub fn exported(name: &str) -> String {
             out.extend(first.to_uppercase());
             out.push_str(chars.as_str());
         }
+    }
+    if out.starts_with(|c: char| c.is_ascii_digit()) {
+        out.insert(0, 'X');
     }
     out
 }
@@ -60,6 +64,7 @@ pub fn unnamed_base(ty: &SolType, tuple_name: Option<&str>) -> String {
 ///
 /// Named parameters keep their ABI names. Unnamed parameters take
 /// [`unnamed_base`], and repeats of a base get `2`, `3`, ... in order.
+/// Numeric type names separate the suffix with an underscore (`uint256_2`).
 /// Any clash with another parameter gets the next free numeric suffix.
 ///
 /// Each item is a parameter's ABI name, type, and the name of the tuple at
@@ -87,16 +92,26 @@ pub fn param_names<'a>(
             let mut candidate = if suffix == 1 {
                 base.clone()
             } else {
-                format!("{base}{suffix}")
+                numbered(&base, suffix)
             };
             while used.contains(&candidate) {
                 suffix += 1;
-                candidate = format!("{base}{suffix}");
+                candidate = numbered(&base, suffix);
             }
             used.insert(candidate.clone());
             candidate
         })
         .collect()
+}
+
+/// Appends an occurrence number without merging it into a numeric type width.
+fn numbered(base: &str, suffix: usize) -> String {
+    let separator = if base.ends_with(|c: char| c.is_ascii_digit()) {
+        "_"
+    } else {
+        ""
+    };
+    format!("{base}{separator}{suffix}")
 }
 
 /// Returns each function's position among overloads that share its name.
@@ -148,6 +163,23 @@ impl Scope {
         }
     }
 
+    /// Claims related names together, placing collision numbers before their role suffixes.
+    pub fn claim_family(&mut self, base: &str, roles: &[&str]) -> String {
+        let mut candidate = base.to_string();
+        let mut number = 2;
+        while roles
+            .iter()
+            .any(|role| self.used.contains(&format!("{candidate}{role}")))
+        {
+            candidate = format!("{base}{number}");
+            number += 1;
+        }
+        for role in roles {
+            self.used.insert(format!("{candidate}{role}"));
+        }
+        candidate
+    }
+
     /// Returns `name`, or `name` plus a numeric suffix when it is taken.
     pub fn claim(&mut self, name: &str) -> String {
         if self.used.insert(name.to_string()) {
@@ -178,6 +210,13 @@ mod tests {
         assert_eq!(exported("_owner"), "Owner");
         assert_eq!(exported("balance_of"), "BalanceOf");
         assert_eq!(exported("ERC20"), "ERC20");
+    }
+
+    #[test]
+    fn exported_digit_leading_names_remain_identifiers() {
+        assert_eq!(exported("_0"), "X0");
+        assert_eq!(exported("__123_name"), "X123Name");
+        assert_eq!(exported("_"), "");
     }
 
     #[test]

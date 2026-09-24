@@ -1,7 +1,7 @@
 //! Swift output: a public namespace per contract with its ABI, selectors,
 //! and `Sendable`, `Hashable` value types for web3swift.
 
-use crate::naming::{Scope, exported, overload_indices, param_names, repeat_indices};
+use crate::naming::{Scope, exported, lower_first, overload_indices, param_names, repeat_indices};
 use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{ContractIr, NatSpec, SolType};
 use std::collections::HashMap;
@@ -65,8 +65,8 @@ const SWIFT_KEYWORDS: &[&str] = &[
     "while",
 ];
 
-/// Types the generated code refers to. A nested struct with one of these names
-/// would shadow them inside the contract enum.
+/// SDK types and modules used by generated code. Contract namespaces and nested
+/// structs must not shadow these names.
 const SDK_NAMES: &[&str] = &[
     "Array",
     "BigInt",
@@ -74,9 +74,12 @@ const SDK_NAMES: &[&str] = &[
     "Bool",
     "Data",
     "EthereumAddress",
+    "Foundation",
     "Hashable",
     "Sendable",
     "String",
+    "Swift",
+    "Web3Core",
 ];
 
 /// Imports a rendered file needs beyond Foundation.
@@ -93,11 +96,17 @@ struct Field {
     ty: String,
 }
 
+/// Returns the public Swift namespace for a contract, avoiding SDK type and module names.
+pub fn namespace_name(contract_name: &str) -> String {
+    Scope::with_reserved(SDK_NAMES.iter().copied()).claim(&exported(contract_name))
+}
+
 /// Renders `<Name>.swift` for `ir`.
 pub fn render_swift_file(ir: &ContractIr) -> String {
     let registry = TupleRegistry::new(ir);
     let mut imports = Imports::default();
-    let contract = exported(&ir.name);
+    // The namespace must not shadow SDK types or imported modules used below.
+    let contract = namespace_name(&ir.name);
     let mut scope = Scope::with_reserved(
         [contract.as_str(), "abi"]
             .into_iter()
@@ -116,7 +125,8 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
         let names = param_names(params.iter().map(|(name, ty, internal_type)| {
             (*name, *ty, registry.name_of_type(ty, *internal_type))
         }));
-        let mut field_scope = Scope::default();
+        // `self` would shadow the initializer receiver even when backticked.
+        let mut field_scope = Scope::with_reserved(["_", "self"]);
         names
             .iter()
             .zip(&params)
@@ -150,13 +160,17 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
     for (function, overload) in ir.functions.iter().zip(overloads) {
         let index = overload.map(|i| i.to_string()).unwrap_or_default();
         let signature = function.signature();
+        let constant = scope.claim_family(
+            &format!("{}{index}", function.name),
+            &["Signature", "Selector"],
+        );
         constants.push((
-            scope.claim(&format!("{}{index}Signature", function.name)),
+            format!("{constant}Signature"),
             format!("Canonical signature of `{signature}`."),
             swift_string(&signature),
         ));
         constants.push((
-            scope.claim(&format!("{}{index}Selector", function.name)),
+            format!("{constant}Selector"),
             format!("Selector of `{signature}`."),
             swift_data(function.selector().as_slice()),
         ));
@@ -172,7 +186,10 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
             &mut imports,
         );
         types.push(render_struct(
-            &scope.claim(&format!("{}{index}Params", exported(&function.name))),
+            &format!(
+                "{}Params",
+                scope.claim_family(&format!("{}{index}", exported(&function.name)), &["Params"])
+            ),
             &format!("Arguments of `{signature}`."),
             function.natspec.as_ref(),
             &fields,
@@ -182,14 +199,18 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
     let event_overloads = suffixes(ir.events.iter().map(|e| e.name.as_str()));
     for (event, index) in ir.events.iter().zip(event_overloads) {
         let signature = event.signature();
+        let constant = scope.claim_family(
+            &format!("{}{index}", lower_first(&exported(&event.name))),
+            &["EventSignature", "EventTopic"],
+        );
         constants.push((
-            scope.claim(&format!("{}{index}EventSignature", event.name)),
+            format!("{constant}EventSignature"),
             format!("Canonical signature of the `{signature}` event."),
             swift_string(&signature),
         ));
         if !event.anonymous {
             constants.push((
-                scope.claim(&format!("{}{index}EventTopic", event.name)),
+                format!("{constant}EventTopic"),
                 format!("Topic 0 of the `{signature}` event."),
                 swift_data(event.topic0().as_slice()),
             ));
@@ -203,7 +224,10 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
             &mut imports,
         );
         types.push(render_struct(
-            &scope.claim(&format!("{}{index}Event", exported(&event.name))),
+            &format!(
+                "{}Event",
+                scope.claim_family(&format!("{}{index}", exported(&event.name)), &["Event"])
+            ),
             &format!("Fields of the `{signature}` event."),
             event.natspec.as_ref(),
             &fields,
@@ -213,13 +237,17 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
     let error_overloads = suffixes(ir.errors.iter().map(|e| e.name.as_str()));
     for (error, index) in ir.errors.iter().zip(error_overloads) {
         let signature = error.signature();
+        let constant = scope.claim_family(
+            &format!("{}{index}", lower_first(&exported(&error.name))),
+            &["ErrorSignature", "ErrorSelector"],
+        );
         constants.push((
-            scope.claim(&format!("{}{index}ErrorSignature", error.name)),
+            format!("{constant}ErrorSignature"),
             format!("Canonical signature of the `{signature}` error."),
             swift_string(&signature),
         ));
         constants.push((
-            scope.claim(&format!("{}{index}ErrorSelector", error.name)),
+            format!("{constant}ErrorSelector"),
             format!("Selector of the `{signature}` error."),
             swift_data(error.selector().as_slice()),
         ));
@@ -232,7 +260,10 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
             &mut imports,
         );
         types.push(render_struct(
-            &scope.claim(&format!("{}{index}Error", exported(&error.name))),
+            &format!(
+                "{}Error",
+                scope.claim_family(&format!("{}{index}", exported(&error.name)), &["Error"])
+            ),
             &format!("Arguments of the `{signature}` error."),
             error.natspec.as_ref(),
             &fields,
@@ -350,12 +381,12 @@ fn escape_keyword(name: &str) -> String {
 fn doc_lines(indent: &str, summary: &str, natspec: Option<&NatSpec>) -> String {
     let mut out = format!("{indent}/// {summary}\n");
     if let Some(natspec) = natspec {
-        let lines: Vec<&str> = natspec
+        let lines: Vec<String> = natspec
             .notice
             .iter()
             .chain(natspec.dev.iter())
             .flat_map(|text| text.lines())
-            .map(str::trim)
+            .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" "))
             .collect();
         if !lines.is_empty() {
             out.push_str(&format!("{indent}///\n"));
@@ -457,7 +488,7 @@ mod tests {
             "{out}"
         );
         assert!(
-            out.contains("public static let TransferEventTopic = Data([0x"),
+            out.contains("public static let transferEventTopic = Data([0x"),
             "{out}"
         );
     }
@@ -506,7 +537,7 @@ mod tests {
             ),
             "{out}"
         );
-        assert!(!out.contains("PingEventTopic"), "{out}");
+        assert!(!out.contains("pingEventTopic"), "{out}");
         assert!(!out.contains("import BigInt"), "{out}");
     }
 

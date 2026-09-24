@@ -58,7 +58,9 @@ const SDK_NAMES: &[&str] = &[
     "DynamicArray",
     "DynamicBytes",
     "DynamicStruct",
+    "JvmField",
     "List",
+    "Parameterized",
     "StaticArray",
     "StaticStruct",
     "String",
@@ -81,10 +83,20 @@ struct Field {
     web3j: String,
 }
 
+/// Returns the contract object name, avoiding Kotlin and web3j type names.
+pub fn namespace_name(contract_name: &str) -> String {
+    let contract = exported(contract_name);
+    if is_web3j_generated_name(&contract) {
+        format!("{contract}Contract")
+    } else {
+        Scope::with_reserved(SDK_NAMES.iter().copied()).claim(&contract)
+    }
+}
+
 /// Renders `<Name>.kt` for `ir` in package `package`.
 pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
     let registry = TupleRegistry::new(ir);
-    let contract = exported(&ir.name);
+    let contract = namespace_name(&ir.name);
     let mut imports = BTreeSet::new();
     let mut scope = Scope::with_reserved(
         [contract.as_str(), "JSON"]
@@ -167,26 +179,75 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
             .map(|field| field.web3j.as_str())
             .collect::<Vec<_>>()
             .join(", ");
-        classes.push(render_class(
+        let mut class = render_class(
             &tuple_names[&def.name],
             &format!("The `{}` tuple.", def.name),
             None,
             &fields,
             Some(&format!("{base}({args})")),
-        ));
+        );
+        let decoder_types: Vec<_> = def
+            .components
+            .iter()
+            .map(|c| kotlin.decoder_type(&c.ty, c.internal_type.as_deref(), &mut imports))
+            .collect();
+        if def.components.iter().any(|c| match c.ty {
+            SolType::Bytes | SolType::BytesN(_) | SolType::Tuple(_) => false,
+            SolType::Bool
+            | SolType::StringType
+            | SolType::Address
+            | SolType::Uint(_)
+            | SolType::Int(_)
+            | SolType::Array(_)
+            | SolType::FixedArray(_, _) => true,
+        }) {
+            let params = fields
+                .iter()
+                .zip(&decoder_types)
+                .zip(&def.components)
+                .map(|((f, ty), component)| {
+                    let annotation = match &component.ty {
+                        SolType::Array(inner) | SolType::FixedArray(inner, _) => {
+                            imports.insert("org.web3j.abi.datatypes.reflection.Parameterized");
+                            let element = kotlin.web3j_class(
+                                inner,
+                                component.internal_type.as_deref(),
+                                &mut imports,
+                            );
+                            format!("@Parameterized(type = {element}::class) ")
+                        }
+                        _ => String::new(),
+                    };
+                    format!("{annotation}{}: {ty}", escape_keyword(&f.name))
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            let values = fields
+                .iter()
+                .zip(&def.components)
+                .map(|(f, c)| Kotlin::from_web3j(&escape_keyword(&f.name), &c.ty))
+                .collect::<Vec<_>>()
+                .join(", ");
+            class.pop();
+            class.push_str(&format!(
+                " {{\n        constructor({params}) : this({values})\n    }}\n"
+            ));
+        }
+        classes.push(class);
     }
 
     for (function, overload) in ir.functions.iter().zip(overload_indices(&ir.functions)) {
         let index = overload.map(|i| i.to_string()).unwrap_or_default();
         let constant = constant_base(&function.name, &index);
+        let constant = scope.claim_family(&constant, &["_SIGNATURE", "_SELECTOR"]);
         let signature = function.signature();
         constants.push((
-            scope.claim(&format!("{constant}_SIGNATURE")),
+            format!("{constant}_SIGNATURE"),
             format!("Canonical signature of `{signature}`."),
             kotlin_string(&signature),
         ));
         constants.push((
-            scope.claim(&format!("{constant}_SELECTOR")),
+            format!("{constant}_SELECTOR"),
             format!("Selector of `{signature}`."),
             kotlin_string(&function.selector().to_string()),
         ));
@@ -203,7 +264,10 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
             &mut imports,
         );
         classes.push(render_class(
-            &scope.claim(&format!("{}{index}Params", exported(&function.name))),
+            &format!(
+                "{}Params",
+                scope.claim_family(&format!("{}{index}", exported(&function.name)), &["Params"])
+            ),
             &format!("Arguments of `{signature}`."),
             function.natspec.as_ref(),
             &fields,
@@ -217,15 +281,16 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
         .zip(suffixes(ir.events.iter().map(|e| e.name.as_str())))
     {
         let constant = constant_base(&event.name, &index);
+        let constant = scope.claim_family(&constant, &["_EVENT_SIGNATURE", "_EVENT_TOPIC"]);
         let signature = event.signature();
         constants.push((
-            scope.claim(&format!("{constant}_EVENT_SIGNATURE")),
+            format!("{constant}_EVENT_SIGNATURE"),
             format!("Canonical signature of the `{signature}` event."),
             kotlin_string(&signature),
         ));
         if !event.anonymous {
             constants.push((
-                scope.claim(&format!("{constant}_EVENT_TOPIC")),
+                format!("{constant}_EVENT_TOPIC"),
                 format!("Topic 0 of the `{signature}` event."),
                 kotlin_string(&event.topic0().to_string()),
             ));
@@ -240,7 +305,10 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
             &mut imports,
         );
         classes.push(render_class(
-            &scope.claim(&format!("{}{index}Event", exported(&event.name))),
+            &format!(
+                "{}Event",
+                scope.claim_family(&format!("{}{index}", exported(&event.name)), &["Event"])
+            ),
             &format!("Fields of the `{signature}` event."),
             event.natspec.as_ref(),
             &fields,
@@ -254,14 +322,15 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
         .zip(suffixes(ir.errors.iter().map(|e| e.name.as_str())))
     {
         let constant = constant_base(&error.name, &index);
+        let constant = scope.claim_family(&constant, &["_ERROR_SIGNATURE", "_ERROR_SELECTOR"]);
         let signature = error.signature();
         constants.push((
-            scope.claim(&format!("{constant}_ERROR_SIGNATURE")),
+            format!("{constant}_ERROR_SIGNATURE"),
             format!("Canonical signature of the `{signature}` error."),
             kotlin_string(&signature),
         ));
         constants.push((
-            scope.claim(&format!("{constant}_ERROR_SELECTOR")),
+            format!("{constant}_ERROR_SELECTOR"),
             format!("Selector of the `{signature}` error."),
             kotlin_string(&error.selector().to_string()),
         ));
@@ -275,7 +344,10 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
             &mut imports,
         );
         classes.push(render_class(
-            &scope.claim(&format!("{}{index}Error", exported(&error.name))),
+            &format!(
+                "{}Error",
+                scope.claim_family(&format!("{}{index}", exported(&error.name)), &["Error"])
+            ),
             &format!("Arguments of the `{signature}` error."),
             error.natspec.as_ref(),
             &fields,
@@ -392,6 +464,45 @@ impl Kotlin<'_> {
             }
             SolType::Bytes | SolType::BytesN(_) | SolType::Tuple(_) => {
                 self.field_type(ty, internal_type, imports)
+            }
+        }
+    }
+
+    /// Complete web3j constructor parameter type, including array elements.
+    fn decoder_type(
+        &self,
+        ty: &SolType,
+        internal_type: Option<&str>,
+        imports: &mut BTreeSet<&'static str>,
+    ) -> String {
+        let class = self.web3j_class(ty, internal_type, imports);
+        match ty {
+            SolType::Array(inner) | SolType::FixedArray(inner, _) => {
+                format!(
+                    "{class}<{}>",
+                    self.decoder_type(inner, internal_type, imports)
+                )
+            }
+            _ => class,
+        }
+    }
+
+    /// Converts decoded SDK values back to the convenience property types.
+    fn from_web3j(expr: &str, ty: &SolType) -> String {
+        match ty {
+            SolType::Bytes | SolType::BytesN(_) | SolType::Tuple(_) => expr.to_string(),
+            SolType::Bool
+            | SolType::StringType
+            | SolType::Address
+            | SolType::Uint(_)
+            | SolType::Int(_) => format!("{expr}.value"),
+            SolType::Array(inner) | SolType::FixedArray(inner, _) => {
+                let item = Self::from_web3j("it", inner);
+                if item == "it" {
+                    format!("{expr}.value")
+                } else {
+                    format!("{expr}.value.map {{ {item} }}")
+                }
             }
         }
     }
@@ -618,7 +729,7 @@ fn render_class(
 }
 
 fn escape_keyword(name: &str) -> String {
-    if KOTLIN_KEYWORDS.contains(&name) {
+    if KOTLIN_KEYWORDS.contains(&name) || (!name.is_empty() && name.chars().all(|c| c == '_')) {
         format!("`{name}`")
     } else {
         name.to_string()
@@ -746,7 +857,7 @@ mod tests {
         );
         assert!(
             out.contains(
-                "    data class Position(\n        val shares: BigInteger,\n        val token: String,\n        val memo: Bytes32,\n        val flags: List<Boolean>,\n    ) : StaticStruct(Uint256(shares), Address(token), memo, StaticArray2(Bool::class.java, flags.map { Bool(it) }))\n"
+                "    data class Position(\n        val shares: BigInteger,\n        val token: String,\n        val memo: Bytes32,\n        val flags: List<Boolean>,\n    ) : StaticStruct(Uint256(shares), Address(token), memo, StaticArray2(Bool::class.java, flags.map { Bool(it) })) {\n"
             ),
             "{out}"
         );

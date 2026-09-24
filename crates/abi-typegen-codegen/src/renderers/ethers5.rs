@@ -1,5 +1,5 @@
 use super::ethers_common::{function_signature, method_names, overrides_param_name};
-use crate::type_mapper::safe_param_name;
+use crate::type_mapper::{property_name, safe_param_names};
 use abi_typegen_core::types::{
     AbiEvent, AbiFunction, AbiParam, ContractIr, SolType, StateMutability,
 };
@@ -73,7 +73,7 @@ fn sol_type_to_ethers5_input(ty: &SolType) -> String {
                 .map(|(i, c)| {
                     format!(
                         "{}: {}",
-                        safe_param_name(&c.name, i),
+                        property_name(&c.name, i),
                         sol_type_to_ethers5_input(&c.ty)
                     )
                 })
@@ -156,17 +156,12 @@ fn render_function_sig(method_name: &str, f: &AbiFunction) -> String {
         StateMutability::NonPayable => "Overrides",
         StateMutability::Payable => "PayableOverrides",
     };
+    let names = safe_param_names(f.inputs.iter().map(|p| p.name.as_str()));
     let params = f
         .inputs
         .iter()
         .enumerate()
-        .map(|(i, p)| {
-            format!(
-                "{}: {}",
-                safe_param_name(&p.name, i),
-                sol_type_to_ethers5_input(&p.ty)
-            )
-        })
+        .map(|(i, p)| format!("{}: {}", names[i], sol_type_to_ethers5_input(&p.ty)))
         .chain(std::iter::once(format!(
             "{}?: {}",
             overrides_param_name(f),
@@ -196,6 +191,7 @@ fn render_function_sig(method_name: &str, f: &AbiFunction) -> String {
 
 /// Renders a single event filter method line for ethers v5.
 fn render_event_filter(event: &AbiEvent) -> String {
+    let names = safe_param_names(event.inputs.iter().map(|p| p.name.as_str()));
     let params = event
         .inputs
         .iter()
@@ -209,13 +205,9 @@ fn render_event_filter(event: &AbiEvent) -> String {
         )
         .map(|(i, p)| {
             if !p.indexed {
-                return format!("{}?: null", safe_param_name(&p.name, i));
+                return format!("{}?: null", names[i]);
             }
-            format!(
-                "{}?: {} | null",
-                safe_param_name(&p.name, i),
-                sol_type_to_ethers5_input(&p.ty)
-            )
+            format!("{}?: {} | null", names[i], sol_type_to_ethers5_input(&p.ty))
         })
         .collect::<Vec<_>>()
         .join(", ");
@@ -271,7 +263,7 @@ fn safe_tuple_field_name(name: &str, index: usize) -> Option<String> {
         return None;
     }
 
-    let name = safe_param_name(name, index);
+    let name = property_name(name, index);
     if is_tuple_property_name(&name) {
         None
     } else {

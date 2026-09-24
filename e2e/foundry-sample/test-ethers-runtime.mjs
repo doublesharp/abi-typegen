@@ -18,6 +18,7 @@ const abi = [
   { type: 'function', name: 'quoteUint256', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
   { type: 'function', name: 'nested', stateMutability: 'view', inputs: [{ name: 'items', type: 'tuple[][2]', components: [{ name: 'amount', type: 'uint256' }, { name: 'ok', type: 'bool' }] }], outputs: [{ type: 'uint256' }] },
   { type: 'function', name: 'nested', stateMutability: 'view', inputs: [{ name: 'value', type: 'bytes32' }], outputs: [{ type: 'uint256' }] },
+  { type: 'function', name: 'keywords', stateMutability: 'view', inputs: [{ name: 'item', type: 'tuple', components: [{ name: 'class', type: 'uint256' }, { name: '_class', type: 'bool' }] }], outputs: [{ name: 'item', type: 'tuple', components: [{ name: 'class', type: 'uint256' }, { name: '_class', type: 'bool' }] }] },
   { type: 'event', name: 'Moved', inputs: [
     { name: 'amount', type: 'uint256', indexed: false },
     { name: 'from', type: 'address', indexed: true },
@@ -48,6 +49,9 @@ try {
     const call = async transaction => {
       calls.push(transaction.data);
       const fragment = iface.getFunction(transaction.data.slice(0, 10));
+      if (fragment.name === 'keywords') {
+        return iface.encodeFunctionResult(fragment, [{ class: 7, _class: true }]);
+      }
       return iface.encodeFunctionResult(fragment, [calls.length]);
     };
     let runner;
@@ -70,16 +74,26 @@ try {
     assert.equal((await contract.quoteUint256()).toString(), '3');
     const nested = [[{ amount: 9, ok: true }], []];
     assert.equal((await contract.nestedTupleUint256BoolEndTupleArrayArray2(nested)).toString(), '4');
+    const keywordItem = { class: 7, _class: true };
+    const keywordResult = await contract.keywords(keywordItem);
+    assert.equal(keywordResult.class.toString(), '7');
+    assert.equal(keywordResult._class, true);
+    const generated = readFileSync(join(output, `Runtime.${target}.ts`), 'utf8');
+    assert.match(generated, /\{ class: BigNumberish; _class: boolean \}/);
+    assert.match(generated, target === 'ethers'
+      ? /\{ class: bigint; _class: boolean \}/
+      : /\{ class: BigNumber; _class: boolean \}/);
     assert.deepEqual(calls, [
       iface.encodeFunctionData('quote(uint256)', [7]),
       iface.encodeFunctionData('quote(address)', [other]),
       iface.encodeFunctionData('quoteUint256()', []),
       iface.encodeFunctionData('nested((uint256,bool)[][2])', [nested]),
+      iface.encodeFunctionData('keywords((uint256,bool))', [keywordItem]),
     ]);
     const filter = contract.filters.Moved(null, address, null, other);
     const topics = target === 'ethers' ? await filter.getTopicFilter() : filter.topics;
     assert.deepEqual(topics, iface.encodeFilterTopics('Moved', [null, address, null, other]));
-    console.log(`${target}: generated overload calls, alias collisions, nested tuples, and event topics passed`);
+    console.log(`${target}: generated overload calls, alias collisions, nested tuples, keyword fields, and event topics passed`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

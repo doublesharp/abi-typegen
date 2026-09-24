@@ -51,7 +51,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
                 .iter()
                 .map(|c| (c.name.as_str(), &c.ty, c.internal_type.as_deref())),
             &registry,
-            &mut |ty, internal_type| go_type(ty, internal_type, &mut imports),
+            &mut |_, ty, internal_type| go_type(ty, internal_type, &mut imports),
         );
         body.push_str(&format!(
             "// {name} is the Go form of the {} tuple.\n",
@@ -84,7 +84,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
                 .iter()
                 .map(|p| (p.name.as_str(), &p.ty, p.internal_type.as_deref())),
             &registry,
-            &mut |ty, internal_type| go_type(ty, internal_type, &mut imports),
+            &mut |_, ty, internal_type| go_type(ty, internal_type, &mut imports),
         );
         body.push_str(&doc_comment(
             &format!("{name} holds the arguments of {signature}."),
@@ -116,7 +116,14 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
                 .iter()
                 .map(|p| (p.name.as_str(), &p.ty, p.internal_type.as_deref())),
             &registry,
-            &mut |ty, internal_type| go_type(ty, internal_type, &mut imports),
+            &mut |index, ty, internal_type| {
+                if event.inputs[index].indexed && indexed_topic_is_hash(ty) {
+                    imports.common = true;
+                    "common.Hash".to_string()
+                } else {
+                    go_type(ty, internal_type, &mut imports)
+                }
+            },
         );
         body.push_str(&doc_comment(
             &format!("{name} holds the fields of the {signature} event."),
@@ -144,7 +151,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
                 .iter()
                 .map(|p| (p.name.as_str(), &p.ty, p.internal_type.as_deref())),
             &registry,
-            &mut |ty, internal_type| go_type(ty, internal_type, &mut imports),
+            &mut |_, ty, internal_type| go_type(ty, internal_type, &mut imports),
         );
         body.push_str(&doc_comment(
             &format!("{name} holds the arguments of the {signature} error."),
@@ -226,7 +233,7 @@ struct Field {
 fn struct_fields<'a>(
     params: impl IntoIterator<Item = (&'a str, &'a SolType, Option<&'a str>)>,
     registry: &TupleRegistry,
-    go_type: &mut dyn FnMut(&SolType, Option<&str>) -> String,
+    go_type: &mut dyn FnMut(usize, &SolType, Option<&str>) -> String,
 ) -> Vec<Field> {
     let params: Vec<_> = params.into_iter().collect();
     let names =
@@ -247,11 +254,14 @@ fn struct_fields<'a>(
             let field = scope.claim(&base);
             // go-ethereum maps ABI names to fields by exporting them. A
             // suffixed field no longer matches, so it names its ABI field.
-            let tag = (!abi_name.is_empty() && field != exported(abi_name))
+            let needs_digit_prefix = abi_name
+                .trim_start_matches('_')
+                .starts_with(|c: char| c.is_ascii_digit());
+            let tag = (!abi_name.is_empty() && (field != exported(abi_name) || needs_digit_prefix))
                 .then(|| (*abi_name).to_string());
             Field {
                 name: field,
-                ty: go_type(ty, *internal_type),
+                ty: go_type(index, ty, *internal_type),
                 tag,
             }
         })
@@ -265,6 +275,22 @@ fn struct_fields<'a>(
         }
     }
     fields
+}
+
+/// Indexed reference values are represented by their topic hash, not their value.
+fn indexed_topic_is_hash(ty: &SolType) -> bool {
+    match ty {
+        SolType::StringType
+        | SolType::Bytes
+        | SolType::Array(_)
+        | SolType::FixedArray(_, _)
+        | SolType::Tuple(_) => true,
+        SolType::Bool
+        | SolType::Address
+        | SolType::BytesN(_)
+        | SolType::Uint(_)
+        | SolType::Int(_) => false,
+    }
 }
 
 fn sol_type_to_go(
@@ -404,7 +430,7 @@ fn natspec_lines(natspec: &NatSpec) -> Vec<String> {
         .iter()
         .chain(natspec.dev.iter())
         .flat_map(|text| text.lines())
-        .map(|line| line.trim().to_string())
+        .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" "))
         .collect()
 }
 
@@ -412,7 +438,7 @@ fn comment_line(text: &str) -> String {
     if text.is_empty() {
         "//\n".to_string()
     } else {
-        format!("// {text}\n")
+        format!("// {}\n", text.replace("``", "“").replace("''", "”"))
     }
 }
 

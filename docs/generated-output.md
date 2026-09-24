@@ -68,30 +68,47 @@ of every function, event, and error. Each tuple becomes a named type.
   `<Name><Tuple>`, `<Name>TransferParams`, `<Name>TransferEvent`, and
   `<Name>XError`. Output is gofmt-clean, and structs pack and unpack through
   go-ethereum's `abi` package. When two ABI names export to the same Go field
-  name, the suffixed fields carry `abi:"..."` tags.
+  name, the suffixed fields carry `abi:"..."` tags. Indexed strings, bytes, arrays,
+  and tuples use `common.Hash` because their event topics contain hashes rather
+  than the original values. For event field names that go-ethereum cannot map to
+  Go identifiers, such as `_0`, use `abi.ParseTopicsIntoMap` instead of
+  `abi.ParseTopics`.
 - **Rust** emits `alloy::sol! { #[sol(rpc, abi, all_derives, extra_derives(serde::Serialize, serde::Deserialize))] contract <Name> { ... } }`
   and a `<NAME>_ABI` string constant. alloy generates the structs, `…Call`
   and `…Return` types, events with indexed fields, errors, and selectors. Types
   derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`, `Default` (where every field
-  supports it), and serde with ABI field names. serde supports arrays of at most
+  supports it), and serde. Field names follow the ABI unless keyword escaping or
+  collision handling requires a different name. serde supports arrays of at most
   32 elements, so a contract with a longer fixed array omits the serde derives.
   `wrappers = false` removes only `rpc`. NatSpec becomes rustdoc that passes
   `-D warnings`. A contract whose module name is a Rust keyword uses a raw
-  identifier (`pub mod r#override;`).
+  identifier (`pub mod r#override;`). `Mod` uses `mod_.rs` to keep the module index
+  in `mod.rs`. Unnamed fields receive positional names, disambiguated against
+  explicit ABI names.
 - **Swift** types are `public struct <Type>: Sendable, Hashable` with a public
   memberwise initializer. Constants are static lets such as
-  `Token.transferSelector` (`Data`) and `Token.TransferEventTopic`. Output builds
+  `Token.transferSelector` (`Data`) and `Token.transferEventTopic`. Output builds
   in Swift 6 language mode.
 - **Kotlin** tuples are data classes that extend web3j's `StaticStruct` or
-  `DynamicStruct`, so they encode directly. Integers are `BigInteger`, addresses
+  `DynamicStruct`. They retain convenience constructors and also accept web3j
+  types such as `Uint256` for reflective decoding. Integers are `BigInteger`, addresses
   are `String`, `bytesN` is web3j's `BytesN`, and `bytes` is `DynamicBytes`, all
   compared by value. Constants are `const val` strings such as
   `Token.TRANSFER_SELECTOR`. Names that shout to the same constant get a numeric
   suffix in ABI order (`premiumPeriod` after `PREMIUM_PERIOD` gives
-  `PREMIUM_PERIOD_SIGNATURE2`). Java reads the constants, the `Token.JSON` ABI, and every
+  `PREMIUM_PERIOD2_SIGNATURE`). Java reads the constants, the `Token.JSON` ABI, and every
   getter without name mangling. A struct field named `value`, `typeAsString`, or
   `componentType` gets a trailing underscore because web3j's `Array` already
   defines those getters. web3j cannot encode fixed arrays longer than 32 elements.
+  web3j 6 cannot reflectively decode tuples containing nested dynamic arrays,
+  such as `uint256[][]`; those tuples still encode successfully.
+
+Swift and Kotlin contract namespaces also avoid SDK names: `String` becomes
+`String2`. Kotlin names matching generated web3j types use a `Contract` suffix,
+such as `Uint256Contract`. File names still follow the original contract name.
+If two selected contracts produce the same namespace, generation fails before
+writing output. Exported names that would start with a digit get an `X` prefix,
+such as `_0` becoming `X0`.
 
 In Swift and Kotlin, a tuple named like a type the generated code uses (`Data`,
 `Address`, `Uint256`) gets a suffix (`Data2`, `Uint256Tuple`) so it cannot shadow
@@ -99,7 +116,7 @@ that type. Anonymous events have no topic constant, since they do not log their 
 hash. A struct declared in the rendered contract drops the contract qualifier:
 `struct Vault.Position` in `Vault` is `Position` (Go `VaultPosition`). Structs from
 other contracts and libraries keep it (`TupleAccountPosition`). Unnamed parameters
-are named after their types (`address`, `address2`, `uint256`, `bytes32Array`);
+are named after their types (`address`, `address2`, `uint256`, `uint256_2`, `bytes32Array`);
 Rust keeps alloy's `_0`, `_1`.
 
 ## Overloaded functions

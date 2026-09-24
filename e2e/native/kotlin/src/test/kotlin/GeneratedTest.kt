@@ -10,6 +10,30 @@ import org.web3j.abi.datatypes.Function
 import org.web3j.abi.datatypes.generated.Bytes32
 
 class GeneratedTest {
+    @Test
+    fun packedMarketDecodesFromFunctionOutput() {
+        val market = NativeCases.PackedMarket(Bytes32(ByteArray(32) { 1 }), Bytes32(ByteArray(32) { 2 }), BigInteger.TEN)
+        val encoded = org.web3j.abi.TypeEncoder.encode(market)
+        val decoded = org.web3j.abi.FunctionReturnDecoder.decode(
+            encoded,
+            Function("getMarket", emptyList(), listOf(org.web3j.abi.TypeReference.create(NativeCases.PackedMarket::class.java))).outputParameters,
+        ).single() as NativeCases.PackedMarket
+        assertEquals(market, decoded)
+    }
+
+    @Test
+    fun arrayTupleDecodesFromFunctionOutput() {
+        val amounts = NativeCases.Amounts(listOf(BigInteger.ONE, BigInteger.TEN))
+        val encoded = org.web3j.abi.TypeEncoder.encode(amounts)
+        // A dynamic return value starts with an offset to its tuple payload.
+        val output = org.web3j.abi.TypeEncoder.encode(org.web3j.abi.datatypes.generated.Uint256(32)) + encoded
+        val decoded = org.web3j.abi.FunctionReturnDecoder.decode(
+            output,
+            Function("getAmounts", emptyList(), listOf(org.web3j.abi.TypeReference.create(NativeCases.Amounts::class.java))).outputParameters,
+        ).single() as NativeCases.Amounts
+        assertEquals(amounts, decoded)
+    }
+
     private fun batch(fee: Long) = NativeCases.Batch(
         calls = listOf(
             NativeCases.Call3Value(

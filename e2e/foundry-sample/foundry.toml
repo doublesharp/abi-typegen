@@ -7,4 +7,4 @@ solc = "0.8.34"
 [abi-typegen]
 # Generate from source fixtures, excluding the generated interfaces compiled
 # alongside them by Forge.
-contracts = ["Token", "Vault", "Registry", "EdgeCases", "Exchange", "TupleCases"]
+contracts = ["Token", "Vault", "Registry", "EdgeCases", "Exchange", "TupleCases", "NamingCases"]

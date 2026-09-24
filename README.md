@@ -320,6 +320,14 @@ Overloaded functions in TypeScript get a suffix built from their parameter types
 Go, Rust, Swift, and Kotlin number overloads the way their SDKs do (`Deposit`,
 `Deposit0` in Go; `deposit_0Call` in alloy).
 
+Generated names avoid language keywords, SDK type names, and collisions after
+case conversion. Kotlin tuples provide web3j-typed constructors for decoding,
+and Go indexed dynamic event fields use `common.Hash`. See
+[generated output](docs/generated-output.md) for naming rules and SDK limitations.
+
+Regenerate bindings when upgrading and review the
+[changelog](CHANGELOG.md) for changes to generated names.
+
 Wrappers also type transaction options. Payable functions accept a `value` in
 every TypeScript wrapper: ethers `overrides`, the wagmi `write` options, web3
 `send`, and viem's own `write` options.

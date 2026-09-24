@@ -616,11 +616,27 @@ fn render_artifacts(
 ) -> Result<(Vec<String>, std::collections::BTreeMap<String, String>)> {
     let mut files = std::collections::BTreeMap::new();
     let mut owners = std::collections::HashMap::new();
+    let mut namespace_owners = std::collections::HashMap::new();
     let mut contract_names = Vec::new();
     let outputs = target_configs(config);
     for (name, path) in artifacts {
         let ir = read_artifact(name, path)?;
         for (prefix, target_config) in &outputs {
+            let namespace = match target_config.target() {
+                Target::Swift => Some(abi_typegen_codegen::swift::namespace_name(name)),
+                Target::Kotlin => Some(abi_typegen_codegen::kotlin::namespace_name(name)),
+                _ => None,
+            };
+            if let Some(namespace) = namespace
+                && let Some(previous) = namespace_owners.insert((prefix, namespace.clone()), name)
+            {
+                anyhow::bail!(
+                    "contracts '{}' and '{}' both generate namespace '{}'",
+                    previous,
+                    name,
+                    namespace
+                );
+            }
             for (filename, content) in generate_contract_files(&ir, target_config) {
                 let filename = format!("{prefix}{filename}");
                 if let Some(previous) = owners.insert(filename.clone(), name) {

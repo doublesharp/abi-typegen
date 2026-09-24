@@ -1,4 +1,4 @@
-use crate::type_mapper::{Target, overload_suffix, safe_param_name, sol_type_to_ts};
+use crate::type_mapper::{Target, overload_suffix, safe_param_names, sol_type_to_ts};
 use abi_typegen_core::types::{AbiFunction, ContractIr, StateMutability};
 use heck::ToUpperCamelCase;
 use std::collections::{HashMap, HashSet};
@@ -173,13 +173,14 @@ fn is_read(f: &AbiFunction) -> bool {
 
 /// Inline TypeScript object type for a function's inputs.
 fn args_type(f: &AbiFunction) -> String {
+    let names = safe_param_names(f.inputs.iter().map(|p| p.name.as_str()));
     let fields: Vec<String> = f
         .inputs
         .iter()
         .enumerate()
         .map(|(i, p)| {
             let ts_type = sol_type_to_ts(&p.ty, TARGET);
-            let name = safe_param_name(&p.name, i);
+            let name = &names[i];
             format!("{}: {}", name, ts_type)
         })
         .collect();
@@ -188,10 +189,9 @@ fn args_type(f: &AbiFunction) -> String {
 
 /// Positional argument list that reads each input from `args`.
 fn arg_names(f: &AbiFunction) -> String {
-    f.inputs
+    safe_param_names(f.inputs.iter().map(|p| p.name.as_str()))
         .iter()
-        .enumerate()
-        .map(|(i, p)| format!("args.{}", safe_param_name(&p.name, i)))
+        .map(|name| format!("args.{name}"))
         .collect::<Vec<_>>()
         .join(", ")
 }

@@ -1,5 +1,5 @@
 use super::ethers_common::function_signature;
-use crate::type_mapper::{Target, safe_param_name, sol_type_to_ts};
+use crate::type_mapper::{Target, property_name, safe_param_names, sol_type_to_ts};
 use abi_typegen_core::types::{AbiFunction, AbiParam, ContractIr, SolType, StateMutability};
 use heck::ToUpperCamelCase;
 use std::collections::HashMap;
@@ -70,17 +70,12 @@ pub fn render_web3js_file(ir: &ContractIr) -> String {
 }
 
 fn render_method(contract: &str, key: &str, f: &AbiFunction) -> String {
+    let names = safe_param_names(f.inputs.iter().map(|p| p.name.as_str()));
     let params = f
         .inputs
         .iter()
         .enumerate()
-        .map(|(i, p)| {
-            format!(
-                "{}: {}",
-                safe_param_name(&p.name, i),
-                sol_type_to_web3_input(&p.ty)
-            )
-        })
+        .map(|(i, p)| format!("{}: {}", names[i], sol_type_to_web3_input(&p.ty)))
         .collect::<Vec<_>>()
         .join(", ");
     let mutability = match f.state_mutability {
@@ -132,7 +127,7 @@ fn sol_type_to_web3_input(ty: &SolType) -> String {
                 .map(|(i, c)| {
                     format!(
                         "{}: {}",
-                        safe_param_name(&c.name, i),
+                        property_name(&c.name, i),
                         sol_type_to_web3_input(&c.ty)
                     )
                 })

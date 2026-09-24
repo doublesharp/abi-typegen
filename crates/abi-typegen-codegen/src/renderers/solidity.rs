@@ -1,4 +1,5 @@
-use crate::type_mapper::{safe_param_name, struct_name_from_internal_type};
+use crate::naming::Scope;
+use crate::type_mapper::struct_name_from_internal_type;
 use abi_typegen_core::types::{
     AbiError, AbiEvent, AbiEventParam, AbiFunction, ContractIr, NatSpec, SolType, StateMutability,
     TupleComponent,
@@ -204,13 +205,14 @@ fn tuple_name_segment(name: &str, index: usize, fallback_prefix: &str) -> String
     if name.is_empty() {
         format!("{}{}", fallback_prefix, index)
     } else {
-        safe_param_name(name, index).to_upper_camel_case()
+        name.to_upper_camel_case()
     }
 }
 
 fn render_struct_def(def: &StructDef, defs: &[StructDef]) -> String {
     let mut out = String::new();
     out.push_str(&format!("    struct {} {{\n", def.name));
+    let mut scope = Scope::with_reserved(def.components.iter().map(|c| c.name.as_str()));
     for (index, component) in def.components.iter().enumerate() {
         out.push_str(&format!(
             "        {};\n",
@@ -223,7 +225,11 @@ fn render_struct_def(def: &StructDef, defs: &[StructDef]) -> String {
                     def.name,
                     tuple_name_segment(&component.name, index, "Field")
                 ),
-                safe_param_name(&component.name, index),
+                if component.name.is_empty() {
+                    scope.claim(&format!("arg{index}"))
+                } else {
+                    component.name.clone()
+                },
                 None,
             )
         ));
@@ -322,7 +328,7 @@ fn render_function_params(function: &AbiFunction, defs: &[StructDef]) -> String 
                     function.name.to_upper_camel_case(),
                     tuple_name_segment(&input.name, index, "Param")
                 ),
-                safe_param_name(&input.name, index),
+                input.name.clone(),
                 data_location_for_type(&input.ty, true),
             )
         })
@@ -334,8 +340,7 @@ fn render_function_outputs(function: &AbiFunction, defs: &[StructDef]) -> String
     let mut used_names = function
         .inputs
         .iter()
-        .enumerate()
-        .map(|(index, input)| safe_param_name(&input.name, index))
+        .map(|input| input.name.clone())
         .collect::<HashSet<_>>();
 
     function
@@ -346,7 +351,7 @@ fn render_function_outputs(function: &AbiFunction, defs: &[StructDef]) -> String
             let output_name = if output.name.is_empty() {
                 None
             } else {
-                let candidate = safe_param_name(&output.name, index);
+                let candidate = output.name.clone();
                 if used_names.insert(candidate.clone()) {
                     Some(candidate)
                 } else {
@@ -383,7 +388,7 @@ fn render_event_param(
     index: usize,
     defs: &[StructDef],
 ) -> String {
-    let name = safe_param_name(&input.name, index);
+    let name = input.name.clone();
     let ty = render_solidity_type(
         defs,
         &input.ty,
@@ -394,10 +399,11 @@ fn render_event_param(
             tuple_name_segment(&input.name, index, "Param")
         ),
     );
-    if input.indexed {
-        format!("{} indexed {}", ty, name)
+    let indexed = if input.indexed { " indexed" } else { "" };
+    if name.is_empty() {
+        format!("{ty}{indexed}")
     } else {
-        format!("{} {}", ty, name)
+        format!("{ty}{indexed} {name}")
     }
 }
 
@@ -416,7 +422,7 @@ fn render_error_params(error: &AbiError, defs: &[StructDef]) -> String {
                     error.name.to_upper_camel_case(),
                     tuple_name_segment(&input.name, index, "Param")
                 ),
-                safe_param_name(&input.name, index),
+                input.name.clone(),
                 None,
             )
         })
@@ -437,8 +443,10 @@ fn render_field_like(
         out.push(' ');
         out.push_str(location);
     }
-    out.push(' ');
-    out.push_str(&name);
+    if !name.is_empty() {
+        out.push(' ');
+        out.push_str(&name);
+    }
     out
 }
 

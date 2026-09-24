@@ -17,7 +17,7 @@ import Web3Core
     #expect(transfer.signature == Token.transferSignature)
     #expect(transfer.selectorEncoded == Token.transferSelector)
     let event = try #require(contract.events["Transfer"])
-    #expect(event.topic == Token.TransferEventTopic)
+    #expect(event.topic == Token.transferEventTopic)
 }
 
 @Test func tuplesAreNamedTypes() {

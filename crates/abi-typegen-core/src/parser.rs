@@ -127,6 +127,9 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
     // Fixed array: strip trailing [N]
     if ty_str.ends_with(']')
         && let Some(bracket) = ty_str.rfind('[')
+        && ty_str[bracket + 1..ty_str.len() - 1]
+            .bytes()
+            .all(|byte| byte.is_ascii_digit())
         && let Ok(size) = ty_str[bracket + 1..ty_str.len() - 1].parse::<usize>()
     {
         let inner = parse_sol_type(&ty_str[..bracket], components)?;
@@ -156,6 +159,9 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
         }
         s if s.starts_with("uint") => {
             let suffix = &s[4..];
+            if !suffix.bytes().all(|byte| byte.is_ascii_digit()) {
+                return Err(ParseError::InvalidBitWidth(s.to_string()));
+            }
             let bits: u16 = if suffix.is_empty() {
                 256
             } else {
@@ -170,6 +176,9 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
         }
         s if s.starts_with("int") => {
             let suffix = &s[3..];
+            if !suffix.bytes().all(|byte| byte.is_ascii_digit()) {
+                return Err(ParseError::InvalidBitWidth(s.to_string()));
+            }
             let bits: u16 = if suffix.is_empty() {
                 256
             } else {
@@ -183,6 +192,9 @@ pub(crate) fn parse_sol_type(ty_str: &str, components: &[RawParam]) -> Result<So
             Ok(SolType::Int(bits))
         }
         s if s.starts_with("bytes") && s.len() > 5 => {
+            if !s[5..].bytes().all(|byte| byte.is_ascii_digit()) {
+                return Err(ParseError::InvalidBytesN(s.to_string()));
+            }
             let n: u8 = s[5..]
                 .parse()
                 .map_err(|_| ParseError::InvalidBytesN(s.to_string()))?;
@@ -432,6 +444,16 @@ mod tests {
         assert_eq!(parse_sol_type("uint8", &[]).unwrap(), SolType::Uint(8));
         assert_eq!(parse_sol_type("uint", &[]).unwrap(), SolType::Uint(256));
         assert_eq!(parse_sol_type("int128", &[]).unwrap(), SolType::Int(128));
+    }
+
+    #[test]
+    fn type_sizes_reject_signed_numeric_suffixes() {
+        for ty in ["uint+8", "int+32", "bytes+1", "uint256[+2]", "bool[+1][]"] {
+            assert!(
+                parse_type_string(ty).is_err(),
+                "accepted invalid ABI type {ty}"
+            );
+        }
     }
 
     #[test]

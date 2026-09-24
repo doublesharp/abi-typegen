@@ -2528,3 +2528,34 @@ fn glob_matching_agrees_with_independent_dynamic_programming_oracle() {
         }
     }
 }
+
+#[test]
+fn rust_mod_contract_does_not_overwrite_module_index() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Rust);
+    write_target_matrix_artifact(&config.artifacts_dir, "Mod");
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("mod.rs"), "pub mod mod_;");
+    assert_file_contains(&config.out_dir.join("mod_.rs"), "contract Mod");
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn native_namespace_collisions_fail_before_writing() {
+    for target in [Target::Swift, Target::Kotlin] {
+        let dir = tempfile::tempdir().unwrap();
+        let config = generated_config(dir.path().join("out"), dir.path().join("gen"), target);
+        for name in ["String", "String2"] {
+            write_target_matrix_artifact(&config.artifacts_dir, name);
+        }
+        std::fs::create_dir_all(&config.out_dir).unwrap();
+        let previous = config.out_dir.join("String.swift");
+        std::fs::write(&previous, "previous bindings").unwrap();
+        let error = run_generate(&config, true).unwrap_err().to_string();
+        assert!(error.contains("namespace 'String2'"), "{error}");
+        assert_eq!(
+            std::fs::read_to_string(previous).unwrap(),
+            "previous bindings"
+        );
+    }
+}

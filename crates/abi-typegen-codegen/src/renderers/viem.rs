@@ -1,4 +1,7 @@
-use crate::type_mapper::{Target, overload_suffix, safe_param_name, sol_type_to_ts};
+use crate::naming::Scope;
+use crate::type_mapper::{
+    Target, overload_suffix, safe_param_name, safe_param_names, sol_type_to_ts,
+};
 use abi_typegen_core::types::{AbiFunction, AbiParam, ContractIr, NatSpec, StateMutability};
 use heck::ToUpperCamelCase;
 use std::collections::HashMap;
@@ -56,18 +59,20 @@ pub fn render_viem_file(ir: &ContractIr) -> String {
             *name_counts.entry(f.name.as_str()).or_insert(0) += 1;
         }
 
+        let mut scope = Scope::default();
         for f in &write_fns {
             let total = *name_counts.get(f.name.as_str()).unwrap_or(&1);
-            let type_name = if total > 1 {
+            let base = if total > 1 {
                 format!(
-                    "{}{}{}Params",
+                    "{}{}{}",
                     ir.name,
                     f.name.to_upper_camel_case(),
                     overload_suffix(&f.inputs)
                 )
             } else {
-                format!("{}{}Params", ir.name, f.name.to_upper_camel_case())
+                format!("{}{}", ir.name, f.name.to_upper_camel_case())
             };
+            let type_name = format!("{}Params", scope.claim_family(&base, &["Params"]));
             out.push_str(&render_params_type(&type_name, f));
             out.push('\n');
         }
@@ -82,9 +87,10 @@ fn render_params_type(type_name: &str, f: &AbiFunction) -> String {
         out.push_str(&render_jsdoc(ns, &f.inputs, &f.outputs));
     }
     out.push_str(&format!("export type {} = {{\n", type_name));
+    let names = safe_param_names(f.inputs.iter().map(|p| p.name.as_str()));
     for (i, param) in f.inputs.iter().enumerate() {
         let ts_type = sol_type_to_ts(&param.ty, TARGET);
-        let name = safe_param_name(&param.name, i);
+        let name = &names[i];
         out.push_str(&format!("  {}: {};\n", name, ts_type));
     }
     out.push_str("};\n");

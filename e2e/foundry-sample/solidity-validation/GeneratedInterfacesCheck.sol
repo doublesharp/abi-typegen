@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.34;
 
+import {INamingCases} from "../src/generated-solidity/INamingCases.sol";
 import {IEdgeCases} from "../src/generated-solidity/IEdgeCases.sol";
 import {IExchange} from "../src/generated-solidity/IExchange.sol";
 import {IRegistry} from "../src/generated-solidity/IRegistry.sol";
@@ -10,6 +11,10 @@ import {IVault} from "../src/generated-solidity/IVault.sol";
 import {ITupleCases} from "../src/generated-solidity/ITupleCases.sol";
 
 contract GeneratedInterfacesCheck {
+    function namingTuple(INamingCases target) external returns (uint256, bool) {
+        return target.store(INamingCases.Item({class: 7, _class: true}));
+    }
+
     function depositTuples(ITupleCases target) external {
         target.deposit(ITupleCases.Position(address(this)));
         target.deposit(ITupleCases.Position_2(uint256(42)));

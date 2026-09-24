@@ -84,6 +84,25 @@ pub fn safe_param_name(name: &str, index: usize) -> String {
     name.to_string()
 }
 
+/// Allocates distinct TypeScript parameter identifiers within one argument list.
+pub fn safe_param_names<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<String> {
+    let mut scope = crate::naming::Scope::default();
+    names
+        .into_iter()
+        .enumerate()
+        .map(|(index, name)| scope.claim(&safe_param_name(name, index)))
+        .collect()
+}
+
+/// Keeps ABI object keys intact; JavaScript permits reserved words as properties.
+pub fn property_name(name: &str, index: usize) -> String {
+    if name.is_empty() {
+        format!("arg{index}")
+    } else {
+        name.to_string()
+    }
+}
+
 /// Returns the TypeScript type string for a Solidity type.
 pub fn sol_type_to_ts(ty: &SolType, target: Target) -> String {
     match ty {
@@ -151,7 +170,7 @@ pub fn sol_type_to_ts(ty: &SolType, target: Target) -> String {
                 .map(|(i, c)| {
                     format!(
                         "{}: {}",
-                        safe_param_name(&c.name, i),
+                        property_name(&c.name, i),
                         sol_type_to_ts(&c.ty, target)
                     )
                 })

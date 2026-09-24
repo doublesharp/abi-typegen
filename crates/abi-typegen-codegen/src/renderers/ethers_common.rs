@@ -1,4 +1,4 @@
-use crate::type_mapper::{overload_suffix, safe_param_name};
+use crate::type_mapper::{overload_suffix, safe_param_names};
 use abi_typegen_core::types::{AbiFunction, SolType};
 use std::collections::{HashMap, HashSet};
 
@@ -30,12 +30,8 @@ pub(super) fn method_names(functions: &[AbiFunction]) -> Vec<String> {
 /// Name for the trailing overrides parameter that no ABI input already uses.
 pub(super) fn overrides_param_name(function: &AbiFunction) -> String {
     let mut name = "overrides".to_string();
-    while function
-        .inputs
-        .iter()
-        .enumerate()
-        .any(|(i, input)| safe_param_name(&input.name, i) == name)
-    {
+    let names = safe_param_names(function.inputs.iter().map(|input| input.name.as_str()));
+    while names.contains(&name) {
         name.insert(0, '_');
     }
     name
