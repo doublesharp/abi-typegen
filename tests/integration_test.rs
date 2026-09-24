@@ -858,3 +858,72 @@ fn ethers_overload_bindings_use_canonical_recursive_abi_types() {
         assert!(source.contains("\"all()\""), "{source}");
     }
 }
+
+// ── Native targets never panic ──────────────────────────────────────────────
+
+/// Renders every fixture and fuzz seed that parses through the Go, Rust,
+/// Swift, and Kotlin renderers. Named-type lookups inside these renderers rely
+/// on the tuple registry covering every tuple, so a gap would panic here.
+#[test]
+fn native_renderers_handle_every_fixture_and_seed() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut inputs: Vec<PathBuf> = std::fs::read_dir(root.join("tests/fixtures"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    for seeds in [
+        "fuzz/seeds/fuzz_codegen_full",
+        "fuzz/seeds/fuzz_parse_artifact",
+    ] {
+        if let Ok(entries) = std::fs::read_dir(root.join(seeds)) {
+            inputs.extend(entries.map(|entry| entry.unwrap().path()));
+        }
+    }
+    let configs: Vec<Config> = ["go", "rust", "swift", "kotlin"]
+        .iter()
+        .map(|target| {
+            Config::from_toml_str(&format!("[abi-typegen]\ntarget = \"{target}\"\n")).unwrap()
+        })
+        .collect();
+    let mut rendered = 0;
+    for path in &inputs {
+        let Ok(json) = std::fs::read_to_string(path) else {
+            continue;
+        };
+        let Ok(ir) = parse_artifact("Seed", &json) else {
+            continue;
+        };
+        for config in &configs {
+            let files = generate_contract_files(&ir, config);
+            assert!(!files.is_empty(), "{} produced no files", path.display());
+            rendered += 1;
+        }
+    }
+    assert!(
+        rendered >= 12,
+        "expected fixtures to render, got {rendered}"
+    );
+}
+
+#[test]
+fn native_targets_embed_selectors_for_the_erc20_fixture() {
+    let ir = parse_artifact("ERC20", &fixture("erc20.json")).unwrap();
+    for (target, needle) in [
+        ("go", "[4]byte{0xa9, 0x05, 0x9c, 0xbb}"),
+        (
+            "rust",
+            "function transfer(address to, uint256 amount) external returns (bool);",
+        ),
+        ("swift", "Data([0xa9, 0x05, 0x9c, 0xbb])"),
+        ("kotlin", "\"0xa9059cbb\""),
+    ] {
+        let config =
+            Config::from_toml_str(&format!("[abi-typegen]\ntarget = \"{target}\"\n")).unwrap();
+        let files = generate_contract_files(&ir, &config);
+        let content = files.values().next().unwrap();
+        assert!(
+            content.contains(needle),
+            "{target} output lacks {needle}:\n{content}"
+        );
+    }
+}

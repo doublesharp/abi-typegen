@@ -14,10 +14,11 @@ fuzz_target!(|names: Vec<String>| {
     let base = abi_typegen_config::Config {
         artifacts_dir: PathBuf::from("out"),
         out_dir: PathBuf::from("src/generated"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
 
     for target in [
@@ -27,7 +28,7 @@ fuzz_target!(|names: Vec<String>| {
         abi_typegen_config::Target::Wagmi,
     ] {
         let config = abi_typegen_config::Config {
-            target,
+            targets: vec![target],
             ..base.clone()
         };
         // Must never panic regardless of what names contains.

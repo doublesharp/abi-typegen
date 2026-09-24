@@ -307,13 +307,18 @@ typed wrapper, and other languages get a single file:
 - `solidity` emits `I<Name>.sol` with the interface, events, custom errors, and
   structs rebuilt from ABI tuples.
 - Other targets emit one file per contract (`.py`, `.go`, `.rs`, `.swift`, `.cs`,
-  `.kt`, or `.yaml`).
+  `.kt`, or `.yaml`). Rust files are snake_case with a generated `mod.rs`.
+- Go, Rust, Swift, and Kotlin files embed the ABI, every selector and signature,
+  and a named type for each tuple.
 - Multi-target runs write each target to its own directory.
 
-Overloaded functions get a suffix built from their parameter types:
+Overloaded functions in TypeScript get a suffix built from their parameter types:
 
 - `deposit(uint256)` -> `depositUint256`
 - `deposit(uint256,address)` -> `depositUint256Address`
+
+Go, Rust, Swift, and Kotlin number overloads the way their SDKs do (`Deposit`,
+`Deposit0` in Go; `deposit_0Call` in alloy).
 
 Wrappers also type transaction options. Payable functions accept a `value` in
 every TypeScript wrapper: ethers `overrides`, the wagmi `write` options, web3
@@ -340,10 +345,12 @@ export type TokenTransferParams = {
 Rust:
 
 ```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TokenTransferParams {
-    pub to: Address,
-    pub amount: U256,
+alloy::sol! {
+    #[sol(rpc, abi, all_derives, extra_derives(serde::Serialize, serde::Deserialize))]
+    contract Token {
+        event Transfer(address indexed from, address indexed to, uint256 value);
+        function transfer(address to, uint256 amount) external returns (bool);
+    }
 }
 ```
 

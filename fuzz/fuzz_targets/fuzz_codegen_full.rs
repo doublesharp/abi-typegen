@@ -28,10 +28,11 @@ fuzz_target!(|data: &[u8]| {
     let base = abi_typegen_config::Config {
         artifacts_dir: PathBuf::from("out"),
         out_dir: PathBuf::from("src/generated"),
-        target: abi_typegen_config::Target::Viem,
+        targets: vec![abi_typegen_config::Target::Viem],
         wrappers: true,
         contracts: vec![],
         exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.to_string(),
     };
     let names = vec![ir.name.clone()];
 
@@ -39,10 +40,13 @@ fuzz_target!(|data: &[u8]| {
         abi_typegen_config::Target::Viem,
         abi_typegen_config::Target::Zod,
         abi_typegen_config::Target::Ethers,
+        abi_typegen_config::Target::Go,
         abi_typegen_config::Target::Rust,
+        abi_typegen_config::Target::Swift,
+        abi_typegen_config::Target::Kotlin,
     ] {
         let config = abi_typegen_config::Config {
-            target,
+            targets: vec![target],
             ..base.clone()
         };
         let _ = abi_typegen_codegen::barrel::render_barrel(&names, &config);
