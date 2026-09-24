@@ -1,7 +1,7 @@
 // Validates all generated ethers v6 output against real ethers API types.
 // Compile with: pnpm exec tsc --noEmit
 
-import { JsonRpcProvider, type ContractTransactionResponse, type EventFilter } from 'ethers';
+import { JsonRpcProvider, type ContractTransactionResponse, type DeferredTopicFilter } from 'ethers';
 
 import {
   type TokenContract,
@@ -44,9 +44,9 @@ async function validateToken(t: TokenContract) {
   const tx3: ContractTransactionResponse = await t.mint('0xdef', 300n);
 
   // Event filters
-  const f1: EventFilter = t.filters.Transfer('0xabc', '0xdef');
-  const f2: EventFilter = t.filters.Transfer(null, null);
-  const f3: EventFilter = t.filters.Approval('0xabc', null);
+  const f1: DeferredTopicFilter = t.filters.Transfer('0xabc', '0xdef');
+  const f2: DeferredTopicFilter = t.filters.Transfer(null, null);
+  const f3: DeferredTopicFilter = t.filters.Approval('0xabc', null);
 
   void name; void symbol; void decimals; void totalSupply; void balance;
   void allowance; void tx1; void tx2; void tx3; void f1; void f2; void f3;
@@ -72,9 +72,9 @@ async function validateVault(v: VaultContract) {
   const matrix: [bigint, bigint, bigint] = await v.getMatrix();
 
   // Event filters
-  const f1: EventFilter = v.filters.Deposited('0xabc');
-  const f2: EventFilter = v.filters.Deposited(null);
-  const f3: EventFilter = v.filters.BatchProcessed();
+  const f1: DeferredTopicFilter = v.filters.Deposited('0xabc');
+  const f2: DeferredTopicFilter = v.filters.Deposited(null);
+  const f3: DeferredTopicFilter = v.filters.BatchProcessed();
 
   void tx0; void tx1; void shares; void depositedAt; void posToken;
   void mapping; void balances; void matrix; void f1; void f2; void f3;
@@ -103,7 +103,7 @@ async function validateRegistry(r: RegistryContract) {
   const encoded: string = await r.encode(42n, '0xabc');
 
   // Event filter with bytes32 indexed param
-  const f: EventFilter = r.filters.Registered(id, '0xabc');
+  const f: DeferredTopicFilter = r.filters.Registered(id, '0xabc');
 
   void tx; void entryId; void label; void createdAt; void owner; void active;
   void batch; void hash; void encoded; void f;
@@ -176,11 +176,11 @@ async function validateEdgeCases(e: EdgeCasesContract) {
 
   // ── Event filters ────────────────────────────────────────────────────
   // Anonymous event — no indexed params
-  const debugFilter: EventFilter = e.filters.DebugLog();
+  const debugFilter: DeferredTopicFilter = e.filters.DebugLog();
   // Mixed indexed: only `id` is indexed
-  const itemFilter: EventFilter = e.filters.ItemCreated(42n);
+  const itemFilter: DeferredTopicFilter = e.filters.ItemCreated(42n);
   // Both indexed
-  const transferFilter: EventFilter = e.filters.Transfer('0xabc', '0xdef');
+  const transferFilter: DeferredTopicFilter = e.filters.Transfer('0xabc', '0xdef');
 
   void a; void b; void c; void d; void e1; void e2; void e3;
   void s1; void s2; void s3; void b1; void b16; void b32; void db;
@@ -197,7 +197,7 @@ void validateToken; void validateVault; void validateRegistry; void validateEdge
 // Non-indexed slots before indexed fields must remain present in the filter API.
 import { connectTupleCases } from './generated/TupleCases.ethers.js';
 const tupleCases = connectTupleCases('0x0000000000000000000000000000000000000001', provider);
-const moved: EventFilter = tupleCases.filters.Moved(null, '0x0000000000000000000000000000000000000002', null, null);
+const moved: DeferredTopicFilter = tupleCases.filters.Moved(null, '0x0000000000000000000000000000000000000002', null, null);
 // @ts-expect-error Non-indexed fields cannot be filtered by a value.
 tupleCases.filters.Moved(123n, null, null, null);
 void moved;
