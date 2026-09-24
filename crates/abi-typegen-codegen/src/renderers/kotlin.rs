@@ -6,7 +6,7 @@
 //! value types, and nothing uses Kotlin's unsigned types, so every getter is
 //! callable from Java.
 
-use crate::naming::{Scope, exported, overload_indices, param_names};
+use crate::naming::{Scope, exported, overload_indices, param_names, repeat_indices};
 use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{ContractIr, NatSpec, SolType};
 use heck::ToShoutySnakeCase;
@@ -186,7 +186,7 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
     for (event, index) in ir
         .events
         .iter()
-        .zip(name_indices(ir.events.iter().map(|e| e.name.as_str())))
+        .zip(suffixes(ir.events.iter().map(|e| e.name.as_str())))
     {
         let constant = constant_base(&event.name, &index);
         let signature = event.signature();
@@ -223,7 +223,7 @@ pub fn render_kotlin_file(ir: &ContractIr, package: &str) -> String {
     for (error, index) in ir
         .errors
         .iter()
-        .zip(name_indices(ir.errors.iter().map(|e| e.name.as_str())))
+        .zip(suffixes(ir.errors.iter().map(|e| e.name.as_str())))
     {
         let constant = constant_base(&error.name, &index);
         let signature = error.signature();
@@ -541,27 +541,6 @@ fn bytes_n_import(size: u8) -> &'static str {
     BYTES[usize::from(size) - 1]
 }
 
-/// Numbers repeated names `0`, `1`, ... and leaves unique ones bare.
-fn name_indices<'a>(names: impl IntoIterator<Item = &'a str> + Clone) -> Vec<String> {
-    let mut counts: HashMap<&str, usize> = HashMap::new();
-    for name in names.clone() {
-        *counts.entry(name).or_insert(0) += 1;
-    }
-    let mut next: HashMap<&str, usize> = HashMap::new();
-    names
-        .into_iter()
-        .map(|name| {
-            if counts[name] < 2 {
-                return String::new();
-            }
-            let index = next.entry(name).or_insert(0);
-            let current = *index;
-            *index += 1;
-            current.to_string()
-        })
-        .collect()
-}
-
 /// `safeTransferFrom` with overload `0` becomes `SAFE_TRANSFER_FROM_0`.
 fn constant_base(name: &str, index: &str) -> String {
     let base = name.to_shouty_snake_case();
@@ -663,6 +642,14 @@ fn json_expression(json: &str) -> String {
         .map(|chunk| format!("        {chunk},\n"))
         .collect::<String>();
     format!("arrayOf(\n{items}    ).joinToString(\"\")")
+}
+
+/// Overload suffixes: `"0"`, `"1"`, ... for repeated names, `""` otherwise.
+fn suffixes<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<String> {
+    repeat_indices(names)
+        .into_iter()
+        .map(|index| index.map(|i| i.to_string()).unwrap_or_default())
+        .collect()
 }
 
 #[cfg(test)]

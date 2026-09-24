@@ -1,7 +1,7 @@
 //! Swift output: a public namespace per contract with its ABI, selectors,
 //! and `Sendable`, `Hashable` value types for web3swift.
 
-use crate::naming::{Scope, exported, param_names};
+use crate::naming::{Scope, exported, overload_indices, param_names, repeat_indices};
 use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{ContractIr, NatSpec, SolType};
 use std::collections::HashMap;
@@ -128,7 +128,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
         ));
     }
 
-    let overloads = crate::naming::overload_indices(&ir.functions);
+    let overloads = overload_indices(&ir.functions);
     for (function, overload) in ir.functions.iter().zip(overloads) {
         let index = overload.map(|i| i.to_string()).unwrap_or_default();
         let signature = function.signature();
@@ -161,7 +161,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
         ));
     }
 
-    let event_overloads = event_indices(ir.events.iter().map(|e| e.name.as_str()));
+    let event_overloads = suffixes(ir.events.iter().map(|e| e.name.as_str()));
     for (event, index) in ir.events.iter().zip(event_overloads) {
         let signature = event.signature();
         constants.push((
@@ -192,7 +192,7 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
         ));
     }
 
-    let error_overloads = event_indices(ir.errors.iter().map(|e| e.name.as_str()));
+    let error_overloads = suffixes(ir.errors.iter().map(|e| e.name.as_str()));
     for (error, index) in ir.errors.iter().zip(error_overloads) {
         let signature = error.signature();
         constants.push((
@@ -254,27 +254,6 @@ pub fn render_swift_file(ir: &ContractIr) -> String {
     }
     out.push_str("}\n");
     out
-}
-
-/// Numbers repeated event or error names `0`, `1`, ... and leaves unique ones bare.
-fn event_indices<'a>(names: impl IntoIterator<Item = &'a str> + Clone) -> Vec<String> {
-    let mut counts: HashMap<&str, usize> = HashMap::new();
-    for name in names.clone() {
-        *counts.entry(name).or_insert(0) += 1;
-    }
-    let mut next: HashMap<&str, usize> = HashMap::new();
-    names
-        .into_iter()
-        .map(|name| {
-            if counts[name] < 2 {
-                return String::new();
-            }
-            let index = next.entry(name).or_insert(0);
-            let current = *index;
-            *index += 1;
-            current.to_string()
-        })
-        .collect()
 }
 
 fn render_struct(name: &str, summary: &str, natspec: Option<&NatSpec>, fields: &[Field]) -> String {
@@ -407,6 +386,14 @@ fn swift_data(bytes: &[u8]) -> String {
         .collect::<Vec<_>>()
         .join(", ");
     format!("Data([{items}])")
+}
+
+/// Overload suffixes: `"0"`, `"1"`, ... for repeated names, `""` otherwise.
+fn suffixes<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<String> {
+    repeat_indices(names)
+        .into_iter()
+        .map(|index| index.map(|i| i.to_string()).unwrap_or_default())
+        .collect()
 }
 
 #[cfg(test)]

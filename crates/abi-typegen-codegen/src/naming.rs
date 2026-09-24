@@ -104,18 +104,26 @@ pub fn param_names<'a>(
 /// Functions with a unique name get `None`. Overloads get `Some(0)`,
 /// `Some(1)`, ... in ABI declaration order.
 pub fn overload_indices(functions: &[AbiFunction]) -> Vec<Option<usize>> {
+    repeat_indices(functions.iter().map(|function| function.name.as_str()))
+}
+
+/// Numbers repeated names in order and leaves unique names unnumbered.
+///
+/// Used for overloaded functions, events, and errors alike.
+pub fn repeat_indices<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<Option<usize>> {
+    let names: Vec<&str> = names.into_iter().collect();
     let mut counts: HashMap<&str, usize> = HashMap::new();
-    for function in functions {
-        *counts.entry(function.name.as_str()).or_insert(0) += 1;
+    for name in &names {
+        *counts.entry(name).or_insert(0) += 1;
     }
     let mut next: HashMap<&str, usize> = HashMap::new();
-    functions
+    names
         .iter()
-        .map(|function| {
-            if counts[function.name.as_str()] < 2 {
+        .map(|name| {
+            if counts[name] < 2 {
                 return None;
             }
-            let index = next.entry(function.name.as_str()).or_insert(0);
+            let index = next.entry(name).or_insert(0);
             let current = *index;
             *index += 1;
             Some(current)
