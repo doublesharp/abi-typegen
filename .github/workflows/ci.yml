@@ -122,6 +122,48 @@ jobs:
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity
       - run: cd e2e/foundry-sample && forge build --contracts ./solidity-validation --out ./out-solidity-validation
 
+  e2e-native:
+    name: E2E ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: go
+            os: ubuntu-latest
+          - target: rust
+            os: ubuntu-latest
+          - target: kotlin
+            os: ubuntu-latest
+          - target: swift
+            os: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            e2e/native/rust
+      - uses: foundry-rs/foundry-toolchain@v1
+      - if: matrix.target == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: e2e/native/go/go.mod
+          cache-dependency-path: e2e/native/go/go.sum
+      - if: matrix.target == 'kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - if: matrix.target == 'kotlin'
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.7.1"
+      - run: make e2e-${{ matrix.target }}
+
   e2e-hardhat:
     name: E2E Hardhat
     runs-on: ubuntu-latest

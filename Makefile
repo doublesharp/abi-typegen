@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -54,6 +54,44 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 	cd e2e/hardhat3-sample && test -f abi-typegen-out/Token.viem.ts
 	cd e2e/hardhat3-sample && pnpm exec tsc --noEmit
 	@echo "e2e-hardhat3: pass"
+
+# ── Native-language e2e ──────────────────────────────────────────────────────
+# Generates Go, Rust, Swift, and Kotlin bindings from the Foundry sample and
+# builds each in a consumer project with that language's formatter, linter, and
+# tests. Requires: forge, cargo, and the toolchain of each target (go, swift,
+# gradle with JDK 21).
+
+NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
+
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin ## E2E: all native-language targets
+
+e2e-native-artifacts: build
+	cd e2e/foundry-sample && forge build
+
+e2e-go: e2e-native-artifacts ## E2E: Go bindings → gofmt, go vet, go test
+	cd e2e/native/go && rm -rf contracts && $(NATIVE_TYPEGEN) --out ./contracts --target go
+	cd e2e/native/go && unformatted="$$(gofmt -l .)" && test -z "$$unformatted" || { echo "gofmt: $$unformatted"; exit 1; }
+	cd e2e/native/go && go vet ./... && go test ./...
+	@echo "e2e-go: pass"
+
+e2e-rust: e2e-native-artifacts ## E2E: Rust bindings → rustfmt, clippy, rustdoc, tests
+	cd e2e/native/rust && rm -rf src/contracts && $(NATIVE_TYPEGEN) --out ./src/contracts --target rust
+	cd e2e/native/rust && cargo fmt --check
+	cd e2e/native/rust && cargo clippy --all-targets -- -D warnings
+	cd e2e/native/rust && RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
+	cd e2e/native/rust && cargo test
+	@echo "e2e-rust: pass"
+
+e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across modules, tests
+	cd e2e/native/swift && rm -rf Sources/Generated && $(NATIVE_TYPEGEN) --out ./Sources/Generated --target swift
+	cd e2e/native/swift && swift build --build-tests -Xswiftc -warnings-as-errors
+	cd e2e/native/swift && swift test
+	@echo "e2e-swift: pass"
+
+e2e-kotlin: e2e-native-artifacts ## E2E: Kotlin bindings → Gradle build with web3j, Java interop tests
+	cd e2e/native/kotlin && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target kotlin --package com.example.contracts
+	cd e2e/native/kotlin && gradle test --console=plain
+	@echo "e2e-kotlin: pass"
 
 bench: ## Benchmark abi-typegen vs TypeChain (10 runs each)
 	./e2e/bench.sh 10
