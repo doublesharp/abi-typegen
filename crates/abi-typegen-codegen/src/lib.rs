@@ -2,7 +2,9 @@
 
 pub mod abi_writer;
 pub mod barrel;
+pub mod naming;
 pub mod renderers;
+pub mod tuples;
 pub mod type_mapper;
 
 // Re-export renderers at crate root for convenience.
