@@ -98,11 +98,14 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
             scope.claim(&format!("{contract}{base}EventSignature")),
             go_string(&signature),
         ));
-        imports.common = true;
-        vars.push((
-            scope.claim(&format!("{contract}{base}EventTopic")),
-            format!("common.HexToHash(\"{}\")", event.topic0()),
-        ));
+        // Anonymous events do not log their signature hash as topic 0.
+        if !event.anonymous {
+            imports.common = true;
+            vars.push((
+                scope.claim(&format!("{contract}{base}EventTopic")),
+                format!("common.HexToHash(\"{}\")", event.topic0()),
+            ));
+        }
         let name = scope.claim(&format!("{contract}{base}Event"));
         let fields = struct_fields(
             event
@@ -526,6 +529,19 @@ mod tests {
         );
         assert!(
             out.contains("\tOwner  common.Address\n\tOwner2 common.Address\n"),
+            "{out}"
+        );
+    }
+
+    #[test]
+    fn anonymous_events_have_no_topic_constant() {
+        let out = render(
+            r#"[{"type":"event","name":"Log","inputs":[{"name":"x","type":"uint8"}],"anonymous":true}]"#,
+        );
+        assert!(!out.contains("EventTopic"), "{out}");
+        assert!(!out.contains("go-ethereum/common"), "{out}");
+        assert!(
+            out.contains("TokenLogEventSignature = \"Log(uint8)\""),
             "{out}"
         );
     }

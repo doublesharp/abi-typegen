@@ -62,7 +62,10 @@ impl AbiEvent {
         signature(&self.name, self.inputs.iter().map(|param| &param.ty))
     }
 
-    /// Returns the event topic: the keccak-256 hash of the signature.
+    /// Returns the keccak-256 hash of the signature.
+    ///
+    /// Non-anonymous events log this as topic 0. Anonymous events do not log
+    /// it, so callers should not match logs against it.
     pub fn topic0(&self) -> B256 {
         keccak256(self.signature().as_bytes())
     }
