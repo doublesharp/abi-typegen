@@ -39,6 +39,7 @@ Node or Python.
 | `npm/hardhat-abi-typegen/`    | Hardhat 2 and Hardhat 3 plugin entry points                              |
 | `tests/`, `npm/tests/`        | CLI, packaging, installer, and storage regression tests                  |
 | `e2e/`                        | Foundry and Hardhat projects used to exercise generated bindings         |
+| `e2e/native/`                 | Go, Rust, Swift, and Kotlin consumers that build the generated bindings  |
 | `fuzz/`                       | Fuzz targets, curated seeds, and local corpus/output                     |
 
 ## Rust checks
@@ -90,6 +91,12 @@ manifest until [release preparation](releasing.md) runs.
 - Hardhat integration: install dependencies in the relevant `e2e/hardhat-sample`
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
+- Native-language integration: with Forge installed, `make e2e-go`, `e2e-rust`,
+  `e2e-swift`, and `e2e-kotlin` generate bindings from `e2e/foundry-sample` into
+  the consumers under `e2e/native/` and run each language's formatter, linter,
+  and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
+  JDK 21. `make e2e-native` runs all four. The consumers do not build until a
+  target has generated their bindings.
 - Coverage: `make coverage` requires `cargo-llvm-cov` and Node/npm.
 - Fuzzing: the `fuzz-*` Makefile targets require `cargo-fuzz` and nightly Rust.
   Curated seeds stay under `fuzz/seeds`; discovered corpus and logs are local data.

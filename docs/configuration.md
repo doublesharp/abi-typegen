@@ -34,6 +34,7 @@ exclude = ["*Test", "*Mock"]
 | `wrappers`  | `true`            | Emit wrappers for wrapper-oriented TypeScript targets             |
 | `contracts` | `[]`              | Exact contract names to include; empty selects all                |
 | `exclude`   | `[]`              | Contract-name patterns to exclude; `*` matches any sequence       |
+| `package`   | `"contracts"`     | Go package name and Kotlin package for those targets              |
 
 Targets are `viem`, `zod`, `wagmi`, `ethers`, `ethers5`, `web3js`, `python`, `go`,
 `rust`, `swift`, `csharp`, `kotlin`, `solidity`, and `yaml`.
@@ -55,9 +56,14 @@ subdirectories such as `src/generated/viem/` and `src/generated/python/`.
 Use explicit target lists; `all` and `all-ts` are not supported.
 
 Setting `wrappers = false` suppresses wrappers for `viem`, `wagmi`, `ethers`,
-`ethers5`, and `web3js` while retaining their ABI modules. It does not suppress Zod
-schemas, Solidity interfaces, or other non-TypeScript output. See
+`ethers5`, and `web3js` while retaining their ABI modules. For Rust it removes
+alloy's `rpc` contract instance and keeps the types, ABI, and selectors. It does
+not suppress Zod schemas, Solidity interfaces, or other output. See
 [generated output](generated-output.md) for filenames.
+
+`package` sets the Go package name (a lowercase identifier that is not a keyword)
+and the Kotlin package (dot-separated identifiers). abi-typegen rejects values that
+are invalid for any selected target. Other targets ignore it.
 
 ## CLI overrides
 
@@ -81,7 +87,8 @@ abi-typegen generate \
 | `--target <names>`     | One target or a comma-separated list                                   |
 | `--contracts <names>`  | Contract allowlist, repeated or comma-separated                        |
 | `--exclude <patterns>` | Comma-separated contract-name patterns; quote shell wildcards          |
-| `--no-wrappers`        | Suppress supported TypeScript wrappers while retaining primary outputs |
+| `--no-wrappers`        | Suppress wrappers (and Rust's `rpc` instance) while keeping primary output |
+| `--package <name>`     | On `generate` and `diff`, the Go package or Kotlin package             |
 | `--clean`              | On `generate`, remove stale generated files                            |
 | `--check`              | On `generate`, compare output without writing; exit nonzero if stale   |
 | `--config <path>`      | Select a Foundry-style TOML configuration file                         |

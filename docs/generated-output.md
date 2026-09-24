@@ -34,11 +34,11 @@ TypeScript ABI modules or an `index.ts` barrel.
 | Target     | File           | Output purpose                                                |
 | ---------- | -------------- | ------------------------------------------------------------- |
 | `python`   | `<Name>.py`    | Python type declarations compatible with web3.py usage        |
-| `go`       | `<Name>.go`    | ABI constant and typed structs for Go integration             |
-| `rust`     | `<Name>.rs`    | Data types using Rust and Alloy primitive types               |
-| `swift`    | `<Name>.swift` | Swift contract-related types                                  |
+| `go`       | `<Name>.go`    | ABI, selectors, and structs in go-ethereum's type model       |
+| `rust`     | `<name>.rs`    | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`      |
+| `swift`    | `<Name>.swift` | ABI, selectors, and public value types for web3swift          |
 | `csharp`   | `<Name>.cs`    | C# contract-related types                                     |
-| `kotlin`   | `<Name>.kt`    | Kotlin contract-related types                                 |
+| `kotlin`   | `<Name>.kt`    | ABI, selectors, and value types built on web3j                |
 | `solidity` | `I<Name>.sol`  | Solidity interface reconstructed from ABI data                |
 | `yaml`     | `<Name>.yaml`  | Human-readable functions, events, errors, and parameter types |
 
@@ -46,13 +46,58 @@ The Solidity target reconstructs tuple structs and emits events, errors,
 overloads, and external function signatures. It cannot recover a contract's
 implementation from an ABI.
 
-Output APIs vary by language. In particular, Rust data types and Go structs are
-not a complete deployed-contract client or deployment factory. Inspect the output
-before integrating it with your runtime SDK.
+Output APIs vary by language. Rust output includes alloy's contract instance.
+The Go, Swift, and Kotlin output does not yet include a bound contract client or
+typed call wrappers. Inspect the output before integrating it with your runtime SDK.
+
+## Go, Rust, Swift, and Kotlin
+
+Each file embeds the contract's JSON ABI plus the canonical signature and selector
+of every function, event, and error. Each tuple becomes a named type.
+
+| Target | SDK and dependencies                                                       | Layout                                                |
+| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Go     | `github.com/ethereum/go-ethereum` (`common`, plus `math/big`)              | One file per contract in the configured `package`     |
+| Rust   | `alloy` with `contract` and `serde` (or `sol-types`, `json`, `serde` without wrappers), and `serde` with `derive` | `<name>.rs` per contract, re-exported from `mod.rs` |
+| Swift  | web3swift 3.x (`BigInt`, `Web3Core`); depend on the `web3swift` product    | `public enum <Name>` holding every type and constant  |
+| Kotlin | `org.web3j:abi` (web3j 6 requires JDK 21)                                  | `object <Name>` in the configured `package`           |
+
+- **Go** follows abigen. Constants are `<Name>TransferSignature`,
+  `<Name>TransferSelector` (`[4]byte`), `<Name>TransferEventTopic`
+  (`common.Hash`), and `<Name>XErrorSelector`. Structs are
+  `<Name><Tuple>`, `<Name>TransferParams`, `<Name>TransferEvent`, and
+  `<Name>XError`. Output is gofmt-clean, and structs pack and unpack through
+  go-ethereum's `abi` package. When two ABI names export to the same Go field
+  name, the suffixed fields carry `abi:"..."` tags.
+- **Rust** emits `alloy::sol! { #[sol(rpc, abi, all_derives, extra_derives(serde::Serialize, serde::Deserialize))] contract <Name> { ... } }`
+  and a `<NAME>_ABI` string constant. alloy generates the structs, `…Call`
+  and `…Return` types, events with indexed fields, errors, and selectors. Types
+  derive `Debug`, `Clone`, `PartialEq`, `Eq`, `Hash`, `Default` (where every field
+  supports it), and serde with ABI field names. `wrappers = false` removes only
+  `rpc`. NatSpec becomes rustdoc that passes `-D warnings`.
+- **Swift** types are `public struct <Type>: Sendable, Hashable` with a public
+  memberwise initializer. Constants are static lets such as
+  `Token.transferSelector` (`Data`) and `Token.TransferEventTopic`. Output builds
+  in Swift 6 language mode.
+- **Kotlin** tuples are data classes that extend web3j's `StaticStruct` or
+  `DynamicStruct`, so they encode directly. Integers are `BigInteger`, addresses
+  are `String`, `bytesN` is web3j's `BytesN`, and `bytes` is `DynamicBytes`, all
+  compared by value. Constants are `const val` strings such as
+  `Token.TRANSFER_SELECTOR`, and Java reads them, the `Token.JSON` ABI, and every
+  getter without name mangling. A struct field named `value`, `typeAsString`, or
+  `componentType` gets a trailing underscore because web3j's `Array` already
+  defines those getters. web3j cannot encode fixed arrays longer than 32 elements.
+
+Anonymous events have no topic constant, since they do not log their signature
+hash. A struct declared in the rendered contract drops the contract qualifier:
+`struct Vault.Position` in `Vault` is `Position` (Go `VaultPosition`). Structs from
+other contracts and libraries keep it (`TupleAccountPosition`). Unnamed parameters
+are named after their types (`address`, `address2`, `uint256`, `bytes32Array`);
+Rust keeps alloy's `_0`, `_1`.
 
 ## Overloaded functions
 
-Generated wrapper/type names distinguish overloaded signatures. For example:
+TypeScript wrapper and type names distinguish overloaded signatures. For example:
 
 ```text
 deposit(uint256)          -> depositUint256
@@ -68,8 +113,18 @@ whose names differ only in casing or separators, such as `PREMIUM_PERIOD` and
 (`useTokenPREMIUM_PERIOD`, `useTokenPremiumPeriod`). Any remaining clash gets a
 numeric suffix. web3.js wrappers type overloads under the keys web3 registers at
 runtime: the plain name, which picks an overload by argument count, and the
-quoted signature, such as `methods['deposit(uint256)']`. Treat generated names as
-part of the output API and recompile consumers when the ABI changes.
+quoted signature, such as `methods['deposit(uint256)']`.
+
+The native targets number overloads the way their SDKs do, in ABI order:
+
+| Target        | `safeTransferFrom(a,b,c)`          | `safeTransferFrom(a,b,c,d)`        |
+| ------------- | ---------------------------------- | ---------------------------------- |
+| Go            | `TokenSafeTransferFromParams`      | `TokenSafeTransferFrom0Params`     |
+| Rust (alloy)  | `safeTransferFrom_0Call`           | `safeTransferFrom_1Call`           |
+| Swift, Kotlin | `SafeTransferFrom0Params`          | `SafeTransferFrom1Params`          |
+
+Names keep acronyms: `tokenURI` gives `TokenURI`, not `TokenUri`. Treat generated
+names as part of the output API and recompile consumers when the ABI changes.
 
 ## Contract types
 
@@ -135,16 +190,17 @@ address inputs use `AddressLike`.
 
 ## Integer output mappings
 
-Unsigned examples below show the size boundaries. Go and Rust use the smallest
-supported native integer type that can hold the ABI width, then switch to a large
-integer type.
+Unsigned examples below show the size boundaries. Go and Rust use a native integer
+only for widths their SDKs decode natively (Go: 8, 16, 32, and 64 bits; alloy also
+128) and a big-integer type otherwise. Swift uses `BigUInt`/`BigInt` and Kotlin
+uses `BigInteger` for every width.
 
 | Solidity  | Viem     | Ethers v6 | Ethers v5   | web3.js  | Go         | Rust   |
 | --------- | -------- | --------- | ----------- | -------- | ---------- | ------ |
 | `uint8`   | `number` | `bigint`  | `number`    | `bigint` | `uint8`    | `u8`   |
-| `uint24`  | `number` | `bigint`  | `number`    | `bigint` | `uint32`   | `u32`  |
-| `uint48`  | `number` | `bigint`  | `number`    | `bigint` | `uint64`   | `u64`  |
-| `uint56`  | `bigint` | `bigint`  | `BigNumber` | `bigint` | `uint64`   | `u64`  |
+| `uint24`  | `number` | `bigint`  | `number`    | `bigint` | `*big.Int` | `U24`  |
+| `uint48`  | `number` | `bigint`  | `number`    | `bigint` | `*big.Int` | `U48`  |
+| `uint56`  | `bigint` | `bigint`  | `BigNumber` | `bigint` | `*big.Int` | `U56`  |
 | `uint64`  | `bigint` | `bigint`  | `BigNumber` | `bigint` | `uint64`   | `u64`  |
 | `uint128` | `bigint` | `bigint`  | `BigNumber` | `bigint` | `*big.Int` | `u128` |
 | `uint256` | `bigint` | `bigint`  | `BigNumber` | `bigint` | `*big.Int` | `U256` |
@@ -162,15 +218,14 @@ fixed-size arrays are emitted as tuples.
 Renderers propagate available NatSpec into their language's documentation syntax.
 A raw ABI without documentation metadata cannot supply source comments.
 
-Python, Rust, Swift, and Kotlin parameter names that match reserved words receive
-an underscore prefix:
+Parameter names that match reserved words are adjusted:
 
-| Language | Examples                                           |
-| -------- | -------------------------------------------------- |
-| Python   | `from` becomes `_from`; `lambda` becomes `_lambda` |
-| Rust     | `type` becomes `_type`; `self` becomes `_self`     |
-| Swift    | `self` becomes `_self`; `func` becomes `_func`     |
-| Kotlin   | `fun` becomes `_fun`; `when` becomes `_when`       |
+| Language | Examples                                                   |
+| -------- | ---------------------------------------------------------- |
+| Python   | `from` becomes `_from`; `lambda` becomes `_lambda`         |
+| Rust     | `type` becomes `type_`; `self` becomes `self_`             |
+| Swift    | `default` becomes `` `default` ``; `func` becomes `` `func` `` |
+| Kotlin   | `in` becomes `` `in` ``; `when` becomes `` `when` ``        |
 
 Compile or type-check generated files in the consuming project, especially after
 changing SDK versions, tuple shapes, overloads, or contract names. Regenerate from
