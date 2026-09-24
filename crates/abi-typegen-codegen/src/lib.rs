@@ -92,7 +92,10 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             );
         }
         Target::Rust => {
-            files.insert(format!("{}.rs", ir.name), rust::render_rust_file(ir));
+            files.insert(
+                rust::file_name(&ir.name),
+                rust::render_rust_file(ir, config.wrappers),
+            );
         }
         Target::Swift => {
             files.insert(format!("{}.swift", ir.name), swift::render_swift_file(ir));

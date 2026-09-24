@@ -813,7 +813,7 @@ fn run_generate_all_single_targets_write_expected_outputs() {
         TargetCase {
             name: "rust",
             target: abi_typegen_config::Target::Rust,
-            expected_files: &["Token.rs"],
+            expected_files: &["token.rs", "mod.rs"],
             absent_files: &[
                 "index.ts",
                 "IToken.sol",
@@ -830,8 +830,8 @@ fn run_generate_all_single_targets_write_expected_outputs() {
                 "Token.kt",
                 "Token.yaml",
             ],
-            marker_file: "Token.rs",
-            marker_text: "pub struct TokenBalanceOfParams",
+            marker_file: "token.rs",
+            marker_text: "alloy::sol! {",
         },
         TargetCase {
             name: "swift",

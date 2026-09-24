@@ -500,7 +500,7 @@ fn render_solidity_type(
     }
 }
 
-fn data_location_for_type(ty: &SolType, is_input: bool) -> Option<&'static str> {
+pub(crate) fn data_location_for_type(ty: &SolType, is_input: bool) -> Option<&'static str> {
     match ty {
         SolType::StringType
         | SolType::Bytes
@@ -515,7 +515,7 @@ fn data_location_for_type(ty: &SolType, is_input: bool) -> Option<&'static str> 
     }
 }
 
-fn render_mutability(state_mutability: &StateMutability) -> &'static str {
+pub(crate) fn render_mutability(state_mutability: &StateMutability) -> &'static str {
     match state_mutability {
         StateMutability::Pure => " pure",
         StateMutability::View => " view",

@@ -637,10 +637,19 @@ fn render_artifacts(
         contract_names.push(name.clone());
     }
     for (prefix, target_config) in &outputs {
-        if !contract_names.is_empty() && target_config.target().emits_barrel() {
+        if contract_names.is_empty() {
+            continue;
+        }
+        if target_config.target().emits_barrel() {
             files.insert(
                 format!("{prefix}index.ts"),
                 barrel::render_barrel(&contract_names, target_config),
+            );
+        }
+        if *target_config.target() == Target::Rust {
+            files.insert(
+                format!("{prefix}mod.rs"),
+                abi_typegen_codegen::rust::render_mod_file(&contract_names),
             );
         }
     }
