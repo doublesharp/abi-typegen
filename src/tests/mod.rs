@@ -854,7 +854,7 @@ fn run_generate_all_single_targets_write_expected_outputs() {
                 "Token.yaml",
             ],
             marker_file: "Token.swift",
-            marker_text: "struct TokenBalanceOfParams {",
+            marker_text: "public struct BalanceOfParams: Sendable, Hashable {",
         },
         TargetCase {
             name: "csharp",
