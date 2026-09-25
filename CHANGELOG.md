@@ -1,46 +1,65 @@
 # Changelog
 
-Notable changes, reconstructed from Git history. Release sections follow repository
-tags; dates use the tagged commits' recorded local dates. Changes after the latest
-tag appear under Unreleased.
+Notable changes, reconstructed from Git history. Release sections follow
+repository tags; dates use the tagged commits' recorded local dates. Changes
+after the latest tag appear under Unreleased.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-25
+
+Adds native language bindings, engine integrations, and contract wrappers.
+Regenerate bindings and compile consumers after upgrading.
+
 ### Added
 
-- Unity adapter package and generated C# compatibility fixtures, with explicit
-  Editor, Anvil, and standalone-player qualification commands. Unity 6000.6.3f1
-  on macOS passes Editor tests and Mono/IL2CPP codec execution; Linux CI remains
-  a separate qualification.
+- C11 bindings with ABI codecs, explicit result ownership, and a shared
+  Rust/Alloy runtime. Applications supply transport and signing.
+- C++17 bindings with ABI codecs, RAII result ownership, and the shared
+  Rust/Alloy runtime. Applications supply transport and signing.
+- Dart bindings backed by web3dart, with contract wrappers and Anvil tests.
+- Elixir bindings backed by Ethers, with contract reads, signed sends, ABI
+  codecs, event and error helpers, and Anvil tests.
+- Java bindings backed by web3j, with contract wrappers and Anvil tests.
+- PHP 8.2 bindings with named ABI types, ABI codecs, JSON-RPC reads, signed
+  legacy EIP-155 transactions, receipt and log queries, and Anvil tests.
+- Ruby bindings backed by the eth gem, with contract reads, transaction
+  builders, ABI codecs, event and error helpers, and Anvil tests.
+- Shell bindings backed by Foundry cast, with Bash helpers for ABI codecs,
+  contract reads and sends, constructors, and event queries.
+- Godot integration with generated GDScript bindings and a GDExtension backed by
+  the shared runtime. Headless macOS tests cover codecs, RPC calls, events,
+  reverts, and request lifetimes. A public Linux CI workflow is included.
+- Unity integration for generated C# bindings, with HTTP transport and an
+  application-supplied signer. macOS tests cover Editor, Anvil, and standalone
+  Mono and IL2CPP codec execution.
+- Unreal Engine integration with generated C ABI codecs and Blueprint wrappers
+  for asynchronous scalar reads. macOS Editor tests cover codecs, request
+  lifetimes, and Anvil calls.
+- Generated-consumer and Anvil tests in GitHub CI, including TypeScript SDK
+  calls and mounted wagmi React hooks. Unity and Unreal workflows require
+  configured self-hosted runners and are disabled by default.
+- Experimental COBOL bindings for reads taking one address and returning one
+  uint256, using GnuCOBOL and a C bridge to the shared runtime.
 
-- Elixir bindings backed by Ethers, with metadata-only output, SDK transaction
-  data, reads, signed sends, event/error helpers, and Anvil consumer tests.
+### Changed
 
-- Ruby bindings using the eth gem, with contract reads, transaction builders,
-  offline codecs, event/error helpers, and Anvil consumer tests.
-- Shell bindings backed by Foundry cast. Generated Bash libraries expose
-  codecs, contract reads and sends, constructor helpers, and event queries.
-
-- Experimental GnuCOBOL target for read-only functions taking one address and
-  returning one uint256. Generated C bridges reuse the shared Rust ABI runtime;
-  optional libcurl/json-c RPC reads are tested against Anvil.
-
-- SDK-backed contract wrappers for Go, Swift, Kotlin, and C#, including typed
-  calls, transaction preparation/submission, offline ABI codecs, and event and
-  custom-error helpers. `--no-wrappers` retains primary metadata and value types.
-- Go event subscriptions return typed events through the configured provider.
-- Java and Dart targets using web3j and web3dart.
-- PHP 8.2 target with named ABI types, strict offline codecs, JSON-RPC reads,
-  signed legacy EIP-155 transactions, receipt and log queries, and event/error
-  decoding. PHP namespaces use the configured `package` value.
-- Callable Python wrappers replace generated stub methods when wrappers are enabled.
-- C11 and C++17 targets backed by a shared Rust/Alloy runtime. C exposes explicit
-  result ownership; C++ wraps results with RAII. Transport and signing are supplied
-  by the consuming application.
-- Generated-consumer tests and disposable Anvil integration tests in GitHub CI,
-  including TypeScript SDK calls and mounted wagmi React hooks.
+- Go wrappers support typed calls, transaction submission, ABI codecs, event and
+  custom-error helpers, and typed event subscriptions.
+- Swift wrappers support typed calls, transaction preparation and submission,
+  ABI codecs, and event and custom-error helpers.
+- Kotlin wrappers support typed calls, transaction preparation and submission,
+  ABI codecs, and event and custom-error helpers.
+- C# wrappers support typed calls, transaction preparation and submission, ABI
+  codecs, and event and custom-error helpers.
+- Python wrappers generate callable methods in place of stubs.
+- `--no-wrappers` retains primary metadata and value types.
+- Native bindings validate inputs and decoded data, including nonpayable values
+  and canonical ABI data in the shared runtime.
+- Reusable engine packages live under `integrations/`; compatibility test
+  projects remain under `e2e/native/`.
 
 ### Fixed
 
@@ -50,39 +69,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - C/C++ contract headers use an `atg_` prefix so names such as `String` cannot
   shadow standard library headers on case-insensitive filesystems.
 
-### Changed
-
-- Add native input and decode checks, including nonpayable transaction values and
-  canonical ABI data validation in the C runtime. Regenerate bindings and compile
-  consumers when upgrading.
-
 ## [0.5.1] - 2026-09-24
 
-Fixes tuple decoding and generated bindings across native and TypeScript targets.
-Regenerate bindings after upgrading; collision fixes can change generated names,
-and Swift event/error constants now use lower camel case.
+Fixes tuple decoding and generated bindings across native and TypeScript
+targets. Regenerate bindings after upgrading; collision fixes can change
+generated names, and Swift event/error constants now use lower camel case.
 
 ### Fixed
 
-- Go event fields for indexed strings, bytes, arrays, and tuples use topic hashes,
-  matching go-ethereum decoding.
-- Kotlin and Swift contract namespaces avoid SDK type names. Kotlin also reserves
-  `JvmField` tuple names and escapes underscore-only fields; Swift renames `_` and `self` fields.
-- Rust reserves `mod.rs` for the module index and disambiguates event and unnamed
-  parameter names after keyword conversion.
+- Go event fields for indexed strings, bytes, arrays, and tuples use topic
+  hashes, matching go-ethereum decoding.
+- Kotlin and Swift contract namespaces avoid SDK type names. Kotlin also
+  reserves `JvmField` tuple names and escapes underscore-only fields; Swift
+  renames `_` and `self` fields.
+- Rust reserves `mod.rs` for the module index and disambiguates event and
+  unnamed parameter names after keyword conversion.
 - TypeScript parameter names and normalized viem/Zod export names remain unique.
   Tuple input and output properties retain their ABI names, including keywords.
 - Native identifiers beginning with an underscore and digit stay valid after
   case conversion. Swift/Kotlin namespace collisions fail before output changes.
-- Solidity preserves its own parameter and struct field names instead of applying
-  TypeScript keyword escaping, and keeps unnamed parameters collision-free.
+- Solidity preserves its own parameter and struct field names instead of
+  applying TypeScript keyword escaping, and keeps unnamed parameters
+  collision-free.
 - Parsing rejects signed type sizes such as `uint+8` and `uint256[+2]`.
 - Kotlin tuples include web3j-typed decoding constructors while retaining the
   existing convenience constructors and property types.
 - Generated Rust bindings allow Clippy's `too_many_arguments` lint for ABI
   functions and preserve NatSpec inline code in rustdoc.
-- Go documentation emits gofmt-compatible quotes. Go and Swift collapse
-  NatSpec alignment whitespace.
+- Go documentation emits gofmt-compatible quotes. Go and Swift collapse NatSpec
+  alignment whitespace.
 - Kotlin and Swift collision numbers precede role suffixes, such as
   `Deploy2Params` and `DEFAULT_YEAR_PRICE2_SIGNATURE`. Repeated unnamed numeric
   parameters use a separator, such as `uint256_2`, in Go, Kotlin, and Swift.
@@ -94,7 +109,8 @@ and Swift event/error constants now use lower camel case.
 This release reworks the Go, Rust, Swift, and Kotlin targets so their output
 compiles, embeds the ABI and selectors, and names every tuple. Generated names
 and layouts change for these four targets. The migration tables below map old
-names to new ones. TypeScript, Python, C#, Solidity, and YAML output is unchanged.
+names to new ones. TypeScript, Python, C#, Solidity, and YAML output is
+unchanged.
 
 ### Added
 
@@ -121,8 +137,8 @@ names to new ones. TypeScript, Python, C#, Solidity, and YAML output is unchange
 - Go: output is gofmt-clean, imports only what it uses, and leaves a blank line
   between the generated-code header and the package clause. Integer widths other
   than 8, 16, 32, and 64 bits use `*big.Int`, which is what go-ethereum decodes.
-  Overloads follow abigen (`Deposit`, `Deposit0`). Contract NatSpec documents the
-  ABI constant instead of the package.
+  Overloads follow abigen (`Deposit`, `Deposit0`). Contract NatSpec documents
+  the ABI constant instead of the package.
 - Swift: every type, property, and initializer is `public`, and every struct is
   `Sendable` and `Hashable`. Types and constants nest in `public enum <Name>`.
   Imports `Web3Core` instead of `web3swift`.
@@ -140,9 +156,11 @@ names to new ones. TypeScript, Python, C#, Solidity, and YAML output is unchange
 - Rust rendered single-field tuples as parenthesized types (`(Address)`).
 - Go reported unused `math/big` and `common` imports, and decoded `uint24`-style
   fields into native integers that go-ethereum rejects.
-- Swift output needed `import Web3Core` and could not be used from another module.
-- Kotlin tuples were `Map<String, Any>`, `ByteArray` fields compared by identity,
-  and events and errors kept their ABI casing while parameter types did not.
+- Swift output needed `import Web3Core` and could not be used from another
+  module.
+- Kotlin tuples were `Map<String, Any>`, `ByteArray` fields compared by
+  identity, and events and errors kept their ABI casing while parameter types
+  did not.
 - The fuzz targets built `Config` with a removed field.
 
 ### Migration
@@ -202,9 +220,9 @@ Kotlin:
 - web3.js: `<Name>Contract` is web3's `Contract<typeof <Name>Abi>` with typed
   `methods`, so events, options, `send()`, `estimateGas()`, and `encodeABI()`
   keep web3's types. The factory no longer casts the ABI to `any`.
-- web3.js: overloaded methods are typed under the keys web3 registers at
-  runtime (`deposit` and `'deposit(uint256)'`). The previous `depositUint256`
-  aliases did not exist on web3 contracts.
+- web3.js: overloaded methods are typed under the keys web3 registers at runtime
+  (`deposit` and `'deposit(uint256)'`). The previous `depositUint256` aliases
+  did not exist on web3 contracts.
 - web3.js: methods with several outputs are typed as web3's result object, keyed
   by position and name, instead of a tuple.
 
@@ -234,9 +252,10 @@ Kotlin:
 
 ### Fixed
 
-- Update rustls to 0.23.45 and rustls-webpki to 0.103.15 to resolve the
-  TLS handshake advisory RUSTSEC-2026-0285.
-- Make storage regression tests independent of recursive GNU Make directory logging.
+- Update rustls to 0.23.45 and rustls-webpki to 0.103.15 to resolve the TLS
+  handshake advisory RUSTSEC-2026-0285.
+- Make storage regression tests independent of recursive GNU Make directory
+  logging.
 
 ## [0.4.0] - 2026-09-14
 
@@ -244,27 +263,31 @@ Tagged, but publication was stopped after CI found the issues fixed in 0.4.1.
 
 ### Added
 
-- User and maintainer guides for installation, development, storage configuration,
-  and release publication, with a documentation index and contribution guidelines.
-- SHA-256 verification of downloaded binary archives against hashes bundled in the
-  npm package. Release builds generate a versioned checksum manifest, and npm
-  publication verifies every platform archive before embedding its hashes.
+- User and maintainer guides for installation, development, storage
+  configuration, and release publication, with a documentation index and
+  contribution guidelines.
+- SHA-256 verification of downloaded binary archives against hashes bundled in
+  the npm package. Release builds generate a versioned checksum manifest, and
+  npm publication verifies every platform archive before embedding its hashes.
 - Optional, per-checkout build and cache storage configured with
-  `python3 .cargo/setup-scratch.py --root PATH`, with an optional required mount.
-  Cargo, pnpm, and Make use saved local settings without repeated flags.
+  `python3 .cargo/setup-scratch.py --root PATH`, with an optional required
+  mount. Cargo, pnpm, and Make use saved local settings without repeated flags.
 - `--disable` support to restore default storage paths while retaining external
-  data and copying discovered fuzz corpus and coverage history into the checkout.
+  data and copying discovered fuzz corpus and coverage history into the
+  checkout.
 - Installer regression coverage for transient HTTP errors, HTTPS restrictions,
-  archive integrity, extraction, and package contents. Separate CI jobs cover the
-  installer on Linux, macOS, and Windows and storage tooling on Linux and macOS.
+  archive integrity, extraction, and package contents. Separate CI jobs cover
+  the installer on Linux, macOS, and Windows and storage tooling on Linux and
+  macOS.
 
 ### Changed
 
 - npm downloads use bounded retries with exponential backoff, connection and
   transfer timeouts, and an overall deadline. Downloads finish and pass checksum
   verification before extraction; the binary is replaced only after validation.
-- Normal development keeps default build and cache paths without requiring Scratch,
-  sccache, or Python. Python storage tests run separately through `make test-storage`.
+- Normal development keeps default build and cache paths without requiring
+  Scratch, sccache, or Python. Python storage tests run separately through
+  `make test-storage`.
 - npm packages include their checksum manifest and exclude local binary output.
   Ordinary `npm pack` rejects missing or invalid checksum manifests.
 
@@ -272,8 +295,8 @@ Tagged, but publication was stopped after CI found the issues fixed in 0.4.1.
 
 - Transient GitHub download failures such as HTTP 504 no longer immediately fail
   installation. Failed downloads are cleaned up without misleading tar errors.
-- An existing binary no longer bypasses installer verification solely because its
-  path exists. Failed installation attempts preserve the existing binary.
+- An existing binary no longer bypasses installer verification solely because
+  its path exists. Failed installation attempts preserve the existing binary.
 - Storage setup rejects tracked paths, conflicting data, symlinked parent
   directories, and redirected configuration or cache paths before migration.
 
@@ -283,8 +306,8 @@ Tagged, but publication was stopped after CI found the issues fixed in 0.4.1.
 
 - Package a stable npm command launcher so npm creates the `abi-typegen` command
   link before postinstall downloads the native binary.
-- Forward CLI arguments, exit codes, and termination signals to the native process;
-  terminating the launcher also terminates its child.
+- Forward CLI arguments, exit codes, and termination signals to the native
+  process; terminating the launcher also terminates its child.
 
 ### Added
 
@@ -300,8 +323,9 @@ Those changes are included here, in the next tagged release after `0.2.0`.
 
 - Hardhat 3 plugin support using configuration and Solidity compilation hooks,
   while retaining Hardhat 2 support.
-- Generated-binding compilation and runtime tests covering ethers v5/v6 overloads,
-  nested tuples and arrays, Solidity interfaces, and multi-target CLI behavior.
+- Generated-binding compilation and runtime tests covering ethers v5/v6
+  overloads, nested tuples and arrays, Solidity interfaces, and multi-target CLI
+  behavior.
 - Coverage reporting with downloadable artifacts and a GitHub Pages report.
 - Dependency policy, Rust advisory, and release compatibility checks in CI.
 
@@ -312,19 +336,20 @@ Those changes are included here, in the next tagged release after `0.2.0`.
   that preserve positional access.
 - Use dynamic programming for exclusion-pattern matching to avoid exponential
   backtracking on adversarial patterns.
-- Render and validate selected artifacts before writing or cleaning output; retain
-  unchanged generated files instead of rewriting them.
+- Render and validate selected artifacts before writing or cleaning output;
+  retain unchanged generated files instead of rewriting them.
 - Publish npm packages with provenance.
 
 ### Fixed
 
-- Discover all contract artifacts inside Foundry `.sol` directories, use contract
-  names, and ignore Hardhat debug artifacts.
+- Discover all contract artifacts inside Foundry `.sol` directories, use
+  contract names, and ignore Hardhat debug artifacts.
 - Reject invalid artifacts, duplicate contract names, and output filename
   collisions before modifying generated files.
-- Keep multi-target generation, checking, diffing, fetching, and watching consistent.
-- Clean stale YAML output and stale generated files when the selected contract set
-  is empty; omit TypeScript barrel files for non-TypeScript targets.
+- Keep multi-target generation, checking, diffing, fetching, and watching
+  consistent.
+- Clean stale YAML output and stale generated files when the selected contract
+  set is empty; omit TypeScript barrel files for non-TypeScript targets.
 - Correct nested readonly array types, tuple overload suffixes, and Solidity
   struct-name collisions in generated bindings.
 - Dispatch ethers overloads using canonical ABI signatures and preserve event
@@ -340,9 +365,11 @@ Those changes are included here, in the next tagged release after `0.2.0`.
 
 ### Added
 
-- YAML renderer (`--target yaml`, alias `yml`) for human-readable ABI descriptions.
-- Multi-target configuration in `foundry.toml` and Hardhat: accept comma-separated
-  strings such as `"viem,python"` and arrays such as `["viem", "python"]`.
+- YAML renderer (`--target yaml`, alias `yml`) for human-readable ABI
+  descriptions.
+- Multi-target configuration in `foundry.toml` and Hardhat: accept
+  comma-separated strings such as `"viem,python"` and arrays such as
+  `["viem", "python"]`.
 
 ### Changed
 
@@ -350,8 +377,8 @@ Those changes are included here, in the next tagged release after `0.2.0`.
 
 ### Fixed
 
-- Remove inline tuple comments from Python type annotations that produced invalid
-  function signatures.
+- Remove inline tuple comments from Python type annotations that produced
+  invalid function signatures.
 - Escape language-specific reserved parameter names in Python, Rust, Swift, and
   Kotlin, including names such as `from`, `type`, `self`, and `fun`.
 
@@ -361,18 +388,20 @@ Initial release.
 
 ### Added
 
-- Native Rust CLI for generating typed bindings from Foundry and Hardhat Solidity
-  ABI artifacts.
+- Native Rust CLI for generating typed bindings from Foundry and Hardhat
+  Solidity ABI artifacts.
 - TypeScript, Python, Go, Rust, Swift, C#, Kotlin, and Solidity output targets.
-- Multi-target generation and the `generate`, `watch`, `diff`, `json`, and `fetch`
-  commands.
-- `--check` for CI, `--clean` for stale generated files, and `--exclude` patterns.
+- Multi-target generation and the `generate`, `watch`, `diff`, `json`, and
+  `fetch` commands.
+- `--check` for CI, `--clean` for stale generated files, and `--exclude`
+  patterns.
 - ABI fetching from Etherscan-compatible explorers.
 - Named multi-return types, signature-based overload disambiguation, NatSpec
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/doublesharp/abi-typegen/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/doublesharp/abi-typegen/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...v0.5.0
 [0.4.3]: https://github.com/doublesharp/abi-typegen/compare/v0.4.2...v0.4.3

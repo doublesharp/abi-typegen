@@ -83,7 +83,7 @@ workflow.
 
 The release workflow runs semantic-version compatibility checks for the library
 crates. After those checks and the GitHub release succeed, it publishes the core,
-configuration, code generation, and CLI crates in dependency order with the
+configuration, code generation, runtime, and CLI crates in dependency order with the
 `CARGO_REGISTRY_TOKEN` secret.
 
 ## Re-running a failed release
