@@ -108,6 +108,9 @@ npx abi-typegen generate --hardhat --target viem
 | Java      | `java`     | Java       | [web3j](https://docs.web3j.io/)                          |
 | Dart      | `dart`     | Dart       | [web3dart](https://pub.dev/packages/web3dart)            |
 | PHP       | `php`      | PHP        | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          |
+| COBOL     | `cobol`    | COBOL      | Experimental GnuCOBOL read subset; shared Rust runtime   |
+| Ruby      | `ruby`     | Ruby       | eth gem                                                  |
+| Shell     | `shell`    | Bash       | Foundry cast                                             |
 | C         | `c`        | C11        | Shared Rust ABI runtime                                  |
 | C++       | `cpp`      | C++17      | Shared Rust ABI runtime                                  |
 | YAML      | `yaml`     | Data       | Human-readable ABI descriptions                          |

@@ -137,7 +137,7 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
-There are 19 CLI targets across 13 languages:
+There are 22 CLI targets across 16 languages:
 
 | Target     | Works with                                               | What you get                                                                                     |
 | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -155,6 +155,9 @@ There are 19 CLI targets across 13 languages:
 | `java`     | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                                                    |
 | `dart`     | [web3dart](https://pub.dev/packages/web3dart)            | Typed values, codecs, calls, and transactions                                                    |
 | `php`      | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          | ABI codecs, JSON-RPC reads, signed legacy transactions, receipts, logs, and event/error decoding |
+| `cobol`    | GnuCOBOL and shared Rust runtime                         | Experimental: one-address, one-uint256 read functions                                            |
+| `ruby`     | Ruby and eth gem                                         | SDK-backed calls, transaction builders, codecs, events and errors                                |
+| `shell`    | Bash and Foundry cast                                    | Sourceable helpers for encoding, reads, sends, deployment and logs                               |
 | `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership                                              |
 | `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup                                                |
 | `zod`      | [Zod 4](https://zod.dev/)                                | Validation schemas and ABI                                                                       |
@@ -269,6 +272,20 @@ transactions or deploy contracts. Poll for a receipt before treating a returned
 transaction hash as success. Event log filters, event decoders, and declared
 custom-error decoders are also generated. The upstream signing library emits
 ArrayAccess return-type deprecation notices on PHP 8.5.
+
+### Read a balance from COBOL
+
+The experimental COBOL target supports read-only functions with one `address`
+input and one `uint256` output, such as `balanceOf(address)`:
+
+```sh
+abi-typegen generate --target cobol --out ./generated
+```
+
+It emits free-form GnuCOBOL subprograms and a C bridge to the shared Rust runtime.
+Results use decimal text in a 78-character buffer. Other functions, events, and
+errors appear as metadata comments. See the [COBOL build guide](docs/native-bindings.md#cobol-experimental)
+for dependencies and limitations.
 
 ### Link C or C++
 

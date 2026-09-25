@@ -151,6 +151,12 @@ jobs:
             os: ubuntu-latest
           - target: dart
             os: ubuntu-latest
+          - target: ruby
+            os: ubuntu-latest
+          - target: shell
+            os: ubuntu-latest
+          - target: cobol
+            os: ubuntu-latest
           - target: php
             os: ubuntu-latest
           - target: python
@@ -198,6 +204,18 @@ jobs:
           extensions: curl, gmp, mbstring, iconv
           tools: composer:v2
           coverage: none
+      - if: matrix.target == 'ruby'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+      - if: matrix.target == 'ruby'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecp256k1-dev pkg-config
+      - if: matrix.target == 'cobol'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnucobol libcurl4-openssl-dev libjson-c-dev pkg-config
       - run: make e2e-${{ matrix.target }}
 
   e2e-hardhat:

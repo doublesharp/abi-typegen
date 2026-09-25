@@ -8,6 +8,7 @@ pub mod tuples;
 pub mod type_mapper;
 
 // Re-export renderers at crate root for convenience.
+pub use renderers::cobol;
 pub use renderers::csharp;
 pub use renderers::dart;
 pub use renderers::ethers5;
@@ -17,7 +18,9 @@ pub use renderers::java;
 pub use renderers::kotlin;
 pub use renderers::php;
 pub use renderers::python;
+pub use renderers::ruby;
 pub use renderers::rust;
+pub use renderers::shell;
 pub use renderers::solidity;
 pub use renderers::swift;
 pub use renderers::viem;
@@ -128,6 +131,23 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
                 format!("{}.sol", interface_name),
                 solidity::render_solidity_file(ir),
             );
+        }
+        Target::Shell => {
+            files.insert(
+                format!("{}.sh", ir.name),
+                shell::render_shell_file(ir, config.wrappers),
+            );
+        }
+        Target::Ruby => {
+            files.insert(
+                format!("{}.rb", ir.name),
+                ruby::render_ruby_file_with_wrappers(ir, config.wrappers),
+            );
+        }
+        Target::Cobol => {
+            let artifacts = cobol::render_cobol_artifacts(ir, config.wrappers);
+            files.insert(format!("{}.cob", ir.name), artifacts.cobol);
+            files.insert(format!("{}.cobol.c", ir.name), artifacts.bridge);
         }
         Target::Php => {
             files.insert(

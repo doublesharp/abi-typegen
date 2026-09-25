@@ -10,6 +10,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Ruby bindings using the eth gem, with contract reads, transaction builders,
+  offline codecs, event/error helpers, and Anvil consumer tests.
+- Shell bindings backed by Foundry cast. Generated Bash libraries expose
+  codecs, contract reads and sends, constructor helpers, and event queries.
+
+- Experimental GnuCOBOL target for read-only functions taking one address and
+  returning one uint256. Generated C bridges reuse the shared Rust ABI runtime;
+  optional libcurl/json-c RPC reads are tested against Anvil.
+
 - SDK-backed contract wrappers for Go, Swift, Kotlin, and C#, including typed
   calls, transaction preparation/submission, offline ABI codecs, and event and
   custom-error helpers. `--no-wrappers` retains primary metadata and value types.

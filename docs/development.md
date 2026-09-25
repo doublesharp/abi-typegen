@@ -93,7 +93,7 @@ manifest until [release preparation](releasing.md) runs.
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
 - Native-language integration: `make e2e-native` runs Go, Rust, Swift, Kotlin,
-  Java, C#, Dart, PHP, Python, C, and C++ consumers. Individual `e2e-<target>` tasks
+  Java, C#, Dart, PHP, Python, Ruby, shell, COBOL, C, and C++ consumers. Individual `e2e-<target>` tasks
   generate bindings from `e2e/foundry-sample` into
   the consumers under `e2e/native/` and run each language's formatter, linter,
   and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
@@ -120,3 +120,10 @@ Native consumer Make targets use [the Anvil harness](native-bindings.md#tests-ag
 for signed submissions against a disposable chain. Install Foundry so `anvil`,
 `cast`, and `forge` are available. No external RPC endpoint or secrets are needed.
 The CI native matrix runs the same Make targets.
+
+The experimental COBOL consumer uses GnuCOBOL, libcurl, json-c, and pkg-config.
+Run `make e2e-cobol` for offline codec checks and an asserted Anvil balance read.
+
+Ruby consumers use Bundler and a system secp256k1 library. Shell consumers use
+Bash and Foundry cast. Run `make e2e-ruby` or `make e2e-shell` to generate and test
+those bindings, including local Anvil transactions.

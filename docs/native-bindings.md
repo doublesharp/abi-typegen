@@ -21,6 +21,9 @@ primary ABI metadata and value types while omitting callable helpers.
 | C#           | Nethereum.Web3; the consumer fixture pins 6.1.0                                                                |
 | Dart         | web3dart; the consumer fixture pins 3.0.3                                                                      |
 | PHP          | PHP 8.2+, Brick Math 1.0.0, `web3p/ethereum-tx` 0.4.3, and cURL; enable `curl`, `gmp`, `mbstring`, and `iconv` |
+| Ruby         | eth 0.5.17; consumer tests use Ruby 4.0 and Bundler                                                            |
+| Shell        | Bash 3.2+ and Foundry cast; tested with Cast 1.8.3                                                             |
+| COBOL        | GnuCOBOL 3.2 and shared Rust runtime; optional libcurl/json-c RPC                                              |
 | C, C++       | `abi-typegen-runtime`, built with Rust/Alloy; C11 or C++17 compiler                                            |
 
 SDK-backed wrappers use the application's provider and signing configuration.
@@ -31,7 +34,8 @@ results; write operations expose the target SDK's transaction or operation objec
 Preparing a transaction, submitting it, and waiting for its receipt are distinct
 operations.
 
-Canonical signatures select overloads. Generated codecs cover positional
+Canonical signatures select overloads. Except for the limited COBOL target,
+generated codecs cover positional
 arguments, tuples, arrays, results, declared custom errors, and events. Indexed
 strings, bytes, arrays, and tuples decode to their 32-byte topic hashes because
 the original values are absent from the log. Anonymous events have no signature
@@ -78,6 +82,101 @@ echo $balance->toBase(10);
 For writes, construct the client with a private key, sender address, and chain ID.
 Pass gas price and gas limit through the generated transaction options, then wait
 for a receipt before treating the returned hash as a successful transaction.
+
+## Ruby
+
+Ruby bindings use the `eth` gem. Reads execute through your `Eth::Client`; write
+methods build transaction hashes for your application to sign and submit. The
+consumer pins `eth` 0.5.17 and uses Bundler. Its secp256k1 native dependency can
+build against a system library; the CI job installs `libsecp256k1-dev`.
+
+```sh
+abi-typegen generate --target ruby --out ./generated
+```
+
+```ruby
+require_relative "generated/Token"
+
+client = Eth::Client.create(ENV.fetch("RPC_URL"))
+token = TokenContract.new(ENV.fetch("TOKEN_ADDRESS"), client)
+owner = ENV.fetch("ACCOUNT_ADDRESS")
+balance = token.balance_of(owner)
+calldata = token.encode_transfer(owner, 1000)
+transaction = token.transfer(owner, 1000, gas_limit: 100_000)
+```
+
+A write builder returns a Ruby `Hash` containing transaction fields. It does
+not submit a transaction or return an on-chain transaction identifier. Supply signing, nonce and fee policy through
+the SDK. Generated helpers also cover result decoding, event filters and log
+decoding, custom errors, and constructor data. Large integers use Ruby integers.
+`--no-wrappers` keeps ABI metadata and named tuple values without requiring `eth`.
+
+## Shell
+
+The `shell` target emits Bash libraries backed by Foundry `cast`. Source the file
+and call its functions; Cast handles ABI values, RPC, and signing.
+
+```sh
+abi-typegen generate --target shell --out ./generated
+```
+
+```bash
+source ./generated/Token.sh
+export ATG_RPC_URL=http://127.0.0.1:8545
+atg_token_balance_of_call "$TOKEN_ADDRESS" "$OWNER_ADDRESS"
+atg_token_transfer_encode "$RECIPIENT_ADDRESS" 1000
+```
+
+Set `ATG_CAST_BIN` to select the Cast executable. RPC and wallet settings use
+`ATG_RPC_URL`, `ATG_PRIVATE_KEY`, `ATG_FROM`, and Bash arrays such as
+`ATG_CAST_SEND_ARGS`. The generated library does not change the caller's shell
+options. Pass tuple and array values using Cast's argument syntax, quoted as one
+shell argument. Keep uint256 values as strings instead of shell arithmetic.
+
+Read helpers offer decoded `*_call` and raw `*_call_raw` results. Writes use
+`*_send`; constructor helpers provide argument encoding and deployment from
+caller-supplied bytecode. Event `*_logs` helpers delegate filtering to Cast;
+`*_decode_data` decodes only the nonindexed payload. Indexed values remain in log
+topics. Anonymous event signature filtering is unsupported. The installed Cast
+version determines output formatting and wallet options. These are Bash scripts,
+not portable POSIX `sh` libraries.
+
+## COBOL (experimental)
+
+COBOL can read a token balance through the shared Rust runtime. This target
+supports `view` or `pure` functions with exactly one `address` input and one
+`uint256` output. All functions, events, and errors retain signature metadata
+comments; unsupported signatures do not get callable subprograms.
+
+```sh
+abi-typegen generate --target cobol --out ./generated
+cargo build --release -p abi-typegen-runtime
+```
+
+For `Token.balanceOf`, the generated `Token.cob` contains
+`TOKEN-BALANCE-OF-ENC`, `TOKEN-BALANCE-OF-DEC`, and `TOKEN-BALANCE-OF-CALL`.
+`Token.cobol.c` bridges fixed COBOL buffers to the runtime and releases its owned
+results. Compile the COBOL as free-form source with GnuCOBOL. Link both sources
+with the matching `abi-typegen-runtime` library. This does not require a COBOL
+implementation of the Ethereum ABI.
+
+Offline encoding and decoding require only the shared runtime. For RPC reads,
+compile the bridge with `-DATG_COBOL_WITH_CURL=1` and link libcurl and json-c.
+Without that option, `*-CALL` reports an error while codecs remain available.
+Reads use `latest` and omit `from`, so the provider chooses the default caller.
+The CALL helper cannot configure a sender or historical block; use another client
+with the offline codec for reads that depend on those settings.
+The generated source defines the required buffer sizes and argument order.
+`uint256` results are ASCII decimal text in `PIC X(78)`, accompanied by a length.
+Status zero means success; a nonzero status comes with an error buffer.
+
+Install GnuCOBOL, libcurl, json-c, and pkg-config, then run `make e2e-cobol` for
+an executable build example and tests against Anvil. The same command runs in
+Linux CI. IBM Enterprise COBOL is not tested.
+
+This target does not generate writes, signing, deployment, event/error decoding,
+other scalar signatures, tuples, or arrays. `--no-wrappers` keeps signature
+comments and the C ABI constant, with no callable COBOL programs.
 
 ## C and C++
 

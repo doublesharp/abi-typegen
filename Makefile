@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -65,7 +65,7 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 
 NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
 
-e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php ## E2E: all native-language targets
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell ## E2E: all native-language targets
 
 e2e-native-artifacts: build
 	cd e2e/foundry-sample && forge build
@@ -231,3 +231,23 @@ e2e-php: e2e-native-artifacts
 	find e2e/native/php/Metadata -name '*.php' -print0 | xargs -0 -n1 php -l
 	cd e2e/native/php && php test_metadata.php Metadata
 	python3 e2e/native/anvil.py --cwd e2e/native/php php test_consumer.php
+
+e2e-cobol: e2e-native-artifacts
+	cargo build -p abi-typegen-runtime
+	sh e2e/native/cobol/run.sh
+	python3 e2e/native/anvil.py sh e2e/native/cobol/run.sh anvil
+
+e2e-shell: e2e-native-artifacts
+	sh e2e/native/shell/run.sh
+	python3 e2e/native/anvil.py sh e2e/native/shell/run.sh anvil
+
+e2e-ruby: e2e-native-artifacts
+	cd e2e/native/ruby && bundle config set --local path vendor/bundle
+	cd e2e/native/ruby && bundle config set --local build.rbsecp256k1 --with-system-library
+	cd e2e/native/ruby && bundle install
+	cd e2e/native/ruby && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target ruby
+	cd e2e/native/ruby && bundle exec ruby verify_generated.rb build/generated-contracts
+	cd e2e/native/ruby && rm -rf build/metadata-contracts && $(NATIVE_TYPEGEN) --out ./build/metadata-contracts --target ruby --no-wrappers
+	cd e2e/native/ruby && ruby verify_generated.rb build/metadata-contracts --metadata
+	cd e2e/native/ruby && bundle exec rspec generated_spec.rb anvil_spec.rb
+	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb anvil_spec.rb

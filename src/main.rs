@@ -369,6 +369,9 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::Java => "java",
         Target::Dart => "dart",
         Target::Php => "php",
+        Target::Cobol => "cobol",
+        Target::Ruby => "ruby",
+        Target::Shell => "shell",
         Target::C => "c",
         Target::Cpp => "cpp",
         Target::Yaml => "yaml",
@@ -377,7 +380,8 @@ fn target_dir_name(target: &Target) -> &'static str {
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "java", "dart", "php", "c", "cpp", "yaml",
+    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "shell", "c", "cpp",
+    "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -430,7 +434,7 @@ fn apply_overrides(
             let trimmed = part.trim();
             let parsed = parse_target(trimmed).ok_or_else(|| {
                 anyhow::anyhow!(
-                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|solidity|c|cpp|yaml",
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|shell|solidity|c|cpp|yaml",
                     trimmed
                 )
             })?;
@@ -528,6 +532,10 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".java",
     ".dart",
     ".php",
+    ".cob",
+    ".rb",
+    ".sh",
+    ".cobol.c",
     ".h",
     ".hpp",
     ".yaml",
@@ -633,6 +641,8 @@ fn render_artifacts(
         let ir = read_artifact(name, path)?;
         for (prefix, target_config) in &outputs {
             let namespace = match target_config.target() {
+                Target::Shell => Some(abi_typegen_codegen::shell::namespace_name(name)),
+                Target::Cobol => Some(abi_typegen_codegen::cobol::namespace_name(name)),
                 Target::Swift => Some(abi_typegen_codegen::swift::namespace_name(name)),
                 Target::Kotlin => Some(abi_typegen_codegen::kotlin::namespace_name(name)),
                 Target::Dart => Some(abi_typegen_codegen::dart::namespace_name(name)),
@@ -645,6 +655,22 @@ fn render_artifacts(
                     .into_iter()
                     .map(|name| name.to_ascii_lowercase())
                     .collect()
+            } else if *target_config.target() == Target::Shell {
+                abi_typegen_codegen::shell::declared_names(&ir, target_config.wrappers)
+            } else if *target_config.target() == Target::Ruby {
+                abi_typegen_codegen::ruby::declared_constant_names(&ir, target_config.wrappers)
+            } else if *target_config.target() == Target::Cobol {
+                namespace
+                    .into_iter()
+                    .chain(
+                        abi_typegen_codegen::cobol::declared_program_names(
+                            &ir,
+                            target_config.wrappers,
+                        )
+                        .into_iter()
+                        .map(|name| format!("program:{name}")),
+                    )
+                    .collect::<Vec<_>>()
             } else {
                 namespace.into_iter().collect::<Vec<_>>()
             };
@@ -683,7 +709,10 @@ fn render_artifacts(
                 barrel::render_barrel(&contract_names, target_config),
             );
         }
-        if matches!(target_config.target(), Target::C | Target::Cpp) {
+        if matches!(
+            target_config.target(),
+            Target::C | Target::Cpp | Target::Cobol
+        ) {
             let filename = format!("{prefix}abi_typegen.h");
             if files.contains_key(&filename) {
                 anyhow::bail!(

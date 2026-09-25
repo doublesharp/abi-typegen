@@ -3,7 +3,7 @@
 </p>
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">19 targets &middot; 13 languages &middot; Foundry &amp; Hardhat</p>
+<p align="center">22 targets &middot; 16 languages &middot; Foundry &amp; Hardhat</p>
 
 # @0xdoublesharp/abi-typegen
 
@@ -72,6 +72,9 @@ npx abi-typegen generate --target viem,python,rust
 | Java      | `java`     | Java       | [web3j](https://docs.web3j.io/)                          |
 | Dart      | `dart`     | Dart       | [web3dart](https://pub.dev/packages/web3dart)            |
 | PHP       | `php`      | PHP        | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          |
+| COBOL     | `cobol`    | COBOL      | Experimental GnuCOBOL read subset; shared Rust runtime   |
+| Ruby      | `ruby`     | Ruby       | eth gem                                                  |
+| Shell     | `shell`    | Bash       | Foundry cast                                             |
 | C         | `c`        | C11        | Shared Rust ABI runtime                                  |
 | C++       | `cpp`      | C++17      | Shared Rust ABI runtime                                  |
 | YAML      | `yaml`     | Data       | Human-readable ABI descriptions                          |

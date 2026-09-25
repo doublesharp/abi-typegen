@@ -29,3 +29,12 @@ pub mod dart;
 
 /// PHP contract bindings.
 pub mod php;
+
+/// Experimental GnuCOBOL read bindings.
+pub mod cobol;
+
+/// Ruby contract bindings.
+pub mod ruby;
+
+/// Shell contract bindings backed by Foundry cast.
+pub mod shell;

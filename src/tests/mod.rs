@@ -2672,3 +2672,173 @@ fn native_headers_do_not_shadow_runtime_or_standard_headers() {
     assert!(config.out_dir.join("abi_typegen.h").exists());
     cleanup(&dir);
 }
+
+#[test]
+fn cobol_target_emits_bridge_runtime_and_preserves_metadata_without_wrappers() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Cobol,
+    );
+    let folder = config.artifacts_dir.join("Token.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("Token.json"), r#"{"abi":[{"type":"function","name":"balanceOf","inputs":[{"name":"owner","type":"address"}],"outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view"}]}"#).unwrap();
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("Token.cob"), "TOKEN-BALANCE-OF-CALL");
+    assert_file_contains(&config.out_dir.join("Token.cobol.c"), "atg_encode(");
+    assert_file_contains(&config.out_dir.join("abi_typegen.h"), "ATG_ABI_VERSION");
+    run_check(&config).unwrap();
+    config.wrappers = false;
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("Token.cob"), "balanceOf(address)");
+    assert!(
+        !std::fs::read_to_string(config.out_dir.join("Token.cob"))
+            .unwrap()
+            .contains("PROGRAM-ID")
+    );
+    assert!(
+        !std::fs::read_to_string(config.out_dir.join("Token.cobol.c"))
+            .unwrap()
+            .contains("atg_encode(")
+    );
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn cobol_normalized_contract_collisions_preserve_existing_output() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Cobol,
+    );
+    for name in ["FooBar", "Foo_Bar"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let existing = config.out_dir.join("FooBar.cob");
+    std::fs::write(&existing, "previous bindings").unwrap();
+    assert!(
+        run_generate(&config, true)
+            .unwrap_err()
+            .to_string()
+            .contains("namespace")
+    );
+    assert_eq!(
+        std::fs::read_to_string(existing).unwrap(),
+        "previous bindings"
+    );
+}
+
+#[test]
+fn cobol_program_collisions_across_contracts_are_rejected() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Cobol,
+    );
+    for (contract, function) in [("FooBar", "read"), ("Foo", "barRead")] {
+        let folder = config.artifacts_dir.join(format!("{contract}.sol"));
+        std::fs::create_dir_all(&folder).unwrap();
+        let artifact = serde_json::json!({"abi":[{"type":"function","name":function,"inputs":[{"name":"owner","type":"address"}],"outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view"}]});
+        std::fs::write(
+            folder.join(format!("{contract}.json")),
+            artifact.to_string(),
+        )
+        .unwrap();
+    }
+    assert!(
+        run_generate(&config, true)
+            .unwrap_err()
+            .to_string()
+            .contains("program:FOO-BAR-READ")
+    );
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn ruby_and_shell_keep_metadata_without_callable_wrappers() {
+    for (target, extension, marker, runtime_marker) in [
+        (Target::Ruby, "rb", "ABI", "class TokenContract"),
+        (Target::Shell, "sh", "ATG_TOKEN_ABI", "atg_token_"),
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = generated_config(dir.path().join("out"), dir.path().join("gen"), target);
+        write_target_matrix_artifact(&config.artifacts_dir, "Token");
+        run_generate(&config, false).unwrap();
+        let file = config.out_dir.join(format!("Token.{extension}"));
+        assert_file_contains(&file, marker);
+        assert_file_contains(&file, runtime_marker);
+        run_check(&config).unwrap();
+        config.wrappers = false;
+        run_generate(&config, false).unwrap();
+        assert_file_contains(&file, marker);
+        assert!(
+            !std::fs::read_to_string(file)
+                .unwrap()
+                .contains(runtime_marker)
+        );
+        run_check(&config).unwrap();
+    }
+}
+
+#[test]
+fn shell_normalized_contract_collisions_fail_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Shell,
+    );
+    for name in ["FooBar", "Foo_Bar"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    assert!(
+        run_generate(&config, true)
+            .unwrap_err()
+            .to_string()
+            .contains("namespace")
+    );
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn ruby_tuple_and_other_contract_constants_cannot_collide() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Ruby);
+    write_target_matrix_artifact(&config.artifacts_dir, "TokenOther");
+    let folder = config.artifacts_dir.join("Token.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("Token.json"), r#"{"abi":[{"type":"function","name":"read","inputs":[{"name":"item","type":"tuple","internalType":"struct Token.OtherContract","components":[{"name":"amount","type":"uint256"}]}],"outputs":[],"stateMutability":"view"}]}"#).unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(error.contains("TokenOtherContract"), "{error}");
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn shell_global_symbol_collisions_are_rejected_across_contracts() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Shell,
+    );
+    for (contract, function) in [("FooBar", "baz"), ("Foo", "barBaz")] {
+        let folder = config.artifacts_dir.join(format!("{contract}.sol"));
+        std::fs::create_dir_all(&folder).unwrap();
+        let artifact = serde_json::json!({"abi":[{"type":"function","name":function,"inputs":[],"outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view"}]});
+        std::fs::write(
+            folder.join(format!("{contract}.json")),
+            artifact.to_string(),
+        )
+        .unwrap();
+    }
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(
+        error.contains("FOO_BAR_BAZ") || error.contains("foo_bar_baz"),
+        "{error}"
+    );
+    assert!(!config.out_dir.exists());
+}

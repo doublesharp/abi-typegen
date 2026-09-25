@@ -1,0 +1,4 @@
+source "https://rubygems.org"
+
+gem "eth", "= 0.5.17"
+gem "rspec", "~> 3.13"

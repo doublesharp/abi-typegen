@@ -32,21 +32,24 @@ Each selected contract produces its primary language files. C/C++ also emit a
 shared runtime header. These targets do not emit
 TypeScript ABI modules or an `index.ts` barrel.
 
-| Target     | File                             | Output purpose                                                               |
-| ---------- | -------------------------------- | ---------------------------------------------------------------------------- |
-| `python`   | `<Name>.py`                      | ABI, typed values, codecs, and web3.py contract wrappers                     |
-| `go`       | `<Name>.go`                      | ABI, value types, codecs, and go-ethereum contract wrappers                  |
-| `rust`     | `<name>.rs`                      | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`                     |
-| `swift`    | `<Name>.swift`                   | ABI, public value types, codecs, and web3swift operations                    |
-| `csharp`   | `<Name>.cs`                      | ABI, Nethereum DTOs, codecs, and contract wrappers                           |
-| `kotlin`   | `<Name>.kt`                      | ABI, value types, codecs, and web3j contract wrappers                        |
-| `solidity` | `I<Name>.sol`                    | Solidity interface reconstructed from ABI data                               |
-| `java`     | `<Name>.java`                    | ABI, value types, codecs, and web3j contract wrappers                        |
-| `dart`     | `<name>.dart`                    | ABI, value types, codecs, and web3dart contract wrappers                     |
-| `php`      | `<Name>.php`                     | ABI, named value types, strict codecs, and optional JSON-RPC client/wrappers |
-| `c`        | `atg_<Name>.h`                   | Typed C API using the shared Rust codec runtime                              |
-| `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp` | C API with C++ ownership and client helpers                                  |
-| `yaml`     | `<Name>.yaml`                    | Human-readable functions, events, errors, and parameter types                |
+| Target     | File                                                   | Output purpose                                                               |
+| ---------- | ------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `python`   | `<Name>.py`                                            | ABI, typed values, codecs, and web3.py contract wrappers                     |
+| `go`       | `<Name>.go`                                            | ABI, value types, codecs, and go-ethereum contract wrappers                  |
+| `rust`     | `<name>.rs`                                            | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`                     |
+| `swift`    | `<Name>.swift`                                         | ABI, public value types, codecs, and web3swift operations                    |
+| `csharp`   | `<Name>.cs`                                            | ABI, Nethereum DTOs, codecs, and contract wrappers                           |
+| `kotlin`   | `<Name>.kt`                                            | ABI, value types, codecs, and web3j contract wrappers                        |
+| `solidity` | `I<Name>.sol`                                          | Solidity interface reconstructed from ABI data                               |
+| `java`     | `<Name>.java`                                          | ABI, value types, codecs, and web3j contract wrappers                        |
+| `dart`     | `<name>.dart`                                          | ABI, value types, codecs, and web3dart contract wrappers                     |
+| `php`      | `<Name>.php`                                           | ABI, named value types, strict codecs, and optional JSON-RPC client/wrappers |
+| `c`        | `atg_<Name>.h`                                         | Typed C API using the shared Rust codec runtime                              |
+| `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp`                       | C API with C++ ownership and client helpers                                  |
+| `cobol`    | `<Name>.cob`, `<Name>.cobol.c`, shared `abi_typegen.h` | Experimental address-to-uint256 read helpers and signature metadata          |
+| `ruby`     | `<Name>.rb`                                            | ABI, SDK-backed wrappers, transaction builders, codecs and named values      |
+| `shell`    | `<Name>.sh`                                            | Sourceable Bash metadata and optional Foundry cast helpers                   |
+| `yaml`     | `<Name>.yaml`                                          | Human-readable functions, events, errors, and parameter types                |
 
 The Solidity target reconstructs tuple structs and emits events, errors,
 overloads, and external function signatures. It cannot recover a contract's
