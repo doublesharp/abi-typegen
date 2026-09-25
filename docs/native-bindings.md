@@ -14,16 +14,16 @@ primary ABI metadata and value types while omitting callable helpers.
 
 | Target       | Consumer runtime                                                                                               |
 | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| Python       | web3.py; the consumer fixture pins 8.0.0 (Python 3.10+)                                                        |
-| Go           | go-ethereum; the consumer fixture pins 1.17.6                                                                  |
+| Python       | web3.py 8 (Python 3.10+)                                                                                       |
+| Go           | go-ethereum 1.17                                                                                               |
 | Swift        | web3swift 3.x with Web3Core and BigInt; Swift 6                                                                |
 | Kotlin, Java | web3j 6; JDK 21                                                                                                |
-| C#           | Nethereum.Web3; the consumer fixture pins 6.1.0                                                                |
-| Dart         | web3dart; the consumer fixture pins 3.0.3                                                                      |
+| C#           | Nethereum.Web3 6.1                                                                                             |
+| Dart         | web3dart 3                                                                                                     |
 | PHP          | PHP 8.2+, Brick Math 1.0.0, `web3p/ethereum-tx` 0.4.3, and cURL; enable `curl`, `gmp`, `mbstring`, and `iconv` |
-| Ruby         | eth 0.5.17; consumer tests use Ruby 4.0 and Bundler                                                            |
-| Elixir       | Ethers 0.8.0; local signer tests use ex_secp256k1 0.8.0                                                        |
-| Shell        | Bash 3.2+ and Foundry cast; tested with Cast 1.8.3                                                             |
+| Ruby         | eth 0.5.17 and Bundler                                                                                         |
+| Elixir       | Ethers 0.8.0; `ex_secp256k1` 0.8.0 for local signing                                                           |
+| Shell        | Bash 3.2+ and Foundry cast                                                                                     |
 | COBOL        | GnuCOBOL 3.2 and shared Rust runtime; optional libcurl/json-c RPC                                              |
 | Godot        | Godot 4.7.2, GDExtension, pinned godot-cpp 10.0.0, SCons 4.10.0, and shared Rust runtime                       |
 | Unreal       | Unreal Engine 5.8.3, the generated plugin, and shared Rust runtime                                             |
@@ -89,9 +89,8 @@ for a receipt before treating the returned hash as a successful transaction.
 ## Ruby
 
 Ruby bindings use the `eth` gem. Reads execute through your `Eth::Client`; write
-methods build transaction hashes for your application to sign and submit. The
-consumer pins `eth` 0.5.17 and uses Bundler. Its secp256k1 native dependency can
-build against a system library; the CI job installs `libsecp256k1-dev`.
+methods build transaction hashes for your application to sign and submit. Use
+`eth` 0.5.17 with Bundler; its secp256k1 dependency may require a system library.
 
 ```sh
 abi-typegen generate --target ruby --out ./generated
@@ -173,9 +172,8 @@ The generated source defines the required buffer sizes and argument order.
 `uint256` results are ASCII decimal text in `PIC X(78)`, accompanied by a length.
 Status zero means success; a nonzero status comes with an error buffer.
 
-Install GnuCOBOL, libcurl, json-c, and pkg-config, then run `make e2e-cobol` for
-an executable build example and tests against Anvil. The same command runs in
-Linux CI. IBM Enterprise COBOL is not tested.
+Use GnuCOBOL for compilation and libcurl and json-c for optional RPC reads.
+IBM Enterprise COBOL compatibility has not been established.
 
 This target does not generate writes, signing, deployment, event/error decoding,
 other scalar signatures, tuples, or arrays. `--no-wrappers` keeps signature
@@ -220,32 +218,6 @@ bytecode from the caller; deployment callbacks receive a null destination.
 Event filter helpers construct topic filters; null indexed topics are wildcards.
 Pass the filter to the application's log provider and decode returned logs with
 the generated event decoder. Hash indexed reference values before filtering.
-
-## Tests against a local chain
-
-`e2e/native/anvil.py` starts its own Anvil process on an ephemeral localhost port,
-waits for the expected chain ID, and deploys the Token fixture. It supplies the
-consumer command with `ATG_RPC_URL`, `ATG_TOKEN_ADDRESS`, `ATG_PRIVATE_KEY`, and
-`ATG_CHAIN_ID`, then stops its node even if the consumer fails. The private key is
-a public Anvil development key and must never be used with real funds.
-
-For example, after generating Go bindings:
-
-```sh
-python3 e2e/native/anvil.py --cwd e2e/native/go \
-  go test ./usage -run TestGeneratedBindingsAnvil -count=1
-```
-
-The native Make targets generate source, compile consumers, run codec tests, and
-exercise RPC submissions where supported. PHP uses `make e2e-php`. GitHub Actions installs Foundry and
-each language's toolchain before running those same targets. These tests need no
-external chain, RPC service, or repository secret.
-
-Codec tests and Anvil tests serve different purposes. Codec tests cover malformed
-bytes, large integers, nested values, overload selection, and ownership. Anvil
-checks verify signed submission, receipts, state changes, and event handling in
-the consumer runtime. A passing local-chain test is not a production-network
-qualification.
 
 ## Current boundaries
 
@@ -297,21 +269,15 @@ custom-error names, and functions that shadow reserved Ethers helpers are
 rejected before files are written. The generator does not supply a wallet or
 manage transaction receipts for the application.
 
-Run `make e2e-elixir` for generated-consumer and local Anvil tests.
-
 ## Unity compatibility
 
 Unity uses the existing `csharp` target. The adapter package at
-`integrations/unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport, an application
-signer interface, and cancellation tied to GameObject lifetime. Generate and
-verify its fixtures using the [Unity consumer guide](../e2e/native/unity/README.md).
-
-The Unity checks are separate from ordinary C# tests. Unity 6000.6.3f1 on macOS
-is tested with Editor codec tests, signed Anvil transactions, and standalone
-Mono/IL2CPP codec execution. Its Linux manual workflow is skipped by default and
-requires `UNITY_ENGINE_CI_ENABLED=true`, `UNITY_EDITOR_6000_6_3F1` set to the
-installed Editor path, and a matching self-hosted runner. Linux is unqualified
-until that workflow runs. Android, iOS, and WebGL are not qualified.
+`integrations/unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport,
+an application signer interface, and cancellation tied to GameObject lifetime.
+See the [Unity adapter package](../integrations/unity/com.doublesharp.abi-typegen.unity/README.md)
+for setup.
+Supported configurations include Unity 6000.6.3f1 on macOS with Mono and IL2CPP.
+Linux, Android, iOS, and WebGL compatibility is not yet verified.
 
 ## Godot (experimental)
 
@@ -319,21 +285,13 @@ The `godot` target emits GDScript ABI bindings and uses a Godot 4 GDExtension fo
 the shared codec and asynchronous HTTP JSON-RPC client. The extension links the
 Rust runtime statically and is compiled against C ABI v1. It currently builds
 for Linux x86_64 and macOS arm64. This integration is experimental; other
-platforms and export templates have not been qualified.
-
-Install Godot 4.7.2 and SCons 4.10.0, then run `make e2e-godot`. The target
-regenerates the full Foundry sample bindings, builds the extension against the
-matching runtime, checks codec and packaging behavior in headless Godot, and
-runs Anvil reads/writes, event decoding, revert handling, and request-lifetime
-tests. The command fetches the pinned godot-cpp dependency when it is absent.
-Godot import can exit successfully despite a missing extension, so the runner
-checks engine diagnostics and requires a fresh suite pass marker. The full local
-macOS arm64 suite passed. The same suite runs on Linux x86_64 in the public
-[Godot compatibility workflow](../.github/workflows/godot-compat.yml).
+platforms and export templates are not yet supported. Build the extension
+with Godot 4.7.2, SCons 4.10.0, and the pinned godot-cpp dependency in
+[`integrations/godot/extension`](../integrations/godot/extension/).
 
 Use `--no-wrappers` to emit ABI metadata without generated codec/client calls.
 The GDExtension is not needed to load that metadata-only output. Write wrappers
-accept an application-provided signer; the tests use Anvil's unlocked accounts.
+accept an application-provided signer.
 No local signer, deployment wrapper, event subscriptions, or fallback/receive
 wrappers are bundled. Constructor encoding is available. uint256 values use
 exact 32-byte `PackedByteArray` words.
@@ -350,11 +308,6 @@ that need another caller can use the generated calldata with their own RPC flow.
 The plugin uses the application's provider and signer; it does not include a
 wallet or local key store.
 
-Run `make e2e-unreal UNREAL_ROOT=/path/to/UnrealEngine` with Unreal Engine 5.8.3,
-Rust, and Foundry installed. The test host generates and compiles all Foundry
-contracts plus a metadata-only fixture, then runs codec, lifecycle, and Anvil
-automation tests. The full local macOS arm64 run passed. Windows build rules are
-provided but unqualified; Linux support is not implemented. The manual
-GitHub workflow is skipped unless `UNREAL_ENGINE_CI_ENABLED=true`,
-`UNREAL_ROOT_5_8_3` points to the installed engine, and a matching self-hosted
-runner is configured. A skipped workflow does not count as a pass.
+The [Unreal plugin](../integrations/unreal/Plugins/AbiTypegen/) targets Unreal
+Engine 5.8.3 on macOS arm64. Windows build rules are provided, but Windows
+compatibility has not been established; Linux support is not implemented.

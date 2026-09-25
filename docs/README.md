@@ -1,9 +1,7 @@
 # Documentation
 
-These guides describe how to use and maintain abi-typegen. For version-specific
-changes, see the [changelog](../CHANGELOG.md). Documentation on the main branch
-can include behavior listed under Unreleased; use a release tag's documentation
-when working with an older package.
+Install abi-typegen, choose a target, and use the generated bindings in your app.
+For version-specific changes, see the [changelog](../CHANGELOG.md).
 
 ## Using abi-typegen
 
@@ -17,8 +15,10 @@ when working with an older package.
   integration, and watching artifacts.
 - [Choosing a binding tool](comparison.md): output tradeoffs and how to measure
   generation performance for your project.
+- [Native contract bindings](native-bindings.md): runtime dependencies, C/C++
+  ownership, contract wrappers, and engine integrations.
 
-## Developing and releasing
+## Contributing
 
 - [Contributing](../CONTRIBUTING.md): bug reports, code conventions, tests, and
   pull-request guidance.
@@ -28,6 +28,3 @@ when working with an older package.
   configuration, migration, and returning to defaults.
 - [Releasing](releasing.md): matching package versions, binary assets, checksum
   manifests, and publication order.
-
-- [Native contract bindings](native-bindings.md): runtime dependencies, C/C++ ownership,
-  callable wrappers, engine integrations, and local Anvil tests.

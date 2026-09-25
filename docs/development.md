@@ -41,6 +41,7 @@ Node or Python.
 | `tests/`, `npm/tests/`        | CLI, packaging, installer, and storage regression tests                  |
 | `e2e/`                        | Foundry and Hardhat projects used to exercise generated bindings         |
 | `e2e/native/`                 | Native language consumers that compile and exercise generated bindings   |
+| `integrations/`               | Reusable Unity, Unreal, and Godot engine packages                        |
 | `fuzz/`                       | Fuzz targets, curated seeds, and local corpus/output                     |
 
 ## Rust checks
@@ -125,10 +126,22 @@ guide. The [release guide](releasing.md) covers publication.
 
 ## Local RPC integration tests
 
-Native consumer Make targets use [the Anvil harness](native-bindings.md#tests-against-a-local-chain)
+Native consumer Make targets use [the Anvil harness](../e2e/native/anvil.py)
 for signed submissions against a disposable chain. Install Foundry so `anvil`,
 `cast`, and `forge` are available. No external RPC endpoint or secrets are needed.
-The CI native matrix runs the same Make targets.
+The harness starts Anvil on an ephemeral local port, deploys the Token fixture,
+sets `ATG_RPC_URL`, `ATG_TOKEN_ADDRESS`, `ATG_PRIVATE_KEY`, and `ATG_CHAIN_ID`
+for the consumer, and stops the node afterward. The private key is a public
+Anvil development key; never use it with real funds. For example:
+
+```sh
+python3 e2e/native/anvil.py --cwd e2e/native/go \
+  go test ./usage -run TestGeneratedBindingsAnvil -count=1
+```
+
+Codec tests cover invalid inputs and ABI layout; Anvil tests cover signed
+submissions, receipts, state changes, and event handling. The CI native matrix
+runs the same Make targets.
 
 The experimental COBOL consumer uses GnuCOBOL, libcurl, json-c, and pkg-config.
 Run `make e2e-cobol` for offline codec checks and an asserted Anvil balance read.

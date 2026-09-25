@@ -1,10 +1,10 @@
 # Engine integrations
 
-This directory holds reusable engine packages. Generated contract bindings and
-compatibility test projects live under [`e2e/native`](../e2e/native/).
+The engine adapters connect generated abi-typegen bindings to each engine's
+runtime, request lifecycle, and application-owned transaction submission.
 
-| Engine | Reusable package | Consumer and validation guide |
-| --- | --- | --- |
-| Unity | [`com.doublesharp.abi-typegen.unity`](unity/com.doublesharp.abi-typegen.unity/) | [Unity](../e2e/native/unity/README.md) |
-| Unreal | [`AbiTypegen` plugin](unreal/Plugins/AbiTypegen/) | [Unreal](../e2e/native/unreal/README.md) |
-| Godot | [GDExtension source](godot/extension/) | [Godot](../e2e/native/godot/README.md) |
+| Engine | Adapter                                                                         | Usage guide                                                        |
+| ------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Unity  | [`com.doublesharp.abi-typegen.unity`](unity/com.doublesharp.abi-typegen.unity/) | [Unity adapter](unity/com.doublesharp.abi-typegen.unity/README.md) |
+| Unreal | [`AbiTypegen` plugin](unreal/Plugins/AbiTypegen/)                               | [Unreal bindings](../docs/native-bindings.md#unreal-experimental)  |
+| Godot  | [GDExtension](godot/extension/)                                                 | [Godot bindings](../docs/native-bindings.md#godot-experimental)    |

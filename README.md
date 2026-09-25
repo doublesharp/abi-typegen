@@ -50,13 +50,6 @@ pnpm exec abi-typegen --help
 The npm package installs the native executable. Generating code does not require
 an RPC connection, and the standalone binary needs neither Node nor Python.
 
-This README describes the current source. Changes listed under
-[Unreleased](CHANGELOG.md#unreleased) require a source build until published:
-
-```sh
-cargo install --path .
-```
-
 See [installation](docs/installation.md) for platforms and download verification.
 
 ## Quick start
@@ -137,49 +130,66 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
-Unity uses the existing C# target. The [Unity compatibility tests](e2e/native/unity/README.md)
-cover the adapter package in Unity 6000.6.3f1 on macOS, including Editor tests
-and standalone Mono/IL2CPP codec checks.
+There are 25 CLI targets across 18 languages. Unity uses the `csharp` target
+with an adapter package.
 
-Godot and Unreal are experimental engine integrations. The reusable
-[engine packages](integrations/README.md) and their full local macOS checks are
-documented in [native bindings](docs/native-bindings.md); Godot also
-has a public Linux workflow, while Unity and Unreal engine workflows require
-explicitly configured self-hosted runners.
+### JavaScript and TypeScript
 
-There are 25 CLI targets across 18 languages:
+| Target    | Framework or SDK                         | What you get                                     |
+| --------- | ---------------------------------------- | ------------------------------------------------ |
+| `viem`    | [viem](https://viem.sh/)                 | Typed contract helpers and ABI                   |
+| `wagmi`   | [wagmi](https://wagmi.sh/)               | React hooks for reads, writes, and events        |
+| `ethers`  | [ethers v6](https://docs.ethers.org/v6/) | Typed contract interfaces and connection helpers |
+| `ethers5` | [ethers v5](https://docs.ethers.org/v5/) | Typed contract interfaces and connection helpers |
+| `web3js`  | [web3.js v4](https://docs.web3js.org/)   | Typed contract methods                           |
+| `zod`     | [Zod 4](https://zod.dev/)                | Validation schemas and ABI                       |
 
-| Target     | Works with                                               | What you get                                                                                     |
-| ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `viem`     | [viem](https://viem.sh/)                                 | Typed contract helpers and ABI                                                                   |
-| `wagmi`    | [wagmi](https://wagmi.sh/)                               | React hooks for reads, writes, and events                                                        |
-| `ethers`   | [ethers v6](https://docs.ethers.org/v6/)                 | Typed contract interfaces and connection helpers                                                 |
-| `ethers5`  | ethers v5                                                | Typed contract interfaces and connection helpers                                                 |
-| `web3js`   | [web3.js v4](https://docs.web3js.org/)                   | Typed contract methods                                                                           |
-| `python`   | [web3.py](https://web3py.readthedocs.io/)                | Reads, transaction builders, codecs, and event/error helpers                                     |
-| `go`       | [go-ethereum](https://geth.ethereum.org/)                | Typed calls, transactions, deployment, and events                                                |
-| `rust`     | [Alloy](https://alloy.rs/)                               | `sol!` types, codecs, and contract instances                                                     |
-| `swift`    | [web3swift](https://github.com/web3swift-team/web3swift) | Typed values, codecs, and contract operations                                                    |
-| `csharp`   | [Nethereum](https://nethereum.com/)                      | Typed DTOs, contract methods, and deployment                                                     |
-| `kotlin`   | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                                                    |
-| `java`     | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                                                    |
-| `dart`     | [web3dart](https://pub.dev/packages/web3dart)            | Typed values, codecs, calls, and transactions                                                    |
-| `php`      | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          | ABI codecs, JSON-RPC reads, signed legacy transactions, receipts, logs, and event/error decoding |
-| `cobol`    | GnuCOBOL and shared Rust runtime                         | Experimental: one-address, one-uint256 read functions                                            |
-| `ruby`     | Ruby and eth gem                                         | SDK-backed calls, transaction builders, codecs, events and errors                                |
-| `elixir`   | Elixir and Ethers                                        | SDK-backed transaction data, reads, sends, events and errors                                     |
-| `shell`    | Bash and Foundry cast                                    | Sourceable helpers for encoding, reads, sends, deployment and logs                               |
-| `godot`    | [Godot 4](https://godotengine.org/) and GDScript         | GDScript ABI bindings and a GDExtension-backed async RPC client                                  |
-| `unreal`   | Unreal Engine 5.8                                        | C++ codecs and reflected asynchronous scalar read nodes                                          |
-| `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership                                              |
-| `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup                                                |
-| `zod`      | [Zod 4](https://zod.dev/)                                | Validation schemas and ABI                                                                       |
-| `solidity` | Solidity                                                 | Interfaces, tuple structs, events, and errors                                                    |
-| `yaml`     | Any YAML reader                                          | Readable ABI descriptions                                                                        |
+### Native languages
+
+| Language | Target   | Runtime or SDK                                                                                         | What you get                                                      |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| C        | `c`      | [Shared Rust runtime](docs/native-bindings.md#c-and-c)                                                 | C11 codecs and client helpers with explicit ownership             |
+| C++      | `cpp`    | [Shared Rust runtime](docs/native-bindings.md#c-and-c)                                                 | C++17 codecs and client helpers with automatic cleanup            |
+| C#       | `csharp` | [Nethereum](https://docs.nethereum.com/)                                                               | Typed DTOs, contract methods, and deployment                      |
+| Dart     | `dart`   | [web3dart](https://pub.dev/packages/web3dart)                                                          | Typed values, codecs, calls, and transactions                     |
+| Elixir   | `elixir` | [Ethers](https://ethers.hexdocs.pm/Ethers.html)                                                        | Transaction data, reads, sends, events, and errors                |
+| Go       | `go`     | [go-ethereum](https://geth.ethereum.org/docs/developers)                                               | Typed calls, transactions, deployment, and events                 |
+| Java     | `java`   | [web3j](https://docs.web3j.io/latest/)                                                                 | Typed values, codecs, calls, and transactions                     |
+| Kotlin   | `kotlin` | [web3j](https://docs.web3j.io/latest/)                                                                 | Typed values, codecs, calls, and transactions                     |
+| PHP      | `php`    | [Brick Math](https://github.com/brick/math), [ethereum-tx](https://github.com/web3p/ethereum-tx), cURL | Codecs, RPC reads, signed legacy transactions, receipts, and logs |
+| Python   | `python` | [web3.py](https://web3py.readthedocs.io/en/stable/)                                                    | Reads, transaction builders, codecs, events, and errors           |
+| Ruby     | `ruby`   | [eth](https://github.com/q9f/eth.rb)                                                                   | Calls, transaction builders, codecs, events, and errors           |
+| Rust     | `rust`   | [Alloy](https://alloy.rs/introduction/getting-started/)                                                | `sol!` types, codecs, and contract instances                      |
+| Swift    | `swift`  | [web3swift](https://github.com/web3swift-team/web3swift)                                               | Typed values, codecs, and contract operations                     |
+
+### Game engines
+
+| Engine                                                                        | Target                                                                            | What you get                                                             |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Unity](https://docs.unity3d.com/Manual/index.html)                           | `csharp` + [Unity adapter](integrations/unity/com.doublesharp.abi-typegen.unity/) | C# bindings with Unity HTTP transport and object lifecycle support       |
+| [Godot](https://docs.godotengine.org/en/stable/)                              | `godot`                                                                           | GDScript bindings and a native extension for codecs and asynchronous RPC |
+| [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/) | `unreal`                                                                          | C++ codecs and Blueprint nodes for asynchronous scalar reads             |
+
+See [engine packages](integrations/README.md) for setup and
+[native bindings](docs/native-bindings.md) for supported features and platforms.
+
+### Shell and ABI formats
+
+| Target     | Works with                                                                                                    | What you get                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `shell`    | [Bash](https://www.gnu.org/software/bash/manual/bash.html) and [Foundry cast](https://www.getfoundry.sh/cast) | Sourceable helpers for encoding, reads, sends, deployment, and logs |
+| `solidity` | [Solidity](https://docs.soliditylang.org/en/latest/)                                                          | Interfaces, tuple structs, events, and errors                       |
+| `yaml`     | [YAML](https://yaml.org/)                                                                                     | Readable ABI descriptions                                           |
 
 Zod, Solidity, and YAML describe or validate contracts; they do not submit
-transactions. See [native bindings](docs/native-bindings.md) for tested SDK
-versions and [configuration](docs/configuration.md) for target aliases.
+transactions. See [native bindings](docs/native-bindings.md) for SDK versions
+and [configuration](docs/configuration.md) for target aliases.
+
+### COBOL
+
+| Target  | Works with                                                                                | What you get                                                    |
+| ------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Experimental reads taking one address and returning one uint256 |
 
 ### Generate for more than one app
 
@@ -423,45 +433,42 @@ you want to inspect the proposed changes:
 abi-typegen diff
 ```
 
-## Test the generated code
-
-A file can compile and still call a contract incorrectly. The consumer tests
-exercise generated bindings with their real SDKs, including transactions on a
-local Anvil chain.
-
-```sh
-make e2e-go       # Generate, vet, test, and exercise RPC calls and subscriptions.
-make e2e-java     # Compile web3j consumers and run offline and Anvil tests.
-make e2e-foundry  # Check TypeScript, React hooks, and Solidity interfaces.
-make e2e-native  # Run all native consumers with their language toolchains.
-```
-
-The Anvil runner starts an isolated node, deploys a test contract, and shuts the
-node down afterward. Tests check receipts, state changes, and decoded events.
-They use public development keys and need no external RPC service or CI secrets.
-GitHub Actions runs the same test entry points.
-
-For setup and toolchain requirements, see [development](docs/development.md).
-For timing comparisons, run `./e2e/bench.sh 10` and read the
-[benchmark method](docs/comparison.md); results depend on your machine, targets,
-and contracts.
-
 ## Command reference
 
-These commands cover generation, inspection, and importing ABIs. Run
-`abi-typegen <command> --help` for the available flags.
+| Command         | Example                                                | What it does                                         |
+| --------------- | ------------------------------------------------------ | ---------------------------------------------------- |
+| `generate`      | `abi-typegen generate --target viem`                   | Write bindings from compiled artifacts               |
+| `watch`         | `abi-typegen watch --artifacts out`                    | Regenerate when artifacts change                     |
+| `diff`          | `abi-typegen diff --target viem`                       | Preview changes without writing files                |
+| `json`          | `abi-typegen json --pretty`                            | Print the parsed ABI as JSON                         |
+| `fetch`         | `abi-typegen fetch --name Token --file Token.abi.json` | Import an ABI and generate bindings                  |
+| `init`          | `abi-typegen init`                                     | Add an `[abi-typegen]` section to `foundry.toml`     |
+| `forge-install` | `abi-typegen forge-install --shell zsh`                | Print shell integration that enables `forge typegen` |
+| `help`          | `abi-typegen help generate`                            | Show help for the CLI or a command                   |
 
-| Command            | Use it to                                        |
-| ------------------ | ------------------------------------------------ |
-| `generate`         | Write bindings from compiled artifacts           |
-| `generate --check` | Fail when generated output is stale              |
-| `generate --clean` | Remove stale generated files                     |
-| `watch`            | Regenerate when artifacts change                 |
-| `diff`             | Preview changes without writing                  |
-| `json --pretty`    | Inspect the parsed ABI as JSON                   |
-| `fetch`            | Import an ABI and generate bindings              |
-| `init`             | Add an `[abi-typegen]` section to `foundry.toml` |
-| `forge-install`    | Print the shell integration for `forge typegen`  |
+Use `abi-typegen --version` to print the installed version and
+`abi-typegen help <command>` for command help. Global `--config PATH` selects a
+configuration file; `--hardhat` selects the Hardhat artifact layout.
+
+Common generation options:
+
+| Option                    | What it does                                           |
+| ------------------------- | ------------------------------------------------------ |
+| `--artifacts PATH`        | Read compiled artifacts from a directory               |
+| `--out PATH`              | Choose the output directory                            |
+| `--target viem,python`    | Generate one or more targets                           |
+| `--contracts Token,Vault` | Select contracts by name                               |
+| `--exclude '*Test,*Mock'` | Exclude contracts by glob pattern                      |
+| `--package NAME`          | Set the package, namespace, or Unreal module name      |
+| `--no-wrappers`           | Keep metadata and types without contract wrappers      |
+| `--check`                 | Fail if generated output is stale, without writing     |
+| `--clean`                 | Remove stale generated files from the output directory |
+
+`watch` reads target and output settings from your configuration.
+`forge-install` supports Bash, Zsh, and Fish; follow the
+[Forge setup guide](docs/forge-integration.md) to load the printed integration.
+See [configuration](docs/configuration.md) for complete examples and
+`abi-typegen <command> --help` for command-specific options.
 
 ## Docs and support
 
@@ -470,19 +477,12 @@ small ABI that reproduces the problem, your target, and the relevant SDK version
 
 - [Installation](docs/installation.md) and [configuration](docs/configuration.md)
 - [Generated output](docs/generated-output.md) and [native bindings](docs/native-bindings.md)
-- [Development and tests](docs/development.md)
-- [Release process](docs/releasing.md) and [changelog](CHANGELOG.md)
+- [Changelog](CHANGELOG.md)
 - [Report an issue](https://github.com/doublesharp/abi-typegen/issues)
 
 The [documentation index](docs/README.md) links the full set of guides.
 
 ## Contribute
 
-A useful fix includes a small example that failed before the change and passes
-after it. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, code conventions, tests,
+See [CONTRIBUTING.md](CONTRIBUTING.md) for source builds, tests, code conventions,
 and pull requests.
-
-Builds use ordinary local paths by default. Contributors who want build output
-and caches on another volume can use the optional
-[storage setup](docs/development-storage.md). It is not required to build or use
-abi-typegen.

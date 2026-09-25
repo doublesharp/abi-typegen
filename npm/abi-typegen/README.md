@@ -30,14 +30,8 @@ release and npm publishing process and is not independent build attestation.
 Re-running postinstall verifies a fresh archive before replacing the binary.
 Installations need `curl` and `tar`. Linux archives currently target glibc.
 
-For maintainers, release tags generate and publish `checksums.json`. Run
-`node npm/abi-typegen/scripts/release-checksums.mjs prepare` after the matching
-release is available and before packing or publishing the npm package. Ordinary
-`npm pack` refuses missing or invalid hashes. The publish workflow performs this
-preparation explicitly because it publishes with lifecycle scripts disabled.
 See the [installation guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/installation.md)
-and [release guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/releasing.md)
-for details.
+for supported platforms and download troubleshooting.
 
 ## Usage
 
@@ -159,4 +153,4 @@ signing, receipt and log queries, and event/error decoding. It requires PHP 8.2+
 cURL, GMP, mbstring, and iconv. It does not generate EIP-1559 or deployment helpers. C/C++ bindings link `abi-typegen-runtime` and accept a
 caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
 metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
-for dependencies, ownership rules, tested capabilities, and SDK limits.
+for dependencies, ownership rules, supported features, and SDK limits.

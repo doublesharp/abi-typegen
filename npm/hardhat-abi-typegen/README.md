@@ -141,4 +141,4 @@ signing, receipt and log queries, and event/error decoding. It requires PHP 8.2+
 cURL, GMP, mbstring, and iconv. It does not generate EIP-1559 or deployment helpers. C/C++ bindings link `abi-typegen-runtime` and accept a
 caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
 metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
-for dependencies, ownership rules, tested capabilities, and SDK limits.
+for dependencies, ownership rules, supported features, and SDK limits.

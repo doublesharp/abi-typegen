@@ -19,28 +19,23 @@ Regenerate bindings and compile consumers after upgrading.
   Rust/Alloy runtime. Applications supply transport and signing.
 - C++17 bindings with ABI codecs, RAII result ownership, and the shared
   Rust/Alloy runtime. Applications supply transport and signing.
-- Dart bindings backed by web3dart, with contract wrappers and Anvil tests.
+- Dart bindings backed by web3dart, with contract wrappers.
 - Elixir bindings backed by Ethers, with contract reads, signed sends, ABI
-  codecs, event and error helpers, and Anvil tests.
-- Java bindings backed by web3j, with contract wrappers and Anvil tests.
+  codecs, event and error helpers.
+- Java bindings backed by web3j, with contract wrappers.
 - PHP 8.2 bindings with named ABI types, ABI codecs, JSON-RPC reads, signed
-  legacy EIP-155 transactions, receipt and log queries, and Anvil tests.
+  legacy EIP-155 transactions, receipt and log queries.
 - Ruby bindings backed by the eth gem, with contract reads, transaction
-  builders, ABI codecs, event and error helpers, and Anvil tests.
+  builders, ABI codecs, event and error helpers.
 - Shell bindings backed by Foundry cast, with Bash helpers for ABI codecs,
   contract reads and sends, constructors, and event queries.
 - Godot integration with generated GDScript bindings and a GDExtension backed by
-  the shared runtime. Headless macOS tests cover codecs, RPC calls, events,
-  reverts, and request lifetimes. A public Linux CI workflow is included.
+  the shared runtime, with ABI codecs, asynchronous RPC calls, and event and
+  error decoding.
 - Unity integration for generated C# bindings, with HTTP transport and an
-  application-supplied signer. macOS tests cover Editor, Anvil, and standalone
-  Mono and IL2CPP codec execution.
+  application-supplied signer.
 - Unreal Engine integration with generated C ABI codecs and Blueprint wrappers
-  for asynchronous scalar reads. macOS Editor tests cover codecs, request
-  lifetimes, and Anvil calls.
-- Generated-consumer and Anvil tests in GitHub CI, including TypeScript SDK
-  calls and mounted wagmi React hooks. Unity and Unreal workflows require
-  configured self-hosted runners and are disabled by default.
+  for asynchronous scalar reads.
 - Experimental COBOL bindings for reads taking one address and returning one
   uint256, using GnuCOBOL and a C bridge to the shared runtime.
 
@@ -58,18 +53,12 @@ Regenerate bindings and compile consumers after upgrading.
 - `--no-wrappers` retains primary metadata and value types.
 - Native bindings validate inputs and decoded data, including nonpayable values
   and canonical ABI data in the shared runtime.
-- Reusable engine packages live under `integrations/`; compatibility test
-  projects remain under `e2e/native/`.
+- Reusable engine packages live under `integrations/`.
 
 ### Fixed
 
-- Solidity test fixtures reject zero owners and document intentional payable and
-  timestamp behavior, clearing compiler and Foundry lint warnings.
 - Godot links the shared ABI runtime correctly on Linux and rejects unresolved
   symbols during the build.
-- PHP and Elixir consumer tests check fixture names instead of stale local
-  artifact counts. Shell tests handle Cast annotations on large integers and
-  fail consistently across Bash versions.
 - Go event decoding preserves indexed tuple topic hashes.
 - Python wrapper names remain distinct from codec, event, and error helpers;
   generated parameters avoid reserved receiver and transaction names.
