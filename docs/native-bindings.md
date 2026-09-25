@@ -22,6 +22,7 @@ primary ABI metadata and value types while omitting callable helpers.
 | Dart         | web3dart; the consumer fixture pins 3.0.3                                                                      |
 | PHP          | PHP 8.2+, Brick Math 1.0.0, `web3p/ethereum-tx` 0.4.3, and cURL; enable `curl`, `gmp`, `mbstring`, and `iconv` |
 | Ruby         | eth 0.5.17; consumer tests use Ruby 4.0 and Bundler                                                            |
+| Elixir       | Ethers 0.8.0; local signer tests use ex_secp256k1 0.8.0                                                        |
 | Shell        | Bash 3.2+ and Foundry cast; tested with Cast 1.8.3                                                             |
 | COBOL        | GnuCOBOL 3.2 and shared Rust runtime; optional libcurl/json-c RPC                                              |
 | C, C++       | `abi-typegen-runtime`, built with Rust/Alloy; C11 or C++17 compiler                                            |
@@ -265,3 +266,33 @@ qualification.
 
 These boundaries differ from information that Ethereum never supplies: indexed
 reference values are hashes, and anonymous events do not identify their own ABI.
+
+## Elixir
+
+Generated contract functions prepare transaction data. Pass that data to Ethers
+when you want to read from the chain or submit a signed transaction.
+
+```sh
+abi-typegen generate --target elixir --out ./lib/contracts
+```
+
+Add `{:ethers, "== 0.8.0"}` to your Mix dependencies. A generated Token read is:
+
+```elixir
+Token.balance_of(owner)
+|> Ethers.call(to: token_address, rpc_opts: [url: rpc_url])
+```
+
+Writes use `Ethers.send_transaction/2` with the application's signer configuration.
+Event filters live under `Token.EventFilters`; custom-error structs and decoders
+live under `Token.Errors`. `Token.abi_json/0` exposes the complete ABI.
+`--no-wrappers` emits only the metadata module, which needs no Ethers dependency.
+
+Function names use snake case. Distinct ABI names that would collide receive
+unique aliases while retaining their original selectors. Event-filter name
+collisions, event overloads with indistinguishable indexed arguments, overloaded
+custom-error names, and functions that shadow reserved Ethers helpers are
+rejected before files are written. The generator does not supply a wallet or
+manage transaction receipts for the application.
+
+Run `make e2e-elixir` for generated-consumer and local Anvil tests.

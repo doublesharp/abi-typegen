@@ -2842,3 +2842,150 @@ fn shell_global_symbol_collisions_are_rejected_across_contracts() {
     );
     assert!(!config.out_dir.exists());
 }
+
+#[test]
+fn elixir_metadata_mode_omits_sdk_dependency_and_preserves_abi() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    run_generate(&config, false).unwrap();
+    let file = config.out_dir.join("token.ex");
+    assert_file_contains(&file, "use Ethers.Contract");
+    config.wrappers = false;
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&file, "def abi_json");
+    assert!(
+        !std::fs::read_to_string(file)
+            .unwrap()
+            .contains("use Ethers.Contract")
+    );
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn elixir_reserved_module_normalization_cannot_overwrite_another_contract() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    for name in ["String", "StringContract"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(error.contains("StringContract"), "{error}");
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn elixir_event_filter_shadowing_fails_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    let folder = config.artifacts_dir.join("Events.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("Events.json"), r#"{"abi":[{"type":"event","name":"FooBar","inputs":[{"name":"x","type":"uint256","indexed":true}],"anonymous":false},{"type":"event","name":"foo_bar","inputs":[{"name":"x","type":"address","indexed":true}],"anonymous":false}]}"#)
+        .unwrap();
+    let error = run_generate(&config, false).unwrap_err().to_string();
+    assert!(
+        error.contains("event filter name/arity collision"),
+        "{error}"
+    );
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn elixir_sdk_helper_name_collision_fails_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    let folder = config.artifacts_dir.join("Helpers.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("Helpers.json"), r#"{"abi":[{"type":"function","name":"__default_address__","inputs":[],"outputs":[{"name":"","type":"address"}],"stateMutability":"view"}]}"#)
+        .unwrap();
+    let error = run_generate(&config, false).unwrap_err().to_string();
+    assert!(error.contains("SDK helper name/arity collision"), "{error}");
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn elixir_event_filter_helper_name_collision_fails_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    let folder = config.artifacts_dir.join("Events.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(
+        folder.join("Events.json"),
+        r#"{"abi":[{"type":"event","name":"__all__","inputs":[],"anonymous":false}]}"#,
+    )
+    .unwrap();
+    let error = run_generate(&config, false).unwrap_err().to_string();
+    assert!(
+        error.contains("event-filter helper name/arity collision"),
+        "{error}"
+    );
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
+fn elixir_ambiguous_event_overload_fails_before_writing_but_keeps_metadata_mode() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    let folder = config.artifacts_dir.join("Events.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(
+        folder.join("Events.json"),
+        r#"{"abi":[{"type":"event","name":"Changed","inputs":[{"name":"owner","type":"address","indexed":true},{"name":"amount","type":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"Changed","inputs":[{"name":"owner","type":"address","indexed":true},{"name":"label","type":"string","indexed":false}],"anonymous":false}]}"#,
+    )
+    .unwrap();
+    let error = run_generate(&config, false).unwrap_err().to_string();
+    assert!(error.contains("event filter overload ambiguity"), "{error}");
+    assert!(!config.out_dir.exists());
+
+    config.wrappers = false;
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("events.ex"), "Changed");
+}
+
+#[test]
+fn elixir_metadata_only_allows_sdk_reserved_abi_names() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("out"),
+        dir.path().join("gen"),
+        Target::Elixir,
+    );
+    config.wrappers = false;
+    let folder = config.artifacts_dir.join("Helpers.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("Helpers.json"), r#"{"abi":[{"type":"function","name":"__default_address__","inputs":[],"outputs":[],"stateMutability":"view"}]}"#)
+        .unwrap();
+    run_generate(&config, false).unwrap();
+    let file = config.out_dir.join("helpers.ex");
+    assert_file_contains(&file, "__default_address__");
+    assert_file_contains(&file, "def abi_json");
+    assert!(
+        !std::fs::read_to_string(file)
+            .unwrap()
+            .contains("use Ethers.Contract")
+    );
+}

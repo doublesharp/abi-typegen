@@ -3,11 +3,12 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
 DART ?= dart
+FORGE ?= forge
 
 DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0
 
@@ -36,7 +37,7 @@ lint:
 e2e: e2e-foundry e2e-hardhat e2e-hardhat3 ## Run all e2e tests
 
 e2e-foundry: build ## E2E: Foundry → abi-typegen → tsc
-	cd e2e/foundry-sample && forge build
+	cd e2e/foundry-sample && $(FORGE) build --out out --cache-path cache
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target viem
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target ethers
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit
@@ -44,7 +45,7 @@ e2e-foundry: build ## E2E: Foundry → abi-typegen → tsc
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
 	python3 e2e/native/anvil.py --cwd e2e/foundry-sample node --test --test-force-exit test-anvil.mjs
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity
-	cd e2e/foundry-sample && forge build --contracts ./solidity-validation --out ./out-solidity-validation
+	cd e2e/foundry-sample && $(FORGE) build --contracts ./solidity-validation --out ./out-solidity-validation --cache-path cache
 	@echo "e2e-foundry: pass"
 
 e2e-hardhat: build ## E2E: Hardhat → abi-typegen --hardhat → tsc
@@ -65,10 +66,10 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 
 NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
 
-e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell ## E2E: all native-language targets
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir ## E2E: all native-language targets
 
 e2e-native-artifacts: build
-	cd e2e/foundry-sample && forge build
+	cd e2e/foundry-sample && $(FORGE) build --out out --cache-path cache
 
 e2e-go: e2e-native-artifacts ## E2E: Go bindings → gofmt, go vet, go test
 	cd e2e/native/go && rm -rf contracts && $(NATIVE_TYPEGEN) --out ./contracts --target go
@@ -240,6 +241,10 @@ e2e-cobol: e2e-native-artifacts
 e2e-shell: e2e-native-artifacts
 	sh e2e/native/shell/run.sh
 	python3 e2e/native/anvil.py sh e2e/native/shell/run.sh anvil
+
+e2e-elixir: e2e-native-artifacts ## E2E: Elixir SDK-backed bindings and Anvil transactions
+	sh e2e/native/elixir/run.sh
+	python3 e2e/native/anvil.py sh e2e/native/elixir/run.sh anvil
 
 e2e-ruby: e2e-native-artifacts
 	cd e2e/native/ruby && bundle config set --local path vendor/bundle

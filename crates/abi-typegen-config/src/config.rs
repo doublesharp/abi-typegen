@@ -220,6 +220,7 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
             | Target::Solidity
             | Target::C
             | Target::Shell
+            | Target::Elixir
             | Target::Ruby
             | Target::Cobol
             | Target::Cpp
@@ -253,6 +254,7 @@ pub fn parse_target(s: &str) -> Option<Target> {
         "php" => Some(Target::Php),
         "cobol" => Some(Target::Cobol),
         "ruby" => Some(Target::Ruby),
+        "elixir" => Some(Target::Elixir),
         "shell" => Some(Target::Shell),
         "c" => Some(Target::C),
         "cpp" | "c++" => Some(Target::Cpp),
@@ -293,6 +295,8 @@ pub enum Target {
     Solidity,
     /// Generate sourceable Bash helpers backed by Foundry cast.
     Shell,
+    /// Generate Elixir modules backed by Ethers.Contract.
+    Elixir,
     /// Generate Ruby bindings using the eth gem.
     Ruby,
     /// Generate experimental GnuCOBOL address-to-uint256 read bindings.
@@ -341,6 +345,7 @@ impl Target {
             | Self::Java
             | Self::C
             | Self::Shell
+            | Self::Elixir
             | Self::Ruby
             | Self::Cobol
             | Self::Cpp
@@ -369,6 +374,7 @@ impl Target {
             | Self::Java
             | Self::C
             | Self::Shell
+            | Self::Elixir
             | Self::Ruby
             | Self::Cobol
             | Self::Cpp
@@ -384,7 +390,7 @@ impl<'de> Deserialize<'de> for Target {
         let s = String::deserialize(d)?;
         parse_target(&s).ok_or_else(|| {
             serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|shell|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                 s
             ))
         })
@@ -446,7 +452,7 @@ fn deserialize_targets<'de, D: serde::Deserializer<'de>>(
             while let Some(s) = seq.next_element::<String>()? {
                 let t = parse_target(s.trim()).ok_or_else(|| {
                     de::Error::custom(format!(
-                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|shell|solidity|c|cpp|yaml",
+                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                         s
                     ))
                 })?;
@@ -469,7 +475,7 @@ fn parse_targets_from_str(s: &str) -> Result<Vec<Target>, String> {
     for part in parts {
         let t = parse_target(part).ok_or_else(|| {
             format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|shell|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                 part
             )
         })?;
@@ -640,6 +646,7 @@ contracts = ["MyToken", "Vault"]
             ("php", Target::Php),
             ("cobol", Target::Cobol),
             ("ruby", Target::Ruby),
+            ("elixir", Target::Elixir),
             ("shell", Target::Shell),
             ("c", Target::C),
             ("cpp", Target::Cpp),

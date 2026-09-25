@@ -137,7 +137,7 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
-There are 22 CLI targets across 16 languages:
+There are 23 CLI targets across 17 languages:
 
 | Target     | Works with                                               | What you get                                                                                     |
 | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -157,6 +157,7 @@ There are 22 CLI targets across 16 languages:
 | `php`      | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          | ABI codecs, JSON-RPC reads, signed legacy transactions, receipts, logs, and event/error decoding |
 | `cobol`    | GnuCOBOL and shared Rust runtime                         | Experimental: one-address, one-uint256 read functions                                            |
 | `ruby`     | Ruby and eth gem                                         | SDK-backed calls, transaction builders, codecs, events and errors                                |
+| `elixir`   | Elixir and Ethers                                        | SDK-backed transaction data, reads, sends, events and errors                                     |
 | `shell`    | Bash and Foundry cast                                    | Sourceable helpers for encoding, reads, sends, deployment and logs                               |
 | `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership                                              |
 | `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup                                                |

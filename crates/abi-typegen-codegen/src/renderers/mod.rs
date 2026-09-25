@@ -38,3 +38,6 @@ pub mod ruby;
 
 /// Shell contract bindings backed by Foundry cast.
 pub mod shell;
+
+/// Elixir contract bindings backed by Ethers.
+pub mod elixir;

@@ -11,6 +11,7 @@ pub mod type_mapper;
 pub use renderers::cobol;
 pub use renderers::csharp;
 pub use renderers::dart;
+pub use renderers::elixir;
 pub use renderers::ethers5;
 pub use renderers::ethers6 as ethers;
 pub use renderers::go;
@@ -136,6 +137,12 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             files.insert(
                 format!("{}.sh", ir.name),
                 shell::render_shell_file(ir, config.wrappers),
+            );
+        }
+        Target::Elixir => {
+            files.insert(
+                elixir::file_name(&ir.name),
+                elixir::render_elixir_file(ir, config.wrappers),
             );
         }
         Target::Ruby => {

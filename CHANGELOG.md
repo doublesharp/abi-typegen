@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Elixir bindings backed by Ethers, with metadata-only output, SDK transaction
+  data, reads, signed sends, event/error helpers, and Anvil consumer tests.
+
 - Ruby bindings using the eth gem, with contract reads, transaction builders,
   offline codecs, event/error helpers, and Anvil consumer tests.
 - Shell bindings backed by Foundry cast. Generated Bash libraries expose

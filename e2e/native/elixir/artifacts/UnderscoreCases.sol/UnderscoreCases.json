@@ -1,0 +1,32 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "foo__bar",
+      "inputs": [{"name": "value", "type": "uint256"}],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "foo_bar",
+      "inputs": [{"name": "value", "type": "bool"}],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "_foo",
+      "inputs": [{"name": "value", "type": "uint256"}],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "foo",
+      "inputs": [{"name": "value", "type": "uint256"}],
+      "outputs": [],
+      "stateMutability": "pure"
+    }
+  ]
+}

@@ -153,6 +153,8 @@ jobs:
             os: ubuntu-latest
           - target: ruby
             os: ubuntu-latest
+          - target: elixir
+            os: ubuntu-latest
           - target: shell
             os: ubuntu-latest
           - target: cobol
@@ -175,6 +177,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - if: matrix.target == 'elixir'
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "29.1.1"
+          elixir-version: "1.20.4"
+          version-type: strict
+      - if: matrix.target == 'elixir'
+        uses: actions/cache@v4
+        with:
+          path: |
+            e2e/native/elixir/deps
+            e2e/native/elixir/_build
+          key: ${{ runner.os }}-elixir-1.20.4-otp-29.1.1-${{ hashFiles('e2e/native/elixir/mix.lock') }}
       - if: matrix.target == 'go'
         uses: actions/setup-go@v5
         with:

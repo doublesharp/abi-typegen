@@ -371,6 +371,7 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::Php => "php",
         Target::Cobol => "cobol",
         Target::Ruby => "ruby",
+        Target::Elixir => "elixir",
         Target::Shell => "shell",
         Target::C => "c",
         Target::Cpp => "cpp",
@@ -380,8 +381,8 @@ fn target_dir_name(target: &Target) -> &'static str {
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "shell", "c", "cpp",
-    "yaml",
+    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "elixir", "shell", "c",
+    "cpp", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -434,7 +435,7 @@ fn apply_overrides(
             let trimmed = part.trim();
             let parsed = parse_target(trimmed).ok_or_else(|| {
                 anyhow::anyhow!(
-                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|shell|solidity|c|cpp|yaml",
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                     trimmed
                 )
             })?;
@@ -534,6 +535,7 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".php",
     ".cob",
     ".rb",
+    ".ex",
     ".sh",
     ".cobol.c",
     ".h",
@@ -640,7 +642,18 @@ fn render_artifacts(
     for (name, path) in artifacts {
         let ir = read_artifact(name, path)?;
         for (prefix, target_config) in &outputs {
+            if *target_config.target() == Target::Elixir && target_config.wrappers {
+                let collisions = abi_typegen_codegen::elixir::unsupported_sdk_collisions(&ir);
+                if !collisions.is_empty() {
+                    anyhow::bail!(
+                        "Elixir binding for contract '{}': {}",
+                        name,
+                        collisions.join("; ")
+                    );
+                }
+            }
             let namespace = match target_config.target() {
+                Target::Elixir => Some(abi_typegen_codegen::elixir::namespace_name(name)),
                 Target::Shell => Some(abi_typegen_codegen::shell::namespace_name(name)),
                 Target::Cobol => Some(abi_typegen_codegen::cobol::namespace_name(name)),
                 Target::Swift => Some(abi_typegen_codegen::swift::namespace_name(name)),
@@ -657,6 +670,8 @@ fn render_artifacts(
                     .collect()
             } else if *target_config.target() == Target::Shell {
                 abi_typegen_codegen::shell::declared_names(&ir, target_config.wrappers)
+            } else if *target_config.target() == Target::Elixir {
+                abi_typegen_codegen::elixir::declared_module_names(&ir, target_config.wrappers)
             } else if *target_config.target() == Target::Ruby {
                 abi_typegen_codegen::ruby::declared_constant_names(&ir, target_config.wrappers)
             } else if *target_config.target() == Target::Cobol {

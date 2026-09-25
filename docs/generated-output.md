@@ -48,6 +48,7 @@ TypeScript ABI modules or an `index.ts` barrel.
 | `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp`                       | C API with C++ ownership and client helpers                                  |
 | `cobol`    | `<Name>.cob`, `<Name>.cobol.c`, shared `abi_typegen.h` | Experimental address-to-uint256 read helpers and signature metadata          |
 | `ruby`     | `<Name>.rb`                                            | ABI, SDK-backed wrappers, transaction builders, codecs and named values      |
+| `elixir`   | `<name>.ex`                                            | ABI JSON and optional Ethers.Contract wrappers                               |
 | `shell`    | `<Name>.sh`                                            | Sourceable Bash metadata and optional Foundry cast helpers                   |
 | `yaml`     | `<Name>.yaml`                                          | Human-readable functions, events, errors, and parameter types                |
 

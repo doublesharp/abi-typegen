@@ -93,7 +93,7 @@ manifest until [release preparation](releasing.md) runs.
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
 - Native-language integration: `make e2e-native` runs Go, Rust, Swift, Kotlin,
-  Java, C#, Dart, PHP, Python, Ruby, shell, COBOL, C, and C++ consumers. Individual `e2e-<target>` tasks
+  Java, C#, Dart, PHP, Python, Ruby, shell, Elixir, COBOL, C, and C++ consumers. Individual `e2e-<target>` tasks
   generate bindings from `e2e/foundry-sample` into
   the consumers under `e2e/native/` and run each language's formatter, linter,
   and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
@@ -127,3 +127,8 @@ Run `make e2e-cobol` for offline codec checks and an asserted Anvil balance read
 Ruby consumers use Bundler and a system secp256k1 library. Shell consumers use
 Bash and Foundry cast. Run `make e2e-ruby` or `make e2e-shell` to generate and test
 those bindings, including local Anvil transactions.
+
+Elixir consumers require Elixir and Erlang/OTP, plus Foundry for the independent
+ABI comparison and Anvil tests. Run `make e2e-elixir` to compile every generated
+contract, compile metadata-only modules without Ethers, and run offline and
+signed RPC tests. Mix dependencies are pinned in the consumer lockfile.

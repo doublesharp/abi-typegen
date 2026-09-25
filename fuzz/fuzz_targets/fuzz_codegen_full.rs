@@ -52,6 +52,7 @@ fuzz_target!(|data: &[u8]| {
         abi_typegen_config::Target::Php,
         abi_typegen_config::Target::Cobol,
         abi_typegen_config::Target::Ruby,
+        abi_typegen_config::Target::Elixir,
         abi_typegen_config::Target::Shell,
     ] {
         let config = abi_typegen_config::Config {
