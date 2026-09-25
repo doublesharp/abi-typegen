@@ -24,7 +24,7 @@ jobs:
       - name: Install native build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential clang libclang-dev pkg-config
+          sudo apt-get install -y build-essential clang libclang-dev pkg-config gdb
           python -m pip install --user scons==4.10.0
       - name: Download pinned Godot headless-compatible editor
         run: |
@@ -36,4 +36,46 @@ jobs:
           unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
           chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
       - name: Run generated Godot consumer and Anvil tests
-        run: make e2e-godot GODOT_BIN="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" GODOT_PLATFORM=linux GODOT_ARCH=x86_64 SCONS="$HOME/.local/bin/scons"
+        id: godot-tests
+        run: |
+          mkdir -p e2e/native/godot/TestResults
+          set -o pipefail
+          make e2e-godot GODOT_BIN="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" GODOT_PLATFORM=linux GODOT_ARCH=x86_64 SCONS="$HOME/.local/bin/scons" 2>&1 | tee e2e/native/godot/TestResults/ci.log
+      - name: Capture Godot import backtraces
+        if: failure() && steps.godot-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GODOT_BIN: ${{ runner.temp }}/godot/Godot_v4.7.2-stable_linux.x86_64
+        run: |
+          set +e
+          diagnostic_root="$(mktemp -d)"
+          source_project="$GITHUB_WORKSPACE/e2e/native/godot/test_project"
+
+          cp -a "$source_project" "$diagnostic_root/with-extension"
+          rm -rf "$diagnostic_root/with-extension/.godot"
+          timeout 120s gdb --batch --quiet --return-child-result \
+            -ex 'set pagination off' \
+            -ex run \
+            -ex 'thread apply all bt 30' \
+            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/with-extension" --import --quit \
+            > e2e/native/godot/TestResults/gdb-with-extension.log 2>&1
+
+          cp -a "$source_project" "$diagnostic_root/without-extension"
+          rm -rf "$diagnostic_root/without-extension/.godot"
+          mv "$diagnostic_root/without-extension/bin/abi_typegen.gdextension" \
+            "$diagnostic_root/without-extension/bin/abi_typegen.gdextension.disabled"
+          timeout 120s gdb --batch --quiet --return-child-result \
+            -ex 'set pagination off' \
+            -ex run \
+            -ex 'thread apply all bt 30' \
+            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/without-extension" --import --quit \
+            > e2e/native/godot/TestResults/gdb-without-extension.log 2>&1
+
+          rm -rf "$diagnostic_root"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: godot-linux-diagnostics
+          path: e2e/native/godot/TestResults
+          if-no-files-found: ignore
