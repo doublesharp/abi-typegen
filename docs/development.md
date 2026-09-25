@@ -143,7 +143,7 @@ Codec tests cover invalid inputs and ABI layout; Anvil tests cover signed
 submissions, receipts, state changes, and event handling. The CI native matrix
 runs the same Make targets.
 
-The experimental COBOL consumer uses GnuCOBOL, libcurl, json-c, and pkg-config.
+The COBOL consumer uses GnuCOBOL, libcurl, json-c, and pkg-config.
 Run `make e2e-cobol` for offline codec checks and an asserted Anvil balance read.
 
 Ruby consumers use Bundler and a system secp256k1 library. Shell consumers use

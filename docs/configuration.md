@@ -196,5 +196,5 @@ not discovered from a live chain list, and an alias does not guarantee explorer
 availability. Use `--url` for a compatible endpoint not covered by your installed
 version.
 
-For experimental COBOL output, `--no-wrappers` retains signature metadata comments
+For COBOL output, `--no-wrappers` retains signature metadata comments
 and omits callable subprograms. Its C bridge retains the ABI constant without runtime helpers.

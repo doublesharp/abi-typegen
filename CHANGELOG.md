@@ -36,7 +36,7 @@ Regenerate bindings and compile consumers after upgrading.
   application-supplied signer.
 - Unreal Engine integration with generated C ABI codecs and Blueprint wrappers
   for asynchronous scalar reads.
-- Experimental COBOL bindings for reads taking one address and returning one
+- COBOL bindings for reads taking one address and returning one
   uint256, using GnuCOBOL and a C bridge to the shared runtime.
 
 ### Changed

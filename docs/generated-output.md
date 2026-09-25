@@ -46,7 +46,7 @@ TypeScript ABI modules or an `index.ts` barrel.
 | `php`      | `<Name>.php`                                           | ABI, named value types, strict codecs, and optional JSON-RPC client/wrappers |
 | `c`        | `atg_<Name>.h`                                         | Typed C API using the shared Rust codec runtime                              |
 | `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp`                       | C API with C++ ownership and client helpers                                  |
-| `cobol`    | `<Name>.cob`, `<Name>.cobol.c`, shared `abi_typegen.h` | Experimental address-to-uint256 read helpers and signature metadata          |
+| `cobol`    | `<Name>.cob`, `<Name>.cobol.c`, shared `abi_typegen.h` | address-to-uint256 read helpers and signature metadata                       |
 | `ruby`     | `<Name>.rb`                                            | ABI, SDK-backed wrappers, transaction builders, codecs and named values      |
 | `elixir`   | `<name>.ex`                                            | ABI JSON and optional Ethers.Contract wrappers                               |
 | `shell`    | `<Name>.sh`                                            | Sourceable Bash metadata and optional Foundry cast helpers                   |

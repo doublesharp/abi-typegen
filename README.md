@@ -187,9 +187,9 @@ and [configuration](docs/configuration.md) for target aliases.
 
 ### COBOL
 
-| Target  | Works with                                                                                | What you get                                                    |
-| ------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Experimental reads taking one address and returning one uint256 |
+| Target  | Works with                                                                                | What you get                                          |
+| ------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Reads taking one address and returning one uint256 🤷 |
 
 ### Generate for more than one app
 
@@ -298,7 +298,7 @@ ArrayAccess return-type deprecation notices on PHP 8.5.
 
 ### Read a balance from COBOL
 
-The experimental COBOL target supports read-only functions with one `address`
+The COBOL target supports read-only functions with one `address`
 input and one `uint256` output, such as `balanceOf(address)`:
 
 ```sh
@@ -307,7 +307,7 @@ abi-typegen generate --target cobol --out ./generated
 
 It emits free-form GnuCOBOL subprograms and a C bridge to the shared Rust runtime.
 Results use decimal text in a 78-character buffer. Other functions, events, and
-errors appear as metadata comments. See the [COBOL build guide](docs/native-bindings.md#cobol-experimental)
+errors appear as metadata comments. See the [COBOL build guide](docs/native-bindings.md#cobol)
 for dependencies and limitations.
 
 ### Link C or C++

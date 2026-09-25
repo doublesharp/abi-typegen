@@ -143,7 +143,7 @@ topics. Anonymous event signature filtering is unsupported. The installed Cast
 version determines output formatting and wallet options. These are Bash scripts,
 not portable POSIX `sh` libraries.
 
-## COBOL (experimental)
+## COBOL
 
 COBOL can read a token balance through the shared Rust runtime. This target
 supports `view` or `pure` functions with exactly one `address` input and one
@@ -279,12 +279,12 @@ for setup.
 Supported configurations include Unity 6000.6.3f1 on macOS with Mono and IL2CPP.
 Linux, Android, iOS, and WebGL compatibility is not yet verified.
 
-## Godot (experimental)
+## Godot
 
 The `godot` target emits GDScript ABI bindings and uses a Godot 4 GDExtension for
 the shared codec and asynchronous HTTP JSON-RPC client. The extension links the
 Rust runtime statically and is compiled against C ABI v1. It currently builds
-for Linux x86_64 and macOS arm64. This integration is experimental; other
+for Linux x86_64 and macOS arm64. Other
 platforms and export templates are not yet supported. Build the extension
 with Godot 4.7.2, SCons 4.10.0, and the pinned godot-cpp dependency in
 [`integrations/godot/extension`](../integrations/godot/extension/).
@@ -296,7 +296,7 @@ No local signer, deployment wrapper, event subscriptions, or fallback/receive
 wrappers are bundled. Constructor encoding is available. uint256 values use
 exact 32-byte `PackedByteArray` words.
 
-## Unreal (experimental)
+## Unreal
 
 The `unreal` target emits a plugin-facing C++ API and generated C ABI codecs.
 The plugin uses C ABI v1, linking the Rust runtime statically on macOS and through
