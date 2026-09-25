@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.doublesharp.abi-typegen.unity": {
-      "version": "file:../../../../unity/com.doublesharp.abi-typegen.unity",
+      "version": "file:../../../../integrations/unity/com.doublesharp.abi-typegen.unity",
       "depth": 0,
       "source": "local",
       "dependencies": {

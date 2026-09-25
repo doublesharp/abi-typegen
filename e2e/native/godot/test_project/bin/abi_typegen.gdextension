@@ -1,0 +1,10 @@
+[configuration]
+entry_symbol = "abi_typegen_library_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+macos.arm64.single.debug = "./macos/libabi_typegen_godot.macos.template_debug.arm64.dylib"
+macos.arm64.single.release = "./macos/libabi_typegen_godot.macos.template_release.arm64.dylib"
+linux.x86_64.single.debug = "./linux/libabi_typegen_godot.linux.template_debug.x86_64.so"
+linux.x86_64.single.release = "./linux/libabi_typegen_godot.linux.template_release.x86_64.so"

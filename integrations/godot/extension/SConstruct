@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+import os
+import sys
+import shlex
+import subprocess
+
+libname = "abi_typegen_godot"
+projectdir = "../../../e2e/native/godot/test_project"
+
+local_env = Environment(tools=["default"], PLATFORM="")
+opts = Variables()
+opts.Add("atg_runtime_include", "Directory containing abi_typegen.h", os.environ.get("ATG_RUNTIME_INCLUDE", ""))
+opts.Add("atg_runtime_lib", "Path to the shared Rust runtime static library", os.environ.get("ATG_RUNTIME_LIB", ""))
+opts.Add("atg_runtime_link_flags", "Additional native linker flags required by the Rust staticlib", os.environ.get("ATG_RUNTIME_LINK_FLAGS", ""))
+opts.Update(local_env)
+Help(opts.GenerateHelpText(local_env))
+
+if not (os.path.isdir("godot-cpp") and os.listdir("godot-cpp")):
+    print("error: extension/godot-cpp is missing; initialize the pinned godot-cpp dependency", file=sys.stderr)
+    Exit(1)
+expected_cpp_commit = "507ed9d840c01a3c5b2a39af8bb4000bfac30bf5"
+cpp_commit = subprocess.run(
+    ["git", "-C", "godot-cpp", "rev-parse", "HEAD"],
+    capture_output=True, text=True, check=False,
+)
+if cpp_commit.returncode != 0 or cpp_commit.stdout.strip() != expected_cpp_commit:
+    print("error: godot-cpp checkout does not match pinned commit " + expected_cpp_commit, file=sys.stderr)
+    Exit(1)
+
+runtime_include = local_env["atg_runtime_include"]
+runtime_lib = local_env["atg_runtime_lib"]
+if not runtime_include or not os.path.isfile(os.path.join(runtime_include, "abi_typegen.h")):
+    print("error: set ATG_RUNTIME_INCLUDE (or atg_runtime_include=...) to the directory containing abi_typegen.h", file=sys.stderr)
+    Exit(1)
+if not runtime_lib or not os.path.isfile(runtime_lib):
+    print("error: set ATG_RUNTIME_LIB (or atg_runtime_lib=...) to the shared Rust runtime static library", file=sys.stderr)
+    Exit(1)
+
+env = local_env.Clone()
+env = SConscript("godot-cpp/SConstruct", {"api_version": "4.7", "env": env, "customs": []})
+
+if (env["platform"], env["arch"]) not in [("linux", "x86_64"), ("macos", "arm64")]:
+    print("error: supported targets are linux x86_64 and macos arm64", file=sys.stderr)
+    Exit(1)
+
+env.Append(CPPPATH=["src", runtime_include])
+# First pass deliberately links the existing Rust runtime as a static library.
+# Dynamic-runtime packaging/rpath behavior is outside the proposed target.
+env.Append(LINKFLAGS=[os.path.abspath(runtime_lib)])
+if env["platform"] == "linux":
+    env.Append(LIBS=["dl", "pthread", "m", "rt", "util"])
+if local_env["atg_runtime_link_flags"]:
+    env.Append(LINKFLAGS=shlex.split(local_env["atg_runtime_link_flags"]))
+
+sources = Glob("src/*.cpp")
+# Follow the godot-cpp template naming convention exactly so the .gdextension
+# manifest can select debug/release variants by platform/arch.
+library = env.SharedLibrary(
+    "{}/bin/{}/lib{}{}{}".format(
+        projectdir, env["platform"], libname, env["suffix"], env["SHLIBSUFFIX"]
+    ),
+    source=sources,
+)
+Default(library)

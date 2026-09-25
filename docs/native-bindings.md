@@ -25,6 +25,8 @@ primary ABI metadata and value types while omitting callable helpers.
 | Elixir       | Ethers 0.8.0; local signer tests use ex_secp256k1 0.8.0                                                        |
 | Shell        | Bash 3.2+ and Foundry cast; tested with Cast 1.8.3                                                             |
 | COBOL        | GnuCOBOL 3.2 and shared Rust runtime; optional libcurl/json-c RPC                                              |
+| Godot        | Godot 4.7.2, GDExtension, pinned godot-cpp 10.0.0, SCons 4.10.0, and shared Rust runtime                       |
+| Unreal       | Unreal Engine 5.8.3, the generated plugin, and shared Rust runtime                                             |
 | C, C++       | `abi-typegen-runtime`, built with Rust/Alloy; C11 or C++17 compiler                                            |
 
 SDK-backed wrappers use the application's provider and signing configuration.
@@ -300,11 +302,59 @@ Run `make e2e-elixir` for generated-consumer and local Anvil tests.
 ## Unity compatibility
 
 Unity uses the existing `csharp` target. The adapter package at
-`unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport, an application
+`integrations/unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport, an application
 signer interface, and cancellation tied to GameObject lifetime. Generate and
 verify its fixtures using the [Unity consumer guide](../e2e/native/unity/README.md).
 
 The Unity checks are separate from ordinary C# tests. Unity 6000.6.3f1 on macOS
 is tested with Editor codec tests, signed Anvil transactions, and standalone
-Mono/IL2CPP codec execution. Linux has a manual CI workflow but remains
-unqualified until that workflow runs. Android, iOS, and WebGL are not qualified.
+Mono/IL2CPP codec execution. Its Linux manual workflow is skipped by default and
+requires `UNITY_ENGINE_CI_ENABLED=true`, `UNITY_EDITOR_6000_6_3F1` set to the
+installed Editor path, and a matching self-hosted runner. Linux is unqualified
+until that workflow runs. Android, iOS, and WebGL are not qualified.
+
+## Godot (experimental)
+
+The `godot` target emits GDScript ABI bindings and uses a Godot 4 GDExtension for
+the shared codec and asynchronous HTTP JSON-RPC client. The extension links the
+Rust runtime statically and is compiled against C ABI v1. It currently builds
+for Linux x86_64 and macOS arm64. This integration is experimental; other
+platforms and export templates have not been qualified.
+
+Install Godot 4.7.2 and SCons 4.10.0, then run `make e2e-godot`. The target
+regenerates the full Foundry sample bindings, builds the extension against the
+matching runtime, checks codec and packaging behavior in headless Godot, and
+runs Anvil reads/writes, event decoding, revert handling, and request-lifetime
+tests. The command fetches the pinned godot-cpp dependency when it is absent.
+Godot import can exit successfully despite a missing extension, so the runner
+checks engine diagnostics and requires a fresh suite pass marker. The full local
+macOS arm64 suite passed. Public Linux CI is configured but has not yet run, so
+Linux remains unqualified.
+
+Use `--no-wrappers` to emit ABI metadata without generated codec/client calls.
+The GDExtension is not needed to load that metadata-only output. Write wrappers
+accept an application-provided signer; the tests use Anvil's unlocked accounts.
+No local signer, deployment wrapper, event subscriptions, or fallback/receive
+wrappers are bundled. Constructor encoding is available. uint256 values use
+exact 32-byte `PackedByteArray` words.
+
+## Unreal (experimental)
+
+The `unreal` target emits a plugin-facing C++ API and generated C ABI codecs.
+The plugin uses C ABI v1, linking the Rust runtime statically on macOS and through
+a DLL on Windows. Blueprint nodes cover asynchronous scalar `pure` and `view` reads;
+the native generated codec API covers the full supported ABI values. Generated
+reads use `eth_call` with `to` and `data` at `latest`, without a `from` value, so
+views that depend on `msg.sender` use the provider's default caller. Applications
+that need another caller can use the generated calldata with their own RPC flow.
+The plugin uses the application's provider and signer; it does not include a
+wallet or local key store.
+
+Run `make e2e-unreal UNREAL_ROOT=/path/to/UnrealEngine` with Unreal Engine 5.8.3,
+Rust, and Foundry installed. The test host generates and compiles all 26 Foundry
+contracts plus a metadata-only fixture, then runs codec, lifecycle, and Anvil
+automation tests. The full local macOS arm64 run passed. Windows build rules are
+provided but unqualified; Linux support is not implemented. The manual
+GitHub workflow is skipped unless `UNREAL_ENGINE_CI_ENABLED=true`,
+`UNREAL_ROOT_5_8_3` points to the installed engine, and a matching self-hosted
+runner is configured. A skipped workflow does not count as a pass.

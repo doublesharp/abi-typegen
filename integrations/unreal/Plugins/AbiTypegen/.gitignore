@@ -1,0 +1,5 @@
+Binaries/
+Intermediate/
+Source/AbiTypegenRuntime/lib/**/*.a
+Source/AbiTypegenRuntime/lib/**/*.lib
+Source/AbiTypegenRuntime/bin/**/*.dll

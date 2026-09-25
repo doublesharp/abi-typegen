@@ -1,0 +1,35 @@
+name: Unreal compatibility
+
+# Unreal Engine is installed and licensed separately. Keep the workflow manual
+# and require an explicitly configured 5.8.3 self-hosted runner.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unreal:
+    name: Unreal Engine 5.8.3
+    if: vars.UNREAL_ENGINE_CI_ENABLED == 'true' && vars.UNREAL_ROOT_5_8_3 != ''
+    runs-on: [self-hosted, macOS, ARM64, unreal-engine-5.8.3]
+    timeout-minutes: 90
+    env:
+      UNREAL_ROOT: ${{ vars.UNREAL_ROOT_5_8_3 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run Unreal qualification
+        run: make e2e-unreal
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unreal-results
+          path: |
+            e2e/native/unreal/TestResults
+            e2e/native/unreal/Build

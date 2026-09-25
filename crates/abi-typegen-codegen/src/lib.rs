@@ -15,6 +15,7 @@ pub use renderers::elixir;
 pub use renderers::ethers5;
 pub use renderers::ethers6 as ethers;
 pub use renderers::go;
+pub use renderers::godot;
 pub use renderers::java;
 pub use renderers::kotlin;
 pub use renderers::php;
@@ -24,6 +25,7 @@ pub use renderers::rust;
 pub use renderers::shell;
 pub use renderers::solidity;
 pub use renderers::swift;
+pub use renderers::unreal;
 pub use renderers::viem;
 pub use renderers::wagmi;
 pub use renderers::web3js;
@@ -101,6 +103,23 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
                 format!("{}.go", ir.name),
                 go::render_go_file_with_wrappers(ir, &config.package, config.wrappers),
             );
+        }
+        Target::Godot => {
+            files.insert(
+                godot::file_name(&ir.name),
+                godot::render_godot_file(ir, config.wrappers),
+            );
+        }
+        Target::Unreal => {
+            let api_macro = format!("{}_API", config.package.to_ascii_uppercase());
+            let artifacts = unreal::render_unreal_artifacts(ir, config.wrappers, &api_macro);
+            let contract = unreal::contract_name(&ir.name);
+            files.insert(
+                format!("{}.h", c::namespace_name(&ir.name)),
+                c::render_c_file(ir, config.wrappers),
+            );
+            files.insert(format!("{contract}Unreal.h"), artifacts.header);
+            files.insert(format!("{contract}Unreal.cpp"), artifacts.source);
         }
         Target::Rust => {
             files.insert(

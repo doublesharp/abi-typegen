@@ -11,6 +11,7 @@ permissions:
 jobs:
   unity:
     name: Editor, Anvil, and standalone players
+    if: vars.UNITY_ENGINE_CI_ENABLED == 'true' && vars.UNITY_EDITOR_6000_6_3F1 != ''
     runs-on: [self-hosted, linux, unity-6000.6.3f1, unity-linux-il2cpp]
     timeout-minutes: 60
     env:

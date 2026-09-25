@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir e2e-unity e2e-unity-generate bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir e2e-unity e2e-unity-generate e2e-godot e2e-godot-generate e2e-unreal e2e-unreal-generate bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -265,3 +265,46 @@ e2e-unity-generate: e2e-native-artifacts ## Generate the Unity C# consumer fixtu
 e2e-unity: e2e-unity-generate ## Qualify Unity Editor, Anvil, Mono and IL2CPP
 	python3 e2e/native/unity/test_runner.py
 	python3 e2e/native/unity/run.py all
+
+# Godot is open source and runs headlessly without an account or license.
+# The runner checks engine diagnostics and fresh suite markers because Godot can
+# return success from --import even when a GDExtension fails to load.
+GODOT_BIN ?=
+GODOT_PLATFORM ?= $(shell uname -s | sed 's/Darwin/macos/;s/Linux/linux/')
+GODOT_ARCH ?= $(shell uname -m | sed 's/aarch64/arm64/')
+GODOT_JOBS ?= 4
+SCONS ?= scons
+CARGO_TARGET_DIR ?= $(shell cargo metadata --no-deps --format-version 1 | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')
+TYPEGEN_BIN = $(CARGO_TARGET_DIR)/debug/abi-typegen
+
+e2e-godot-generate: e2e-native-artifacts ## Generate Godot bindings and metadata-only fixture
+	rm -rf e2e/native/godot/test_project/generated
+	$(TYPEGEN_BIN) generate --artifacts e2e/foundry-sample/out --out e2e/native/godot/test_project/generated --target godot
+	$(TYPEGEN_BIN) generate --artifacts e2e/native/godot/artifacts --out e2e/native/godot/test_project/generated --target godot --contracts CodecCases
+	$(TYPEGEN_BIN) generate --artifacts e2e/native/godot/artifacts --out e2e/native/godot/test_project/generated --target godot --no-wrappers --contracts MetadataOnlyToken
+
+e2e-godot: e2e-godot-generate ## Build Godot GDExtension and run headless codec, packaging, and Anvil tests
+	cargo build -p abi-typegen-runtime --release
+	bash integrations/godot/extension/fetch_godot_cpp.sh
+	cd integrations/godot/extension && ATG_RUNTIME_INCLUDE="$(CURDIR)/crates/abi-typegen-runtime/include" ATG_RUNTIME_LIB="$(CARGO_TARGET_DIR)/release/libabi_typegen_runtime.a" $(SCONS) platform=$(GODOT_PLATFORM) arch=$(GODOT_ARCH) target=template_debug -j$(GODOT_JOBS)
+	python3 e2e/native/godot/run.py import --godot "$(GODOT_BIN)"
+	python3 e2e/native/godot/run.py suite --suite codec --godot "$(GODOT_BIN)"
+	python3 e2e/native/godot/run.py suite --suite packaging --godot "$(GODOT_BIN)"
+	python3 -m unittest e2e.native.godot.test_runner
+	python3 e2e/native/anvil.py --cwd e2e/native/godot/test_project python3 ../run.py suite --suite anvil --godot "$(GODOT_BIN)"
+
+# Unreal Engine is licensed software; this integration uses a user-installed
+# Engine 5.8 and is kept out of the public, license-free native test matrix.
+UNREAL_ROOT ?=
+UNREAL_ARCH ?= arm64
+UNREAL_JOBS ?= 8
+
+e2e-unreal-generate: e2e-native-artifacts ## Generate Unreal bindings for all Foundry contracts
+	python3 e2e/native/unreal/run.py generate --typegen "$(TYPEGEN_BIN)"
+
+e2e-unreal: e2e-unreal-generate ## Build the Unreal Editor host and run automation tests against Anvil
+	cargo build -p abi-typegen-runtime --release
+	python3 e2e/native/unreal/run.py stage --engine-root "$(UNREAL_ROOT)" --runtime-library "$(CARGO_TARGET_DIR)/release/libabi_typegen_runtime.a"
+	python3 e2e/native/unreal/run.py build --engine-root "$(UNREAL_ROOT)" --architecture "$(UNREAL_ARCH)" --jobs "$(UNREAL_JOBS)"
+	python3 -m unittest e2e.native.unreal.test_runner
+	python3 e2e/native/anvil.py --cwd . python3 e2e/native/unreal/run.py test --engine-root "$(UNREAL_ROOT)" --architecture "$(UNREAL_ARCH)"

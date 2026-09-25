@@ -50,6 +50,8 @@ TypeScript ABI modules or an `index.ts` barrel.
 | `ruby`     | `<Name>.rb`                                            | ABI, SDK-backed wrappers, transaction builders, codecs and named values      |
 | `elixir`   | `<name>.ex`                                            | ABI JSON and optional Ethers.Contract wrappers                               |
 | `shell`    | `<Name>.sh`                                            | Sourceable Bash metadata and optional Foundry cast helpers                   |
+| `godot`    | `<name>.gd`                                            | GDScript ABI metadata and optional GDExtension-backed codec/client wrappers  |
+| `unreal`   | `<Name>Unreal.h/.cpp`, `atg_<Name>.h`                  | Reflected scalar reads plus generated C ABI codecs                           |
 | `yaml`     | `<Name>.yaml`                                          | Human-readable functions, events, errors, and parameter types                |
 
 The Solidity target reconstructs tuple structs and emits events, errors,
@@ -66,6 +68,10 @@ dependencies, ownership, and local-chain validation. Java filenames follow the
 normalized public class name; Dart filenames use its lower-camel-case form. PHP
 uses the normalized public class name and configured namespace.
 C/C++ filenames and symbols use an `atg_` prefix.
+The Godot target's extension is supplied by `integrations/godot/`; its generated GDScript
+does not contain native binaries. Unreal output uses the configured module
+identifier to select the C++ `*_API` export macro; its plugin and runtime archive
+are separate from generated contract files.
 
 ## Go, Rust, Swift, and Kotlin
 

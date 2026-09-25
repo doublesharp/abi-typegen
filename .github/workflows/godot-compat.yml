@@ -1,0 +1,39 @@
+name: Godot compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  godot:
+    name: Godot 4.7.2 Linux headless
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang libclang-dev pkg-config
+          python -m pip install --user scons==4.10.0
+      - name: Download pinned Godot headless-compatible editor
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip \
+            --output "$RUNNER_TEMP/godot.zip"
+          echo 'cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4  '"$RUNNER_TEMP/godot.zip" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+      - name: Run generated Godot consumer and Anvil tests
+        run: make e2e-godot GODOT_BIN="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" GODOT_PLATFORM=linux GODOT_ARCH=x86_64 SCONS="$HOME/.local/bin/scons"

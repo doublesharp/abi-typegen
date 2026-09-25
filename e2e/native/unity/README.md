@@ -1,7 +1,7 @@
 # Unity compatibility tests
 
 This project checks the existing C# bindings inside Unity. The reusable adapter
-lives at `unity/com.doublesharp.abi-typegen.unity`; it uses Nethereum for ABI
+lives at `integrations/unity/com.doublesharp.abi-typegen.unity`; it uses Nethereum for ABI
 encoding, RPC, and signing. There is no separate Unity generator target.
 
 ## Generate the fixtures

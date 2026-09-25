@@ -1,0 +1,150 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "safeTransferFrom",
+      "inputs": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "safeTransferFrom",
+      "inputs": [
+        {
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "storeTuple",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Cases.Item",
+          "components": [
+            {
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "name": "flag",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "storeArray",
+      "inputs": [
+        {
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "readArray",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "readTuple",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Cases.Item",
+          "components": [
+            {
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "name": "flag",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "IndexedReferences",
+      "inputs": [
+        {
+          "name": "label",
+          "type": "string",
+          "indexed": true
+        },
+        {
+          "name": "payload",
+          "type": "bytes",
+          "indexed": true
+        },
+        {
+          "name": "values",
+          "type": "uint256[]",
+          "indexed": true
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "OwnableUnauthorizedAccount",
+      "inputs": [
+        {
+          "name": "account",
+          "type": "address"
+        }
+      ]
+    }
+  ]
+}

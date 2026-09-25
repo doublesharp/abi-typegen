@@ -43,7 +43,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package or namespace for Go, Kotlin, Java, and PHP output (default: "contracts")
+        /// Package, namespace, or Unreal module name (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -79,7 +79,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package or namespace for Go, Kotlin, Java, and PHP output (default: "contracts")
+        /// Package, namespace, or Unreal module name (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -361,6 +361,8 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::Web3js => "web3js",
         Target::Python => "python",
         Target::Go => "go",
+        Target::Godot => "godot",
+        Target::Unreal => "unreal",
         Target::Rust => "rust",
         Target::Swift => "swift",
         Target::CSharp => "csharp",
@@ -381,8 +383,8 @@ fn target_dir_name(target: &Target) -> &'static str {
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "elixir", "shell", "c",
-    "cpp", "yaml",
+    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "elixir", "godot",
+    "unreal", "shell", "c", "cpp", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -535,6 +537,7 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".php",
     ".cob",
     ".rb",
+    ".gd",
     ".ex",
     ".sh",
     ".cobol.c",
@@ -654,6 +657,8 @@ fn render_artifacts(
             }
             let namespace = match target_config.target() {
                 Target::Elixir => Some(abi_typegen_codegen::elixir::namespace_name(name)),
+                Target::Godot => Some(abi_typegen_codegen::godot::namespace_name(name)),
+                Target::Unreal => Some(abi_typegen_codegen::unreal::contract_name(name)),
                 Target::Shell => Some(abi_typegen_codegen::shell::namespace_name(name)),
                 Target::Cobol => Some(abi_typegen_codegen::cobol::namespace_name(name)),
                 Target::Swift => Some(abi_typegen_codegen::swift::namespace_name(name)),
@@ -686,11 +691,18 @@ fn render_artifacts(
                         .map(|name| format!("program:{name}")),
                     )
                     .collect::<Vec<_>>()
+            } else if *target_config.target() == Target::Unreal {
+                abi_typegen_codegen::unreal::declared_symbol_names(&ir, target_config.wrappers)
             } else {
                 namespace.into_iter().collect::<Vec<_>>()
             };
             for namespace in namespaces {
-                if let Some(previous) = namespace_owners.insert((prefix, namespace.clone()), name) {
+                let key = if *target_config.target() == Target::Unreal {
+                    namespace.to_ascii_lowercase()
+                } else {
+                    namespace.clone()
+                };
+                if let Some(previous) = namespace_owners.insert((prefix, key), name) {
                     anyhow::bail!(
                         "contracts '{}' and '{}' both generate namespace '{}'",
                         previous,
@@ -726,7 +738,7 @@ fn render_artifacts(
         }
         if matches!(
             target_config.target(),
-            Target::C | Target::Cpp | Target::Cobol
+            Target::C | Target::Cpp | Target::Cobol | Target::Unreal
         ) {
             let filename = format!("{prefix}abi_typegen.h");
             if files.contains_key(&filename) {

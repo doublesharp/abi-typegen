@@ -9,7 +9,7 @@
     }
   ],
   "dependencies": {
-    "com.doublesharp.abi-typegen.unity": "file:../../../../unity/com.doublesharp.abi-typegen.unity",
+    "com.doublesharp.abi-typegen.unity": "file:../../../../integrations/unity/com.doublesharp.abi-typegen.unity",
     "com.nethereum.unity": "6.1.0",
     "com.unity.nuget.newtonsoft-json": "3.2.2",
     "com.unity.test-framework": "1.4.6",

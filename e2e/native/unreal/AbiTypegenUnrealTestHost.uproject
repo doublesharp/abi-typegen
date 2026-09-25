@@ -1,0 +1,13 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "Category": "Tests",
+  "Description": "Minimal abi-typegen Unreal compatibility test host.",
+  "Modules": [
+    { "Name": "AbiTypegenUnrealTestHost", "Type": "Runtime", "LoadingPhase": "Default" },
+    { "Name": "AbiTypegenUnrealTestHostTests", "Type": "Editor", "LoadingPhase": "Default" }
+  ],
+  "Plugins": [
+    { "Name": "AbiTypegen", "Enabled": true }
+  ]
+}

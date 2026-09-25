@@ -1,0 +1,4 @@
+godot-cpp/
+.scons_cache/
+.sconsign.dblite
+src/*.os

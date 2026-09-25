@@ -207,6 +207,14 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
                     ));
                 }
             }
+            Target::Unreal => {
+                if !is_identifier(package) {
+                    return Err(invalid(
+                        "unreal",
+                        "expected a single Unreal module identifier",
+                    ));
+                }
+            }
             Target::Viem
             | Target::Zod
             | Target::Wagmi
@@ -223,6 +231,7 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
             | Target::Elixir
             | Target::Ruby
             | Target::Cobol
+            | Target::Godot
             | Target::Cpp
             | Target::Dart
             | Target::Yaml => {}
@@ -253,6 +262,8 @@ pub fn parse_target(s: &str) -> Option<Target> {
         "dart" => Some(Target::Dart),
         "php" => Some(Target::Php),
         "cobol" => Some(Target::Cobol),
+        "godot" => Some(Target::Godot),
+        "unreal" => Some(Target::Unreal),
         "ruby" => Some(Target::Ruby),
         "elixir" => Some(Target::Elixir),
         "shell" => Some(Target::Shell),
@@ -301,6 +312,10 @@ pub enum Target {
     Ruby,
     /// Generate experimental GnuCOBOL address-to-uint256 read bindings.
     Cobol,
+    /// Generate Godot 4 GDScript bindings using the shared C runtime.
+    Godot,
+    /// Generate Unreal Engine reflected adapters over the shared C runtime.
+    Unreal,
     /// Generate PHP classes, ABI codecs, and JSON-RPC wrappers.
     Php,
     /// Generate Dart bindings using web3dart.
@@ -348,6 +363,8 @@ impl Target {
             | Self::Elixir
             | Self::Ruby
             | Self::Cobol
+            | Self::Godot
+            | Self::Unreal
             | Self::Cpp
             | Self::Dart
             | Self::Php
@@ -377,6 +394,8 @@ impl Target {
             | Self::Elixir
             | Self::Ruby
             | Self::Cobol
+            | Self::Godot
+            | Self::Unreal
             | Self::Cpp
             | Self::Dart
             | Self::Php
@@ -390,7 +409,7 @@ impl<'de> Deserialize<'de> for Target {
         let s = String::deserialize(d)?;
         parse_target(&s).ok_or_else(|| {
             serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|godot|unreal|ruby|elixir|shell|solidity|c|cpp|yaml",
                 s
             ))
         })
@@ -645,6 +664,8 @@ contracts = ["MyToken", "Vault"]
             ("dart", Target::Dart),
             ("php", Target::Php),
             ("cobol", Target::Cobol),
+            ("godot", Target::Godot),
+            ("unreal", Target::Unreal),
             ("ruby", Target::Ruby),
             ("elixir", Target::Elixir),
             ("shell", Target::Shell),
@@ -893,6 +914,17 @@ target = "viem,badtarget"
     fn package_defaults_to_contracts() {
         let cfg = Config::from_toml_str("").unwrap();
         assert_eq!(cfg.package, "contracts");
+    }
+
+    #[test]
+    fn unreal_module_name_is_one_cpp_identifier() {
+        for invalid in ["", "bad.name", "9Module", "Module-Name"] {
+            assert!(
+                validate_package(invalid, &[Target::Unreal]).is_err(),
+                "{invalid}"
+            );
+        }
+        assert!(validate_package("AbiTypegenUnrealTestHost", &[Target::Unreal]).is_ok());
     }
 
     #[test]

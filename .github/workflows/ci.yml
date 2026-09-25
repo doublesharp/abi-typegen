@@ -20,7 +20,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python3 e2e/native/unity/test_runner.py
+      - name: Test native engine report validators
+        run: |
+          python3 -m unittest e2e.native.godot.test_runner e2e.native.unreal.test_runner
+          python3 e2e/native/unity/test_runner.py
 
   storage:
     name: Optional storage tooling

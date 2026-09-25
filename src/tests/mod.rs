@@ -2561,6 +2561,128 @@ fn native_namespace_collisions_fail_before_writing() {
 }
 
 #[test]
+fn godot_class_name_collision_fails_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("artifacts"),
+        dir.path().join("out"),
+        Target::Godot,
+    );
+    for name in ["AB", "A_B"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let existing = config.out_dir.join("ab.gd");
+    std::fs::write(&existing, "previous binding").unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(error.contains("AtgContractAB"), "{error}");
+    assert_eq!(
+        std::fs::read_to_string(existing).unwrap(),
+        "previous binding"
+    );
+}
+
+#[test]
+fn godot_metadata_mode_preserves_abi_without_extension_methods() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("artifacts"),
+        dir.path().join("out"),
+        Target::Godot,
+    );
+    config.wrappers = false;
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    run_generate(&config, false).unwrap();
+    let binding = std::fs::read_to_string(config.out_dir.join("token.gd")).unwrap();
+    assert!(binding.contains("class_name AtgContractToken"));
+    assert!(binding.contains("BALANCE_OF_SIGNATURE"));
+    assert!(!binding.contains("AbiTypegenCodec"));
+    assert!(!binding.contains("static func call_balance_of"));
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn unreal_target_emits_exported_host_adapters_and_metadata_mode() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(
+        dir.path().join("artifacts"),
+        dir.path().join("out"),
+        Target::Unreal,
+    );
+    config.package = "AbiTypegenUnrealTestHost".into();
+    write_target_matrix_artifact(&config.artifacts_dir, "Token");
+    run_generate(&config, false).unwrap();
+    let header = std::fs::read_to_string(config.out_dir.join("TokenUnreal.h")).unwrap();
+    assert!(header.contains("ABITYPEGENUNREALTESTHOST_API UTokenUnrealMetadata"));
+    assert!(header.contains("#include \"Generated/atg_Token.h\""));
+    assert!(config.out_dir.join("TokenUnreal.cpp").exists());
+    assert!(config.out_dir.join("atg_Token.h").exists());
+    assert!(config.out_dir.join("abi_typegen.h").exists());
+    run_check(&config).unwrap();
+    config.wrappers = false;
+    run_generate(&config, true).unwrap();
+    let metadata = std::fs::read_to_string(config.out_dir.join("TokenUnreal.h")).unwrap();
+    assert!(metadata.contains("UTokenUnrealMetadata"));
+    assert!(!metadata.contains("AsyncAction"));
+    assert!(
+        std::fs::read_to_string(config.out_dir.join("atg_Token.h"))
+            .unwrap()
+            .contains("Token")
+    );
+    run_check(&config).unwrap();
+}
+
+#[test]
+fn unreal_reflected_symbol_collision_fails_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("artifacts"),
+        dir.path().join("out"),
+        Target::Unreal,
+    );
+    for (contract, function) in [("FooBar", "read"), ("Foo", "barRead")] {
+        let folder = config.artifacts_dir.join(format!("{contract}.sol"));
+        std::fs::create_dir_all(&folder).unwrap();
+        let artifact = serde_json::json!({"abi":[{"type":"function","name":function,"inputs":[{"name":"owner","type":"address"}],"outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view"}]});
+        std::fs::write(
+            folder.join(format!("{contract}.json")),
+            artifact.to_string(),
+        )
+        .unwrap();
+    }
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let prior = config.out_dir.join("prior.txt");
+    std::fs::write(&prior, "preserve me").unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(error.contains("FooBarRead"), "{error}");
+    assert_eq!(std::fs::read_to_string(prior).unwrap(), "preserve me");
+}
+
+#[test]
+fn unreal_case_folded_reflection_names_collide_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(
+        dir.path().join("artifacts"),
+        dir.path().join("out"),
+        Target::Unreal,
+    );
+    // Separate filenames permit this test on case-insensitive filesystems.
+    let first = dir.path().join("first.json");
+    let second = dir.path().join("second.json");
+    std::fs::write(&first, TARGET_MATRIX_ARTIFACT_JSON).unwrap();
+    std::fs::write(&second, TARGET_MATRIX_ARTIFACT_JSON).unwrap();
+    let artifacts = vec![
+        ("OnSuccess".to_string(), first),
+        ("Onsuccess".to_string(), second),
+    ];
+    let error = render_artifacts(&config, &artifacts)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("UnrealMetadata"), "{error}");
+    assert!(!config.out_dir.exists());
+}
+
+#[test]
 fn php_contract_classes_collide_case_insensitively() {
     let dir = tempfile::tempdir().unwrap();
     let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Php);

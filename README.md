@@ -141,7 +141,13 @@ Unity uses the existing C# target. The [Unity compatibility tests](e2e/native/un
 cover the adapter package in Unity 6000.6.3f1 on macOS, including Editor tests
 and standalone Mono/IL2CPP codec checks.
 
-There are 23 CLI targets across 17 languages:
+Godot and Unreal are experimental engine integrations. The reusable
+[engine packages](integrations/README.md) and their full local macOS checks are
+documented in [native bindings](docs/native-bindings.md); Godot also
+has a public Linux workflow, while Unity and Unreal engine workflows require
+explicitly configured self-hosted runners.
+
+There are 25 CLI targets across 18 languages:
 
 | Target     | Works with                                               | What you get                                                                                     |
 | ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -163,6 +169,8 @@ There are 23 CLI targets across 17 languages:
 | `ruby`     | Ruby and eth gem                                         | SDK-backed calls, transaction builders, codecs, events and errors                                |
 | `elixir`   | Elixir and Ethers                                        | SDK-backed transaction data, reads, sends, events and errors                                     |
 | `shell`    | Bash and Foundry cast                                    | Sourceable helpers for encoding, reads, sends, deployment and logs                               |
+| `godot`    | [Godot 4](https://godotengine.org/) and GDScript         | GDScript ABI bindings and a GDExtension-backed async RPC client                                  |
+| `unreal`   | Unreal Engine 5.8                                        | C++ codecs and reflected asynchronous scalar read nodes                                          |
 | `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership                                              |
 | `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup                                                |
 | `zod`      | [Zod 4](https://zod.dev/)                                | Validation schemas and ABI                                                                       |

@@ -102,6 +102,15 @@ manifest until [release preparation](releasing.md) runs.
   and iconv extensions, and Python needs Python 3.11+ with venv support. The
   consumers do not build until a
   target has generated their bindings.
+- Engine integrations are separate from `make e2e-native`: `make e2e-godot`
+  requires Godot 4.7.2 and SCons 4.10.0; `make e2e-unity` requires the Unity
+  6000.6.3f1 Editor and modules; `make e2e-unreal UNREAL_ROOT=<path>` requires
+  Unreal Engine 5.8.3. Godot's Linux compatibility workflow runs on hosted CI.
+  Unity and Unreal compatibility workflows require manually configured engine
+  runners and are skipped by default. Unity requires repository variables
+  `UNITY_ENGINE_CI_ENABLED=true` and `UNITY_EDITOR_6000_6_3F1`; Unreal requires
+  `UNREAL_ENGINE_CI_ENABLED=true` and `UNREAL_ROOT_5_8_3`. A skipped workflow is
+  not a qualification.
 - Coverage: `make coverage` requires `cargo-llvm-cov` and Node/npm.
 - Fuzzing: the `fuzz-*` Makefile targets require `cargo-fuzz` and nightly Rust.
   Curated seeds stay under `fuzz/seeds`; discovered corpus and logs are local data.

@@ -1,0 +1,5 @@
+test_project/.godot/
+test_project/generated/
+test_project/bin/macos/
+test_project/bin/linux/
+test_project/**/*.gd.uid

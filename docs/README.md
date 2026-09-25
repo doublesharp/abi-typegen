@@ -30,4 +30,4 @@ when working with an older package.
   manifests, and publication order.
 
 - [Native contract bindings](native-bindings.md): runtime dependencies, C/C++ ownership,
-  callable wrappers, and local Anvil integration tests.
+  callable wrappers, engine integrations, and local Anvil tests.

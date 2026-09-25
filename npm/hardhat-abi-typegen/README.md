@@ -111,6 +111,8 @@ npx abi-typegen generate --hardhat --target viem
 | COBOL     | `cobol`    | COBOL      | Experimental GnuCOBOL read subset; shared Rust runtime   |
 | Ruby      | `ruby`     | Ruby       | eth gem                                                  |
 | Shell     | `shell`    | Bash       | Foundry cast                                             |
+| Godot     | `godot`    | GDScript   | Godot 4 GDExtension                                      |
+| Unreal    | `unreal`   | C++        | Unreal Engine plugin and shared Rust ABI runtime         |
 | C         | `c`        | C11        | Shared Rust ABI runtime                                  |
 | C++       | `cpp`      | C++17      | Shared Rust ABI runtime                                  |
 | YAML      | `yaml`     | Data       | Human-readable ABI descriptions                          |

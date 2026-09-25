@@ -1,0 +1,16 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0-proposal",
+  "FriendlyName": "abi-typegen Unreal Compatibility",
+  "Description": "Thin Unreal integration over abi-typegen generated C bindings and the shared Rust ABI runtime.",
+  "Category": "Scripting",
+  "CreatedBy": "abi-typegen",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Installed": false,
+  "EngineVersion": "5.8.0",
+  "Modules": [
+    { "Name": "AbiTypegenUnreal", "Type": "Runtime", "LoadingPhase": "Default" }
+  ]
+}

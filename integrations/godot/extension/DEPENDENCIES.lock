@@ -1,0 +1,8 @@
+# Proposed first-pass dependency pins. Not verified by execution in this handoff.
+godot=4.7.2-stable
+godot_cpp=10.0.0-stable
+godot_cpp_commit=507ed9d840c01a3c5b2a39af8bb4000bfac30bf5
+godot_cpp_api_version=4.7
+target_platform=linux
+target_arch=x86_64
+runtime_abi=ATG_ABI_VERSION_1

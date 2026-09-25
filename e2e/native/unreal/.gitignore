@@ -1,0 +1,9 @@
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Plugins/
+TestResults/
+Build/
+*.xcworkspace/
+*.xcodeproj/

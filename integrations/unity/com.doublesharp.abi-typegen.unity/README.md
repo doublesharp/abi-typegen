@@ -15,5 +15,5 @@ A canceled wait does not guarantee that Nethereum aborts an HTTP request already
 in flight. The package contains no private-key signer.
 
 The consumer project and verification commands are in
-[`e2e/native/unity`](../../e2e/native/unity/README.md). Unity 6000.6.3f1 on macOS passes Editor tests and standalone Mono/IL2CPP codec
+[`e2e/native/unity`](../../../e2e/native/unity/README.md). Unity 6000.6.3f1 on macOS passes Editor tests and standalone Mono/IL2CPP codec
 checks. Linux, Android, iOS, and WebGL remain unqualified.

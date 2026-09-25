@@ -37,7 +37,7 @@ exclude = ["*Test", "*Mock"]
 | `package`   | `"contracts"`     | Go package name, Kotlin/Java package, or PHP namespace            |
 
 Targets are `viem`, `zod`, `wagmi`, `ethers`, `ethers5`, `web3js`, `python`, `go`,
-`rust`, `swift`, `csharp`, `kotlin`, `java`, `dart`, `php`, `cobol`, `ruby`, `shell`, `elixir`, `c`, `cpp`, `solidity`, and `yaml`.
+`rust`, `swift`, `csharp`, `kotlin`, `java`, `dart`, `php`, `cobol`, `ruby`, `shell`, `elixir`, `godot`, `unreal`, `c`, `cpp`, `solidity`, and `yaml`.
 Aliases are `ethers6` for `ethers`, `web3` for `web3js`, `cs` for `csharp`, `kt` for
 `kotlin`, `c++` for `cpp`, `sol` for `solidity`, and `yml` for `yaml`.
 
@@ -59,14 +59,16 @@ Setting `wrappers = false` suppresses wrappers for `viem`, `wagmi`, `ethers`,
 `ethers5`, and `web3js` while retaining their ABI modules. For Rust it removes
 alloy's `rpc` contract instance and keeps the types, ABI, and selectors. For Go,
 Python, Swift, Kotlin, C#, Java, Dart, PHP, Ruby, shell, Elixir, C, and C++ it omits callable wrappers while keeping
-primary ABI metadata and value types. It does
-not suppress Zod schemas, Solidity interfaces, or other output. See
+primary ABI metadata and value types. Godot and Unreal retain their metadata
+classes while omitting callable codec/client wrappers. It does not suppress Zod
+schemas, Solidity interfaces, or other output. See
 [generated output](generated-output.md) for filenames.
 
 `package` sets the Go package name (a lowercase identifier that is not a keyword),
-the Kotlin/Java package (dot-separated identifiers), or the PHP namespace
-(backslash-separated identifiers). The default is `contracts`. abi-typegen rejects
-values that are invalid for any selected target. Other targets ignore it.
+the Kotlin/Java package (dot-separated identifiers), the PHP namespace
+(backslash-separated identifiers), or the Unreal module identifier used to form
+its C++ export macro. The default is `contracts`. abi-typegen rejects values
+that are invalid for any selected target. Other targets ignore it.
 
 ## CLI overrides
 

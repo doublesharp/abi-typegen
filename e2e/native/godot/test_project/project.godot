@@ -1,0 +1,12 @@
+; Minimal headless compatibility test project for abi-typegen Godot integration.
+config_version=5
+
+[application]
+config/name="abi-typegen Godot compatibility tests"
+
+[debug]
+gdscript/warnings/untyped_declaration=0
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
