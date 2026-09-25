@@ -5,7 +5,10 @@ pragma solidity ^0.8.34;
 /// @dev Exercises: all integer widths, bytesN variants, nested arrays,
 ///      fixed arrays, anonymous events, fallback, payable constructor,
 ///      no-param functions, multi-output returns, and empty-input write functions.
+// Payable entrypoints intentionally retain ETH to exercise generated payable APIs.
+// forge-lint: disable-next-line(locked-ether)
 contract EdgeCases {
+    uint256 private resetCount;
     // ── Integer width boundaries ────────────────────────────────────────
     // uint8 (smallest) through uint256 (largest), including the 48-bit boundary
     // where viem switches from `number` to `bigint`.
@@ -50,12 +53,14 @@ contract EdgeCases {
     /// @return total The total
     /// @return flag A flag
     function multiReturn() external pure returns (uint256 count, uint256 total, bool flag) {
-        return (10, 100, true);
+        count = 10;
+        total = 100;
+        flag = count < total;
     }
 
     // ── Zero-param write function ──────────────────────────────────────
     function reset() external {
-        // no-op for type testing
+        resetCount++;
     }
 
     // ── Payable function ───────────────────────────────────────────────

@@ -32,6 +32,8 @@ contract Registry {
             id: id,
             label: label,
             meta: Metadata({
+                // Unix timestamps fit uint64 for the lifetime of this fixture.
+                // forge-lint: disable-next-line(unsafe-typecast)
                 createdAt: uint64(block.timestamp),
                 owner: msg.sender,
                 active: true

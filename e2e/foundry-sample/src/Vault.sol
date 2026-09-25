@@ -3,6 +3,8 @@ pragma solidity ^0.8.34;
 
 /// @title Multi-asset vault with structs, overloads, and arrays
 /// @notice Exercises tuple outputs, fixed arrays, overloaded functions, and receive
+// This fixture exercises payable deposits and receive; withdrawal is outside its ABI.
+// forge-lint: disable-next-line(locked-ether)
 contract Vault {
     struct Position {
         uint256 shares;
@@ -27,6 +29,8 @@ contract Vault {
     function deposit(uint256 amount) external payable {
         if (amount == 0) revert ZeroAmount();
         positions[msg.sender].shares += amount;
+        // Unix timestamps fit uint64 for the lifetime of this fixture.
+        // forge-lint: disable-next-line(unsafe-typecast)
         positions[msg.sender].depositedAt = uint64(block.timestamp);
         emit Deposited(msg.sender, amount);
     }
@@ -37,6 +41,8 @@ contract Vault {
     function deposit(uint256 amount, address recipient) external payable {
         if (amount == 0) revert ZeroAmount();
         positions[recipient].shares += amount;
+        // Unix timestamps fit uint64 for the lifetime of this fixture.
+        // forge-lint: disable-next-line(unsafe-typecast)
         positions[recipient].depositedAt = uint64(block.timestamp);
         emit Deposited(recipient, amount);
     }

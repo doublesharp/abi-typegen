@@ -63,6 +63,13 @@ Regenerate bindings and compile consumers after upgrading.
 
 ### Fixed
 
+- Solidity test fixtures reject zero owners and document intentional payable and
+  timestamp behavior, clearing compiler and Foundry lint warnings.
+- Godot links the shared ABI runtime correctly on Linux and rejects unresolved
+  symbols during the build.
+- PHP and Elixir consumer tests check fixture names instead of stale local
+  artifact counts. Shell tests handle Cast annotations on large integers and
+  fail consistently across Bash versions.
 - Go event decoding preserves indexed tuple topic hashes.
 - Python wrapper names remain distinct from codec, event, and error helpers;
   generated parameters avoid reserved receiver and transaction names.

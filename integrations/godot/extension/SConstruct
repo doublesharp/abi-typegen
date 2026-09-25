@@ -44,10 +44,11 @@ if (env["platform"], env["arch"]) not in [("linux", "x86_64"), ("macos", "arm64"
     Exit(1)
 
 env.Append(CPPPATH=["src", runtime_include])
-# First pass deliberately links the existing Rust runtime as a static library.
-# Dynamic-runtime packaging/rpath behavior is outside the proposed target.
-env.Append(LINKFLAGS=[os.path.abspath(runtime_lib)])
+# Link the Rust runtime statically after the extension objects. GNU linkers
+# only extract archive members for symbols referenced earlier in the command.
+env.Append(LIBS=[env.File(os.path.abspath(runtime_lib))])
 if env["platform"] == "linux":
+    env.Append(LINKFLAGS=["-Wl,--no-undefined"])
     env.Append(LIBS=["dl", "pthread", "m", "rt", "util"])
 if local_env["atg_runtime_link_flags"]:
     env.Append(LINKFLAGS=shlex.split(local_env["atg_runtime_link_flags"]))

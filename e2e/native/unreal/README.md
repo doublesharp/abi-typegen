@@ -1,7 +1,7 @@
 # Unreal consumer
 
 Run `make e2e-unreal UNREAL_ROOT=/path/to/UnrealEngine` with Unreal Engine
-5.8.3, Foundry, Python 3.11+, and Rust installed. The target regenerates all 26
+5.8.3, Foundry, Python 3.11+, and Rust installed. The target regenerates all
 Foundry sample contracts and a separate metadata-only fixture, stages the
 runtime and plugin, builds the automation host, and runs the codec, lifecycle,
 and Anvil suites in UnrealEditor-Cmd. It writes fresh automation reports and

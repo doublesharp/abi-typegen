@@ -3,6 +3,8 @@ pragma solidity ^0.8.34;
 
 /// @title Decentralized exchange with complex types
 /// @notice Exercises deep nesting, many functions, many events, and complex structs
+/// @dev The receive fixture intentionally retains ETH; settlement is outside this ABI example.
+// forge-lint: disable-next-line(locked-ether)
 contract Exchange {
     // ── Structs ────────────────────────────────────────────────────────
     struct Order {
@@ -68,7 +70,7 @@ contract Exchange {
     mapping(address => uint256) public nonces;
 
     uint256 public totalVolume;
-    uint256 public totalFees;
+    uint256 public totalFees = 0;
     address public owner;
     bool public paused;
 
@@ -101,6 +103,7 @@ contract Exchange {
 
     // ── Constructor ────────────────────────────────────────────────────
     constructor(address _owner) {
+        require(_owner != address(0));
         owner = _owner;
     }
 
@@ -119,12 +122,16 @@ contract Exchange {
     /// @param amount Amount to fill
     function fillOrder(bytes32 orderHash, uint256 amount) external {
         Order storage order = orders[orderHash];
+        // Expiration is defined in block time; validators can shift timestamps slightly.
+        // forge-lint: disable-next-line(block-timestamp)
         if (block.timestamp > order.deadline) revert OrderExpired(orderHash, order.deadline);
         if (amount == 0) revert ZeroAmount();
         fills[orderHash].push(Fill({
             orderHash: orderHash,
             amountFilled: amount,
             amountRemaining: order.amountIn - amount,
+            // casting to uint64 is safe because block timestamps are Unix seconds and remain far below uint64 max.
+            // forge-lint: disable-next-line(unsafe-typecast)
             timestamp: uint64(block.timestamp),
             filler: msg.sender
         }));
@@ -155,6 +162,8 @@ contract Exchange {
             token1: token1,
             reserve0: 0,
             reserve1: 0,
+            // casting to uint64 is safe because block timestamps are Unix seconds and remain far below uint64 max.
+            // forge-lint: disable-next-line(unsafe-typecast)
             lastUpdate: uint64(block.timestamp),
             feeBps: feeBps,
             active: true
@@ -168,6 +177,8 @@ contract Exchange {
         if (!pool.active) revert PoolInactive(poolId);
         pool.reserve0 += amount0;
         pool.reserve1 += amount1;
+        // casting to uint64 is safe because block timestamps are Unix seconds and remain far below uint64 max.
+        // forge-lint: disable-next-line(unsafe-typecast)
         pool.lastUpdate = uint64(block.timestamp);
         emit PoolUpdated(poolId, pool.reserve0, pool.reserve1);
     }
@@ -209,6 +220,10 @@ contract Exchange {
 
     /// @notice Quote a swap
     function quote(address tokenIn, address tokenOut, uint256 amountIn) external view returns (uint256 amountOut, uint256 fee) {
+        if (paused) revert ContractPaused();
+        if (tokenIn == address(0) || tokenOut == address(0) || tokenIn == tokenOut) {
+            revert InvalidOrder("invalid token pair");
+        }
         amountOut = amountIn;
         fee = 0;
     }
@@ -244,8 +259,10 @@ contract Exchange {
 
     function transferOwnership(address newOwner) external {
         if (msg.sender != owner) revert Unauthorized(msg.sender);
-        emit OwnershipTransferred(owner, newOwner);
+        require(newOwner != address(0));
+        address previousOwner = owner;
         owner = newOwner;
+        emit OwnershipTransferred(previousOwner, newOwner);
     }
 
     // ── Deposit/Withdraw ───────────────────────────────────────────────

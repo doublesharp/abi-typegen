@@ -351,7 +351,7 @@ The plugin uses the application's provider and signer; it does not include a
 wallet or local key store.
 
 Run `make e2e-unreal UNREAL_ROOT=/path/to/UnrealEngine` with Unreal Engine 5.8.3,
-Rust, and Foundry installed. The test host generates and compiles all 26 Foundry
+Rust, and Foundry installed. The test host generates and compiles all Foundry
 contracts plus a metadata-only fixture, then runs codec, lifecycle, and Anvil
 automation tests. The full local macOS arm64 run passed. Windows build rules are
 provided but unqualified; Linux support is not implemented. The manual
