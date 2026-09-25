@@ -1,0 +1,14 @@
+{
+  "name": "AbiTypegen.Unity.E2E.Editor",
+  "rootNamespace": "AbiTypegen.Unity.E2E.Editor",
+  "references": ["AbiTypegen.Unity.E2E.Runtime", "AbiTypegen.Generated", "AbiTypegen.Unity"],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

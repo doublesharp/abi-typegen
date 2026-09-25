@@ -1,0 +1,18 @@
+{
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.nethereum.unity"
+      ]
+    }
+  ],
+  "dependencies": {
+    "com.doublesharp.abi-typegen.unity": "file:../../../../unity/com.doublesharp.abi-typegen.unity",
+    "com.nethereum.unity": "6.1.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.test-framework": "1.4.6",
+    "com.unity.modules.unitywebrequest": "1.0.0"
+  }
+}

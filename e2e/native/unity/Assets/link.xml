@@ -1,0 +1,4 @@
+<linker>
+  <!-- Test-project-only preservation: Nethereum discovers DTO members through attributes/reflection. -->
+  <assembly fullname="AbiTypegen.Generated" preserve="all" />
+</linker>

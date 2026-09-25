@@ -1,0 +1,14 @@
+{
+  "name": "AbiTypegen.Unity.E2E.Runtime",
+  "rootNamespace": "AbiTypegen.Unity.E2E",
+  "references": ["AbiTypegen.Generated", "AbiTypegen.Unity"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

@@ -1,0 +1,34 @@
+{
+  "name": "AbiTypegen.Unity.E2E.PlayModeTests",
+  "rootNamespace": "AbiTypegen.Unity.E2E.Tests",
+  "references": [
+    "AbiTypegen.Generated",
+    "AbiTypegen.Unity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "Nethereum.ABI.dll",
+    "Nethereum.Accounts.dll",
+    "Nethereum.Contracts.dll",
+    "Nethereum.Hex.dll",
+    "Nethereum.JsonRpc.Client.dll",
+    "Nethereum.RPC.dll",
+    "Nethereum.Signer.dll",
+    "Nethereum.Util.dll",
+    "Nethereum.Web3.dll",
+    "Nethereum.Model.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

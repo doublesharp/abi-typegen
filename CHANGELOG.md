@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Unity adapter package and generated C# compatibility fixtures, with explicit
+  Editor, Anvil, and standalone-player qualification commands. Unity 6000.6.3f1
+  on macOS passes Editor tests and Mono/IL2CPP codec execution; Linux CI remains
+  a separate qualification.
+
 - Elixir bindings backed by Ethers, with metadata-only output, SDK transaction
   data, reads, signed sends, event/error helpers, and Anvil consumer tests.
 

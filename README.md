@@ -137,6 +137,10 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
+Unity uses the existing C# target. The [Unity compatibility tests](e2e/native/unity/README.md)
+cover the adapter package in Unity 6000.6.3f1 on macOS, including Editor tests
+and standalone Mono/IL2CPP codec checks.
+
 There are 23 CLI targets across 17 languages:
 
 | Target     | Works with                                               | What you get                                                                                     |

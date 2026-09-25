@@ -17,6 +17,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python3 e2e/native/unity/test_runner.py
 
   storage:
     name: Optional storage tooling

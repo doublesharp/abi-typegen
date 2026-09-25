@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir e2e-unity e2e-unity-generate bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -256,3 +256,12 @@ e2e-ruby: e2e-native-artifacts
 	cd e2e/native/ruby && ruby verify_generated.rb build/metadata-contracts --metadata
 	cd e2e/native/ruby && bundle exec rspec generated_spec.rb anvil_spec.rb
 	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb anvil_spec.rb
+
+# Unity qualification requires an activated Editor and host player support.
+# It is intentionally separate from e2e-native, whose consumers need no license.
+e2e-unity-generate: e2e-native-artifacts ## Generate the Unity C# consumer fixtures
+	sh e2e/native/unity/generate.sh
+
+e2e-unity: e2e-unity-generate ## Qualify Unity Editor, Anvil, Mono and IL2CPP
+	python3 e2e/native/unity/test_runner.py
+	python3 e2e/native/unity/run.py all

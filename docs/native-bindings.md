@@ -296,3 +296,15 @@ rejected before files are written. The generator does not supply a wallet or
 manage transaction receipts for the application.
 
 Run `make e2e-elixir` for generated-consumer and local Anvil tests.
+
+## Unity compatibility
+
+Unity uses the existing `csharp` target. The adapter package at
+`unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport, an application
+signer interface, and cancellation tied to GameObject lifetime. Generate and
+verify its fixtures using the [Unity consumer guide](../e2e/native/unity/README.md).
+
+The Unity checks are separate from ordinary C# tests. Unity 6000.6.3f1 on macOS
+is tested with Editor codec tests, signed Anvil transactions, and standalone
+Mono/IL2CPP codec execution. Linux has a manual CI workflow but remains
+unqualified until that workflow runs. Android, iOS, and WebGL are not qualified.

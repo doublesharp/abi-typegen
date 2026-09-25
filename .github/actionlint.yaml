@@ -1,0 +1,4 @@
+self-hosted-runner:
+  labels:
+    - unity-6000.6.3f1
+    - unity-linux-il2cpp

@@ -1,0 +1,13 @@
+{
+  "name": "com.doublesharp.abi-typegen.unity",
+  "version": "0.1.0-preview.1",
+  "displayName": "abi-typegen Unity Compatibility",
+  "description": "Unity lifecycle and transport adapters for abi-typegen C# bindings. ABI encoding and decoding remain provided by Nethereum.",
+  "unity": "6000.3",
+  "license": "MIT",
+  "dependencies": {
+    "com.nethereum.unity": "6.1.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.modules.unitywebrequest": "1.0.0"
+  }
+}

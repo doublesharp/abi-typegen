@@ -1,0 +1,146 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "echoUint",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "overloaded",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "overloaded",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "echoTuple",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct CodecCases.Item",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct CodecCases.Item",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "echoArray",
+      "inputs": [
+        {
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "values",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "Changed",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "name": "available",
+          "type": "uint256"
+        },
+        {
+          "name": "required",
+          "type": "uint256"
+        }
+      ]
+    }
+  ]
+}

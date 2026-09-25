@@ -9,6 +9,8 @@ extend-exclude = [
   "e2e/foundry-sample/src/generated-zod/",
   "e2e/hardhat-sample/abi-typegen-out/",
   "e2e/hardhat-sample/pnpm-lock.yaml",
+  # Unity serializes fixed engine field names such as lodBias and ps4pnSessions.
+  "e2e/native/unity/ProjectSettings/*.asset",
   "fuzz/Cargo.lock",
   "fuzz/artifacts/",
   "fuzz/corpus/",

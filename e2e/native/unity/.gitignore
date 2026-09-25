@@ -1,0 +1,14 @@
+/Library/
+/Temp/
+/Obj/
+/Logs/
+/UserSettings/
+/TestResults/
+/Build/
+/__pycache__/
+/Assets/Scenes/
+*.csproj
+*.sln
+
+/Assets/Scenes.meta
+/Assets/InitTestScene*.unity*
