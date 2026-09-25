@@ -9,17 +9,36 @@ use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{ContractIr, NatSpec, SolType};
 use std::collections::{BTreeSet, HashMap};
 
+mod wrappers;
+
 /// Go imports a rendered file needs.
 #[derive(Debug, Default)]
 struct Imports {
     big: bool,
     common: bool,
+    wrappers: bool,
+    wrapper_events: bool,
+    wrapper_errors: bool,
+    wrapper_transactions: bool,
 }
 
 /// Renders `<Name>.go` for `ir` in package `package`.
 pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
+    render_go_file_with_wrappers(ir, package, false)
+}
+
+/// Renders Go ABI metadata and types, optionally adding callable bindings.
+pub fn render_go_file_with_wrappers(ir: &ContractIr, package: &str, wrappers: bool) -> String {
     let registry = TupleRegistry::new(ir);
-    let mut imports = Imports::default();
+    let wrapper_events = wrappers && !ir.events.is_empty();
+    let mut imports = Imports {
+        wrappers,
+        wrapper_events,
+        wrapper_errors: wrappers && !ir.errors.is_empty(),
+        wrapper_transactions: wrappers,
+        big: wrapper_events,
+        common: wrappers,
+    };
     let mut scope = Scope::default();
     let contract = exported(&ir.name);
     // The documented ABI constant keeps its name; anything else that clashes
@@ -60,8 +79,31 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
         body.push_str(&render_struct(name, &fields));
     }
 
+    let constructor_params = ir
+        .constructor
+        .as_ref()
+        .filter(|c| !c.inputs.is_empty())
+        .map(|constructor| {
+            let name = scope.claim(&format!("{contract}ConstructorParams"));
+            let fields = struct_fields(
+                constructor
+                    .inputs
+                    .iter()
+                    .map(|p| (p.name.as_str(), &p.ty, p.internal_type.as_deref())),
+                &registry,
+                &mut |_, ty, internal| go_type(ty, internal, &mut imports),
+            );
+            body.push_str(&format!(
+                "// {name} holds constructor arguments for {}.\n",
+                ir.name
+            ));
+            body.push_str(&render_struct(&name, &fields));
+            name
+        });
+
     // Function parameter structs and constants.
     let function_names = abigen_names(ir.functions.iter().map(|f| f.name.as_str()));
+    let mut function_params = Vec::new();
     let mut consts = Vec::new();
     let mut vars = Vec::new();
     for (function, base) in ir.functions.iter().zip(&function_names) {
@@ -75,9 +117,11 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
             go_bytes(function.selector().as_slice()),
         ));
         if function.inputs.is_empty() {
+            function_params.push(None);
             continue;
         }
         let name = scope.claim(&format!("{contract}{base}Params"));
+        function_params.push(Some(name.clone()));
         let fields = struct_fields(
             function
                 .inputs
@@ -95,6 +139,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
 
     // Event structs and topics.
     let event_names = abigen_names(ir.events.iter().map(|e| e.name.as_str()));
+    let mut event_types = Vec::new();
     for (event, base) in ir.events.iter().zip(&event_names) {
         let signature = event.signature();
         consts.push((
@@ -110,6 +155,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
             ));
         }
         let name = scope.claim(&format!("{contract}{base}Event"));
+        event_types.push(name.clone());
         let fields = struct_fields(
             event
                 .inputs
@@ -134,6 +180,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
 
     // Error structs and selectors.
     let error_names = abigen_names(ir.errors.iter().map(|e| e.name.as_str()));
+    let mut error_types = Vec::new();
     for (error, base) in ir.errors.iter().zip(&error_names) {
         let signature = error.signature();
         consts.push((
@@ -145,6 +192,7 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
             go_bytes(error.selector().as_slice()),
         ));
         let name = scope.claim(&format!("{contract}{base}Error"));
+        error_types.push(name.clone());
         let fields = struct_fields(
             error
                 .inputs
@@ -158,6 +206,23 @@ pub fn render_go_file(ir: &ContractIr, package: &str) -> String {
             error.natspec.as_ref(),
         ));
         body.push_str(&render_struct(&name, &fields));
+    }
+
+    if wrappers {
+        body.push_str(&wrappers::render(wrappers::Context {
+            ir,
+            registry: &registry,
+            tuple_names: &tuple_names,
+            scope: &mut scope,
+            imports: &mut imports,
+            function_names: &function_names,
+            function_params: &function_params,
+            event_names: &event_names,
+            event_types: &event_types,
+            error_names: &error_names,
+            error_types: &error_types,
+            constructor_params: constructor_params.as_deref(),
+        }));
     }
 
     let mut out = String::new();
@@ -328,6 +393,41 @@ fn sol_type_to_go(
 }
 
 fn render_imports(imports: &Imports) -> String {
+    if imports.wrappers {
+        let mut standard = BTreeSet::from(["\"fmt\"", "\"strings\""]);
+        if imports.big {
+            standard.insert("\"math/big\"");
+        }
+        if imports.wrapper_errors {
+            standard.insert("\"bytes\"");
+        }
+        if imports.wrapper_events {
+            standard.insert("\"context\"");
+        }
+        let mut sdk = BTreeSet::from([
+            "\"github.com/ethereum/go-ethereum/accounts/abi\"",
+            "\"github.com/ethereum/go-ethereum/accounts/abi/bind\"",
+            "\"github.com/ethereum/go-ethereum/common\"",
+        ]);
+        if imports.wrapper_events {
+            sdk.insert("\"github.com/ethereum/go-ethereum\"");
+            sdk.insert("\"github.com/ethereum/go-ethereum/event\"");
+        }
+        if imports.wrapper_events || imports.wrapper_transactions {
+            sdk.insert("\"github.com/ethereum/go-ethereum/core/types\"");
+        }
+        let body = [standard, sdk]
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .map(|path| format!("\t{path}\n"))
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        return format!("import (\n{body})\n\n");
+    }
     let mut groups: Vec<BTreeSet<&str>> = Vec::new();
     if imports.big {
         groups.push(BTreeSet::from(["\"math/big\""]));
@@ -487,6 +587,39 @@ fn go_bytes(bytes: &[u8]) -> String {
 mod tests {
     use super::*;
     use abi_typegen_core::parser::parse_artifact;
+
+    #[test]
+    fn wrappers_are_opt_in_and_resolve_canonical_overloads() {
+        let ir = parse_artifact("Token", r#"{"abi":[
+            {"type":"function","name":"put","inputs":[{"name":"value","type":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},
+            {"type":"function","name":"put","inputs":[{"name":"value","type":"bytes"}],"outputs":[],"stateMutability":"payable"},
+            {"type":"function","name":"get","inputs":[],"outputs":[{"name":"value","type":"uint256"}],"stateMutability":"view"},
+            {"type":"event","name":"Stored","inputs":[{"name":"owner","type":"address","indexed":true},{"name":"value","type":"uint256","indexed":false}],"anonymous":false},
+            {"type":"error","name":"Denied","inputs":[{"name":"owner","type":"address"}]}
+        ]}"#).expect("valid abi");
+        let plain = render_go_file_with_wrappers(&ir, "contracts", false);
+        assert_eq!(plain, render_go_file(&ir, "contracts"));
+        let wrapped = render_go_file_with_wrappers(&ir, "contracts", true);
+        assert!(wrapped.contains("func NewTokenBinding("), "{wrapped}");
+        assert!(wrapped.contains("TokenPutSignature"), "{wrapped}");
+        assert!(wrapped.contains("TokenPut0Signature"), "{wrapped}");
+        assert!(
+            wrapped.contains("func (c *TokenBinding) EncodePut("),
+            "{wrapped}"
+        );
+        assert!(
+            wrapped.contains("func (c *TokenBinding) DecodeGetResult("),
+            "{wrapped}"
+        );
+        assert!(
+            wrapped.contains("func (c *TokenBinding) FilterStored("),
+            "{wrapped}"
+        );
+        assert!(
+            wrapped.contains("func (c *TokenBinding) DecodeDeniedError("),
+            "{wrapped}"
+        );
+    }
 
     fn render(abi: &str) -> String {
         let ir = parse_artifact("Token", &format!(r#"{{"abi":{abi}}}"#)).expect("valid abi");

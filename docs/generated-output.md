@@ -28,18 +28,23 @@ supports those import conventions.
 
 ## Other targets
 
-Each selected contract produces one primary file. These targets do not emit
+Each selected contract produces its primary language files. C/C++ also emit a
+shared runtime header. These targets do not emit
 TypeScript ABI modules or an `index.ts` barrel.
 
 | Target     | File           | Output purpose                                                |
 | ---------- | -------------- | ------------------------------------------------------------- |
-| `python`   | `<Name>.py`    | Python type declarations compatible with web3.py usage        |
-| `go`       | `<Name>.go`    | ABI, selectors, and structs in go-ethereum's type model       |
+| `python`   | `<Name>.py`    | ABI, typed values, codecs, and web3.py contract wrappers        |
+| `go`       | `<Name>.go`    | ABI, value types, codecs, and go-ethereum contract wrappers |
 | `rust`     | `<name>.rs`    | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`      |
-| `swift`    | `<Name>.swift` | ABI, selectors, and public value types for web3swift          |
-| `csharp`   | `<Name>.cs`    | C# contract-related types                                     |
-| `kotlin`   | `<Name>.kt`    | ABI, selectors, and value types built on web3j                |
+| `swift`    | `<Name>.swift` | ABI, public value types, codecs, and web3swift operations |
+| `csharp`   | `<Name>.cs`    | ABI, Nethereum DTOs, codecs, and contract wrappers |
+| `kotlin`   | `<Name>.kt`    | ABI, value types, codecs, and web3j contract wrappers |
 | `solidity` | `I<Name>.sol`  | Solidity interface reconstructed from ABI data                |
+| `java`     | `<Name>.java` | ABI, value types, codecs, and web3j contract wrappers |
+| `dart`     | `<name>.dart` | ABI, value types, codecs, and web3dart contract wrappers |
+| `c`        | `atg_<Name>.h` | Typed C API using the shared Rust codec runtime |
+| `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp` | C API with C++ ownership and client helpers |
 | `yaml`     | `<Name>.yaml`  | Human-readable functions, events, errors, and parameter types |
 
 The Solidity target reconstructs tuple structs and emits events, errors,
@@ -47,8 +52,12 @@ overloads, and external function signatures. It cannot recover a contract's
 implementation from an ABI.
 
 Output APIs vary by language. Rust output includes alloy's contract instance.
-The Go, Swift, and Kotlin output does not yet include a bound contract client or
-typed call wrappers. Inspect the output before integrating it with your runtime SDK.
+Go, Swift, Kotlin, and C# include SDK-backed callable wrappers by default.
+Java and Dart also generate SDK-backed wrappers. C/C++ use a shared codec runtime
+and caller-supplied transport. See [native bindings](native-bindings.md) for
+dependencies, ownership, and local-chain validation. Java filenames follow the
+normalized public class name; Dart filenames use its lower-camel-case form.
+C/C++ filenames and symbols use an `atg_` prefix.
 
 ## Go, Rust, Swift, and Kotlin
 
@@ -60,7 +69,7 @@ of every function, event, and error. Each tuple becomes a named type.
 | Go     | `github.com/ethereum/go-ethereum` (`common`, plus `math/big`)              | One file per contract in the configured `package`     |
 | Rust   | `alloy` with `contract` and `serde` (or `sol-types`, `json`, `serde` without wrappers), and `serde` with `derive` | `<name>.rs` per contract, re-exported from `mod.rs` |
 | Swift  | web3swift 3.x (`BigInt`, `Web3Core`); depend on the `web3swift` product    | `public enum <Name>` holding every type and constant  |
-| Kotlin | `org.web3j:abi` (web3j 6 requires JDK 21)                                  | `object <Name>` in the configured `package`           |
+| Kotlin | `org.web3j:core` for wrappers, `org.web3j:abi` for types (web3j 6 requires JDK 21)                                  | `object <Name>` in the configured `package`           |
 
 - **Go** follows abigen. Constants are `<Name>TransferSignature`,
   `<Name>TransferSelector` (`[4]byte`), `<Name>TransferEventTopic`
@@ -100,8 +109,8 @@ of every function, event, and error. Each tuple becomes a named type.
   getter without name mangling. A struct field named `value`, `typeAsString`, or
   `componentType` gets a trailing underscore because web3j's `Array` already
   defines those getters. web3j cannot encode fixed arrays longer than 32 elements.
-  web3j 6 cannot reflectively decode tuples containing nested dynamic arrays,
-  such as `uint256[][]`; those tuples still encode successfully.
+  Generated wrapper decoders handle nested dynamic arrays and tuples directly,
+  including layouts that web3j 6 cannot decode through reflection.
 
 Swift and Kotlin contract namespaces also avoid SDK names: `String` becomes
 `String2`. Kotlin names matching generated web3j types use a `Contract` suffix,

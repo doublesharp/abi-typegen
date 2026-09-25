@@ -7,16 +7,24 @@
     "typecheck": "tsc --noEmit",
     "typecheck:zod": "tsc --noEmit -p tsconfig.zod.json",
     "test": "tsc --noEmit",
-    "test:runtime": "node test-ethers-runtime.mjs"
+    "test:runtime": "node test-ethers-runtime.mjs",
+    "test:anvil": "node --test --test-force-exit test-anvil.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@tanstack/react-query": "^5.103.2",
+    "@testing-library/react": "^16.3.3",
     "ethers": "^6.17.0",
     "ethers5": "npm:ethers@5.8.0",
+    "jsdom": "^30.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "typescript": "^6.0.3",
     "viem": "^2.53.1",
+    "wagmi": "^3.7.7",
+    "web3": "^4.16.0",
     "zod": "^4.4.3"
   }
 }

@@ -15,7 +15,7 @@ git push origin v<version>
 
 ## Versions and validation
 
-Keep the CLI, workspace crates, internal dependency requirements, and both npm
+Keep the CLI, workspace crates including `abi-typegen-runtime`, internal dependency requirements, and both npm
 packages on the intended release version. Update Cargo.lock along with Rust
 manifest changes. Move the relevant Unreleased changelog entries into the release
 section and use that version for the `v<version>` tag.
@@ -104,3 +104,10 @@ A failed checksum comparison is a publication or artifact-integrity problem.
 Investigate the manifest and archive; do not disable the installer check. Existing
 releases that have no checksum manifest cannot satisfy this preparation flow
 without completing the corresponding release assets.
+
+## C/C++ runtime compatibility
+
+Release the runtime crate at the same version as the generator. The generated
+`abi_typegen.h` and runtime header must match. Validate both C and C++ consumer
+builds and ownership tests before publishing. Native CLI archives contain the
+generator; C/C++ applications build and link the runtime separately.

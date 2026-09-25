@@ -28,3 +28,6 @@ when working with an older package.
   configuration, migration, and returning to defaults.
 - [Releasing](releasing.md): matching package versions, binary assets, checksum
   manifests, and publication order.
+
+- [Native contract bindings](native-bindings.md): runtime dependencies, C/C++ ownership,
+  callable wrappers, and local Anvil integration tests.

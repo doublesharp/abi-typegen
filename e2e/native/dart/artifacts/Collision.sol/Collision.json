@@ -1,0 +1,15 @@
+{
+  "abi": [
+    {"type":"function","name":"fooBar","inputs":[{"name":"x","type":"uint256"}],"outputs":[],"stateMutability":"view"},
+    {"type":"function","name":"foo_bar","inputs":[{"name":"x","type":"uint256"}],"outputs":[],"stateMutability":"view"},
+    {"type":"function","name":"contract","inputs":[],"outputs":[],"stateMutability":"view"},
+    {"type":"function","name":"write","inputs":[{"name":"client","type":"uint256"},{"name":"credentials","type":"uint256"},{"name":"chainId","type":"uint256"},{"name":"maxGas","type":"uint256"},{"name":"gasPrice","type":"uint256"},{"name":"value","type":"uint256"}],"outputs":[],"stateMutability":"payable"},
+    {"type":"function","name":"multi","inputs":[],"outputs":[{"name":"a","type":"uint256"},{"name":"b","type":"uint256"}],"stateMutability":"view"},
+    {"type":"function","name":"useTuple","inputs":[{"name":"item","type":"tuple","internalType":"struct Collision.MultiResult","components":[{"name":"x","type":"uint256"}]}],"outputs":[],"stateMutability":"view"},
+    {"type":"event","name":"Changed","anonymous":false,"inputs":[{"name":"value","type":"uint256","indexed":true}]},
+    {"type":"event","name":"Changed","anonymous":false,"inputs":[{"name":"account","type":"address","indexed":true}]},
+    {"type":"event","name":"Mixed","anonymous":false,"inputs":[{"name":"key","type":"tuple","indexed":true,"components":[{"name":"id","type":"uint256"}]},{"name":"owner","type":"address","indexed":true},{"name":"details","type":"tuple","indexed":false,"components":[{"name":"count","type":"uint256"},{"name":"flag","type":"bool"}]}]},
+    {"type":"error","name":"Denied","inputs":[{"name":"value","type":"uint256"}]},
+    {"type":"error","name":"Denied","inputs":[{"name":"account","type":"address"}]}
+  ]
+}

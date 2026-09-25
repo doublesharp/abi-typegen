@@ -2559,3 +2559,58 @@ fn native_namespace_collisions_fail_before_writing() {
         );
     }
 }
+
+#[test]
+fn c_and_cpp_share_one_runtime_header_and_keep_types_without_wrappers() {
+    let dir = temp_test_dir("native_c_targets");
+    let artifacts_dir = dir.join("out");
+    for name in ["Token", "Vault", "String"] {
+        let folder = artifacts_dir.join(format!("{name}.sol"));
+        std::fs::create_dir_all(&folder).unwrap();
+        std::fs::write(folder.join(format!("{name}.json")), r#"{"abi":[{"type":"function","name":"read","inputs":[],"outputs":[{"name":"amount","type":"uint256"}],"stateMutability":"view"}]}"#).unwrap();
+    }
+    let config = Config {
+        artifacts_dir,
+        out_dir: dir.join("generated"),
+        targets: vec![Target::C, Target::Cpp],
+        wrappers: false,
+        contracts: vec![],
+        exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.into(),
+    };
+    run_generate(&config, false).unwrap();
+    for target in ["c", "cpp"] {
+        let out = config.out_dir.join(target);
+        assert!(out.join("abi_typegen.h").exists());
+        let header = std::fs::read_to_string(out.join("atg_Token.h")).unwrap();
+        assert!(header.contains("atg_Token_atg_read_returns"));
+        assert!(!header.contains("client->transport"));
+        assert!(out.join("atg_Vault.h").exists());
+        assert!(out.join("atg_String.h").exists());
+        assert!(!out.join("String.h").exists());
+    }
+    assert!(config.out_dir.join("cpp/atg_Token.hpp").exists());
+    cleanup(&dir);
+}
+
+#[test]
+fn native_headers_do_not_shadow_runtime_or_standard_headers() {
+    let dir = temp_test_dir("native_runtime_collision");
+    let artifacts_dir = dir.join("out");
+    let folder = artifacts_dir.join("abi_typegen.sol");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("abi_typegen.json"), r#"{"abi":[]}"#).unwrap();
+    let config = Config {
+        artifacts_dir,
+        out_dir: dir.join("generated"),
+        targets: vec![Target::C],
+        wrappers: true,
+        contracts: vec![],
+        exclude: vec![],
+        package: abi_typegen_config::DEFAULT_PACKAGE.into(),
+    };
+    run_generate(&config, false).unwrap();
+    assert!(config.out_dir.join("atg_abi_typegen.h").exists());
+    assert!(config.out_dir.join("abi_typegen.h").exists());
+    cleanup(&dir);
+}

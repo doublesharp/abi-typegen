@@ -8,6 +8,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- SDK-backed contract wrappers for Go, Swift, Kotlin, and C#, including typed
+  calls, transaction preparation/submission, offline ABI codecs, and event and
+  custom-error helpers. `--no-wrappers` retains primary metadata and value types.
+- Go event subscriptions return typed events through the configured provider.
+- Java and Dart targets using web3j and web3dart.
+- Callable Python wrappers replace generated stub methods when wrappers are enabled.
+- C11 and C++17 targets backed by a shared Rust/Alloy runtime. C exposes explicit
+  result ownership; C++ wraps results with RAII. Transport and signing are supplied
+  by the consuming application.
+- Generated-consumer tests and disposable Anvil integration tests in GitHub CI,
+  including TypeScript SDK calls and mounted wagmi React hooks.
+
+### Fixed
+
+- Go event decoding preserves indexed tuple topic hashes.
+- Python wrapper names remain distinct from codec, event, and error helpers;
+  generated parameters avoid reserved receiver and transaction names.
+- C/C++ contract headers use an `atg_` prefix so names such as `String` cannot
+  shadow standard library headers on case-insensitive filesystems.
+
+### Changed
+
+- Add native input and decode checks, including nonpayable transaction values and
+  canonical ABI data validation in the C runtime. Regenerate bindings and compile
+  consumers when upgrading.
+
+
 ## [0.5.1] - 2026-09-24
 
 Fixes tuple decoding and generated bindings across native and TypeScript targets.

@@ -4,6 +4,7 @@ members = [
     "crates/abi-typegen-core",
     "crates/abi-typegen-config",
     "crates/abi-typegen-codegen",
+    "crates/abi-typegen-runtime",
 ]
 resolver = "2"
 

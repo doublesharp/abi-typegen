@@ -8,6 +8,7 @@ publish = false
 [workspace]
 
 [dependencies]
-alloy = { version = "2", default-features = false, features = ["sol-types", "contract", "json-abi", "serde"] }
+alloy = { version = "2", default-features = false, features = ["sol-types", "contract", "json-abi", "serde", "provider-http", "signer-local", "reqwest-rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt", "time"] }

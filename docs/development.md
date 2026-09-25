@@ -34,12 +34,13 @@ Node or Python.
 | `src/`                        | CLI commands, artifact discovery, generation, watching, and ABI fetching |
 | `crates/abi-typegen-core/`    | ABI parsing and intermediate types                                       |
 | `crates/abi-typegen-config/`  | Configuration and target selection                                       |
+| `crates/abi-typegen-runtime/` | Shared Rust/Alloy codec and C ABI for C/C++ consumers |
 | `crates/abi-typegen-codegen/` | Target renderers and type mapping                                        |
 | `npm/abi-typegen/`            | npm launcher, binary installation, and checksum preparation              |
 | `npm/hardhat-abi-typegen/`    | Hardhat 2 and Hardhat 3 plugin entry points                              |
 | `tests/`, `npm/tests/`        | CLI, packaging, installer, and storage regression tests                  |
 | `e2e/`                        | Foundry and Hardhat projects used to exercise generated bindings         |
-| `e2e/native/`                 | Go, Rust, Swift, and Kotlin consumers that build the generated bindings  |
+| `e2e/native/`                 | Native language consumers that compile and exercise generated bindings  |
 | `fuzz/`                       | Fuzz targets, curated seeds, and local corpus/output                     |
 
 ## Rust checks
@@ -86,16 +87,18 @@ manifest until [release preparation](releasing.md) runs.
 
 - Storage tooling: `make test-storage` uses Python 3.11+ on macOS or Linux.
 - Workflow syntax: `actionlint` checks `.github/workflows/`.
-- Foundry integration: install Forge and the sample's pnpm dependencies, then run
+- Foundry integration: use Node 24, install Forge and the sample's pnpm dependencies, then run
   `make e2e-foundry`.
 - Hardhat integration: install dependencies in the relevant `e2e/hardhat-sample`
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
-- Native-language integration: with Forge installed, `make e2e-go`, `e2e-rust`,
-  `e2e-swift`, and `e2e-kotlin` generate bindings from `e2e/foundry-sample` into
+- Native-language integration: `make e2e-native` runs Go, Rust, Swift, Kotlin,
+  Java, C#, Dart, Python, C, and C++ consumers. Individual `e2e-<target>` tasks
+  generate bindings from `e2e/foundry-sample` into
   the consumers under `e2e/native/` and run each language's formatter, linter,
   and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
-  JDK 21. `make e2e-native` runs all four. The consumers do not build until a
+  JDK 21. C/C++ additionally need a C11/C++17 compiler, C# needs .NET 10,
+  Dart needs its SDK, and Python needs Python 3.11+ with venv support. The consumers do not build until a
   target has generated their bindings.
 - Coverage: `make coverage` requires `cargo-llvm-cov` and Node/npm.
 - Fuzzing: the `fuzz-*` Makefile targets require `cargo-fuzz` and nightly Rust.
@@ -108,3 +111,10 @@ history in [CHANGELOG.md](../CHANGELOG.md), with changes since the latest tag un
 Unreleased. Keep execution plans, task checklists, and one-off test results out of
 user guides. When changing behavior, add a regression test and update the relevant
 guide. The [release guide](releasing.md) covers publication.
+
+## Local RPC integration tests
+
+Native consumer Make targets use [the Anvil harness](native-bindings.md#tests-against-a-local-chain)
+for signed submissions against a disposable chain. Install Foundry so `anvil`,
+`cast`, and `forge` are available. No external RPC endpoint or secrets are needed.
+The CI native matrix runs the same Make targets.

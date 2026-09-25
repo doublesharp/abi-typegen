@@ -94,6 +94,7 @@ jobs:
       - run: cd npm && pnpm run format:check
 
   e2e-foundry:
+    timeout-minutes: 30
     name: E2E Foundry
     runs-on: ubuntu-latest
     steps:
@@ -101,12 +102,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - uses: pnpm/action-setup@v4
         with:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: e2e/foundry-sample/pnpm-lock.yaml
       - run: cargo build
@@ -117,12 +121,14 @@ jobs:
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated --target ethers
       - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit
       - run: cd e2e/foundry-sample && pnpm run test:runtime
+      - run: python3 e2e/native/anvil.py --cwd e2e/foundry-sample pnpm run test:anvil
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
       - run: cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
       - run: cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity
       - run: cd e2e/foundry-sample && forge build --contracts ./solidity-validation --out ./out-solidity-validation
 
   e2e-native:
+    timeout-minutes: 30
     name: E2E ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -137,6 +143,16 @@ jobs:
             os: ubuntu-latest
           - target: swift
             os: macos-15
+          - target: c
+            os: ubuntu-latest
+          - target: csharp
+            os: ubuntu-latest
+          - target: java
+            os: ubuntu-latest
+          - target: dart
+            os: ubuntu-latest
+          - target: python
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -148,20 +164,31 @@ jobs:
             .
             e2e/native/rust
       - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - if: matrix.target == 'go'
         uses: actions/setup-go@v5
         with:
           go-version-file: e2e/native/go/go.mod
           cache-dependency-path: e2e/native/go/go.sum
-      - if: matrix.target == 'kotlin'
+      - if: matrix.target == 'kotlin' || matrix.target == 'java'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
-      - if: matrix.target == 'kotlin'
+      - if: matrix.target == 'kotlin' || matrix.target == 'java'
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.7.1"
+      - if: matrix.target == 'csharp'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - if: matrix.target == 'dart'
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.13.4"
       - run: make e2e-${{ matrix.target }}
 
   e2e-hardhat:

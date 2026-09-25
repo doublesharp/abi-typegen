@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     implementation("org.web3j:abi:6.0.0")
+    implementation("org.web3j:core:6.0.0")
     testImplementation(kotlin("test"))
 }
 

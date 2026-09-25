@@ -15,3 +15,14 @@ pub mod wagmi;
 pub mod web3js;
 pub mod yaml;
 pub mod zod;
+
+/// C11 contract bindings.
+pub mod c;
+/// C++17 contract bindings.
+pub mod cpp;
+
+/// Java contract bindings.
+pub mod java;
+
+/// Dart contract bindings.
+pub mod dart;

@@ -3,9 +3,11 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
+
+DART ?= dart
 
 DOUBLCOV ?= npx --yes @0xdoublesharp/doublcov@0
 
@@ -40,6 +42,7 @@ e2e-foundry: build ## E2E: Foundry → abi-typegen → tsc
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-zod --target zod
 	cd e2e/foundry-sample && pnpm exec tsc --noEmit -p tsconfig.zod.json
+	python3 e2e/native/anvil.py --cwd e2e/foundry-sample node --test --test-force-exit test-anvil.mjs
 	cd e2e/foundry-sample && ../../target/debug/abi-typegen generate --artifacts ./out --out ./src/generated-solidity --target solidity
 	cd e2e/foundry-sample && forge build --contracts ./solidity-validation --out ./out-solidity-validation
 	@echo "e2e-foundry: pass"
@@ -56,22 +59,23 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 	@echo "e2e-hardhat3: pass"
 
 # ── Native-language e2e ──────────────────────────────────────────────────────
-# Generates Go, Rust, Swift, and Kotlin bindings from the Foundry sample and
-# builds each in a consumer project with that language's formatter, linter, and
-# tests. Requires: forge, cargo, and the toolchain of each target (go, swift,
-# gradle with JDK 21).
+# Generates native bindings from the Foundry sample and tests real consumers.
+# Requires Foundry (forge, cast, anvil), Python 3.11+, Cargo, and the selected
+# language toolchain. The same targets run in GitHub Actions.
 
 NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
 
-e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin ## E2E: all native-language targets
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python ## E2E: all native-language targets
 
 e2e-native-artifacts: build
 	cd e2e/foundry-sample && forge build
 
 e2e-go: e2e-native-artifacts ## E2E: Go bindings → gofmt, go vet, go test
 	cd e2e/native/go && rm -rf contracts && $(NATIVE_TYPEGEN) --out ./contracts --target go
+	cd e2e/native/go && rm -rf usage/tupleindexed && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./usage/tupleindexed --target go --package tupleindexed
 	cd e2e/native/go && unformatted="$$(gofmt -l .)" && test -z "$$unformatted" || { echo "gofmt: $$unformatted"; exit 1; }
 	cd e2e/native/go && go vet ./... && go test ./...
+	python3 e2e/native/anvil.py --cwd e2e/native/go go test ./usage -run TestGeneratedBindingsAnvil -count=1
 	@echo "e2e-go: pass"
 
 e2e-rust: e2e-native-artifacts ## E2E: Rust bindings → rustfmt, clippy, rustdoc, tests
@@ -80,17 +84,20 @@ e2e-rust: e2e-native-artifacts ## E2E: Rust bindings → rustfmt, clippy, rustdo
 	cd e2e/native/rust && cargo clippy --all-targets -- -D warnings
 	cd e2e/native/rust && RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 	cd e2e/native/rust && cargo test
+	python3 e2e/native/anvil.py --cwd e2e/native/rust cargo test anvil -- --nocapture
 	@echo "e2e-rust: pass"
 
 e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across modules, tests
 	cd e2e/native/swift && rm -rf Sources/Generated && $(NATIVE_TYPEGEN) --out ./Sources/Generated --target swift
 	cd e2e/native/swift && swift build --build-tests
 	cd e2e/native/swift && swift test
+	python3 e2e/native/anvil.py --cwd e2e/native/swift swift test
 	@echo "e2e-swift: pass"
 
 e2e-kotlin: e2e-native-artifacts ## E2E: Kotlin bindings → Gradle build with web3j, Java interop tests
 	cd e2e/native/kotlin && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target kotlin --package com.example.contracts
 	cd e2e/native/kotlin && gradle test --console=plain
+	python3 e2e/native/anvil.py --cwd e2e/native/kotlin gradle test --rerun-tasks --console=plain
 	@echo "e2e-kotlin: pass"
 
 bench: ## Benchmark abi-typegen vs TypeChain (10 runs each)
@@ -185,3 +192,32 @@ scratch-disable: ## Return to default paths, preserving external data
 
 test-storage: ## Test optional storage tooling (Python 3.11+)
 	PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_scratch.py
+
+# C and C++ share one runtime; both consumer compilers are exercised.
+e2e-c: e2e-native-artifacts
+	cargo build -p abi-typegen-runtime
+	python3 e2e/native/anvil.py sh e2e/native/c/run.sh
+
+e2e-java: e2e-native-artifacts
+	cd e2e/native/java && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target java --package com.example.contracts
+	cd e2e/native/java && gradle test --console=plain
+	python3 e2e/native/anvil.py --cwd e2e/native/java gradle test --rerun-tasks --console=plain
+
+e2e-csharp: e2e-native-artifacts
+	cd e2e/native/csharp && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target csharp
+	cd e2e/native/csharp && dotnet run --project Consumer.csproj
+	python3 e2e/native/anvil.py --cwd e2e/native/csharp dotnet run --project Consumer.csproj
+
+e2e-dart: e2e-native-artifacts
+	cd e2e/native/dart && rm -rf lib/generated && $(NATIVE_TYPEGEN) --out ./lib/generated --target dart
+	cd e2e/native/dart && rm -rf lib/regressions && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./lib/regressions --target dart
+	cd e2e/native/dart && $(DART) pub get && $(DART) analyze && $(DART) test
+	cd e2e/native/dart && $(DART) run bin/validate_generated.dart
+	python3 e2e/native/anvil.py --cwd e2e/native/dart $(DART) test
+
+e2e-python: e2e-native-artifacts
+	python3 -m venv e2e/native/python/.venv
+	e2e/native/python/.venv/bin/python -m pip install -r e2e/native/python/requirements.txt
+	cd e2e/native/python && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target python
+	cd e2e/native/python && .venv/bin/python -m compileall -q Generated && .venv/bin/python test_consumer.py
+	python3 e2e/native/anvil.py --cwd e2e/native/python .venv/bin/python test_consumer.py

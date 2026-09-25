@@ -28,7 +28,7 @@ pub enum ConfigError {
     },
 }
 
-/// Package name used by the Go and Kotlin targets when none is configured.
+/// Package name used by the Go, Kotlin, and Java targets when none is configured.
 pub const DEFAULT_PACKAGE: &str = "contracts";
 
 const GO_KEYWORDS: &[&str] = &[
@@ -90,6 +90,63 @@ const KOTLIN_HARD_KEYWORDS: &[&str] = &[
     "while",
 ];
 
+const JAVA_KEYWORDS: &[&str] = &[
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "strictfp",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
+    "_",
+    "true",
+    "false",
+    "null",
+];
+
 fn is_identifier(segment: &str) -> bool {
     let mut chars = segment.chars();
     matches!(chars.next(), Some(c) if c.is_ascii_alphabetic() || c == '_')
@@ -98,8 +155,8 @@ fn is_identifier(segment: &str) -> bool {
 
 /// Checks `package` against the rules of each target that uses it.
 ///
-/// Go needs a lowercase identifier that is not a keyword. Kotlin needs
-/// dot-separated identifiers, none of them a hard keyword. Other targets
+/// Go needs a lowercase identifier that is not a keyword. Kotlin and Java need
+/// dot-separated identifiers without reserved keywords. Other targets
 /// ignore the package.
 pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigError> {
     let invalid = |target, reason| ConfigError::InvalidPackage {
@@ -131,6 +188,17 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
                     return Err(invalid("kotlin", "a package segment is a Kotlin keyword"));
                 }
             }
+            Target::Java => {
+                if !package.split('.').all(is_identifier) {
+                    return Err(invalid("java", "expected dot-separated identifiers"));
+                }
+                if package
+                    .split('.')
+                    .any(|segment| JAVA_KEYWORDS.contains(&segment))
+                {
+                    return Err(invalid("java", "a package segment is a Java keyword"));
+                }
+            }
             Target::Viem
             | Target::Zod
             | Target::Wagmi
@@ -142,6 +210,9 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
             | Target::Swift
             | Target::CSharp
             | Target::Solidity
+            | Target::C
+            | Target::Cpp
+            | Target::Dart
             | Target::Yaml => {}
         }
     }
@@ -166,6 +237,10 @@ pub fn parse_target(s: &str) -> Option<Target> {
         "csharp" | "cs" => Some(Target::CSharp),
         "kotlin" | "kt" => Some(Target::Kotlin),
         "solidity" | "sol" => Some(Target::Solidity),
+        "java" => Some(Target::Java),
+        "dart" => Some(Target::Dart),
+        "c" => Some(Target::C),
+        "cpp" | "c++" => Some(Target::Cpp),
         "yaml" | "yml" => Some(Target::Yaml),
         _ => None,
     }
@@ -201,6 +276,14 @@ pub enum Target {
     Kotlin,
     /// Generate Solidity interfaces.
     Solidity,
+    /// Generate Dart bindings using web3dart.
+    Dart,
+    /// Generate Java bindings using web3j.
+    Java,
+    /// Generate C11 bindings with the shared ABI runtime.
+    C,
+    /// Generate C++17 bindings with the shared ABI runtime.
+    Cpp,
     /// Generate YAML ABI descriptions.
     Yaml,
 }
@@ -232,6 +315,10 @@ impl Target {
             | Self::CSharp
             | Self::Kotlin
             | Self::Solidity
+            | Self::Java
+            | Self::C
+            | Self::Cpp
+            | Self::Dart
             | Self::Yaml => false,
         }
     }
@@ -252,6 +339,10 @@ impl Target {
             | Self::CSharp
             | Self::Kotlin
             | Self::Solidity
+            | Self::Java
+            | Self::C
+            | Self::Cpp
+            | Self::Dart
             | Self::Yaml => None,
         }
     }
@@ -262,7 +353,7 @@ impl<'de> Deserialize<'de> for Target {
         let s = String::deserialize(d)?;
         parse_target(&s).ok_or_else(|| {
             serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
                 s
             ))
         })
@@ -324,7 +415,7 @@ fn deserialize_targets<'de, D: serde::Deserializer<'de>>(
             while let Some(s) = seq.next_element::<String>()? {
                 let t = parse_target(s.trim()).ok_or_else(|| {
                     de::Error::custom(format!(
-                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
                         s
                     ))
                 })?;
@@ -347,7 +438,7 @@ fn parse_targets_from_str(s: &str) -> Result<Vec<Target>, String> {
     for part in parts {
         let t = parse_target(part).ok_or_else(|| {
             format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
                 part
             )
         })?;
@@ -422,7 +513,7 @@ pub struct Config {
     pub contracts: Vec<String>,
     /// Exclude contracts matching these glob patterns.
     pub exclude: Vec<String>,
-    /// Package for Go and Kotlin output. See [`validate_package`].
+    /// Package or namespace for Go, Kotlin, and Java output. See [`validate_package`].
     pub package: String,
 }
 
@@ -508,6 +599,23 @@ contracts = ["MyToken", "Vault"]
         assert_eq!(*cfg.target(), Target::Viem);
         assert!(!cfg.wrappers);
         assert_eq!(cfg.contracts, vec!["MyToken", "Vault"]);
+    }
+
+    #[test]
+    fn new_native_targets_parse_and_do_not_emit_typescript_modules() {
+        for (name, target) in [
+            ("java", Target::Java),
+            ("dart", Target::Dart),
+            ("c", Target::C),
+            ("cpp", Target::Cpp),
+            ("c++", Target::Cpp),
+        ] {
+            let config =
+                Config::from_toml_str(&format!("[abi-typegen]\ntarget = \"{name}\"\n")).unwrap();
+            assert_eq!(config.target(), &target);
+            assert!(!target.emits_typescript_abi());
+            assert!(!target.emits_barrel());
+        }
     }
 
     #[test]
@@ -774,6 +882,16 @@ target = "viem,badtarget"
             );
         }
         assert!(validate_package("com.example.contracts", &[Target::Kotlin]).is_ok());
+    }
+
+    #[test]
+    fn java_package_uses_java_keywords() {
+        for bad in ["com.int", "com._", "com.null", "com..example", "com.1x", ""] {
+            let error = validate_package(bad, &[Target::Java]).unwrap_err();
+            assert!(error.to_string().contains("target java"));
+        }
+        assert!(validate_package("com.object.contracts", &[Target::Java]).is_ok());
+        assert!(validate_package("com.object.contracts", &[Target::Kotlin]).is_err());
     }
 
     #[test]

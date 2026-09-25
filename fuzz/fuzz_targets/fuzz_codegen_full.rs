@@ -44,6 +44,11 @@ fuzz_target!(|data: &[u8]| {
         abi_typegen_config::Target::Rust,
         abi_typegen_config::Target::Swift,
         abi_typegen_config::Target::Kotlin,
+        abi_typegen_config::Target::C,
+        abi_typegen_config::Target::Cpp,
+        abi_typegen_config::Target::CSharp,
+        abi_typegen_config::Target::Java,
+        abi_typegen_config::Target::Dart,
     ] {
         let config = abi_typegen_config::Config {
             targets: vec![target],

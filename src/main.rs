@@ -43,7 +43,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package for Go and Kotlin output (default: "contracts")
+        /// Package or namespace for Go, Kotlin, and Java output (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -79,7 +79,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package for Go and Kotlin output (default: "contracts")
+        /// Package or namespace for Go, Kotlin, and Java output (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -366,13 +366,17 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::CSharp => "csharp",
         Target::Kotlin => "kotlin",
         Target::Solidity => "solidity",
+        Target::Java => "java",
+        Target::Dart => "dart",
+        Target::C => "c",
+        Target::Cpp => "cpp",
         Target::Yaml => "yaml",
     }
 }
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "yaml",
+    "csharp", "kotlin", "solidity", "java", "dart", "c", "cpp", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -425,7 +429,7 @@ fn apply_overrides(
             let trimmed = part.trim();
             let parsed = parse_target(trimmed).ok_or_else(|| {
                 anyhow::anyhow!(
-                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|solidity|yaml",
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
                     trimmed
                 )
             })?;
@@ -520,6 +524,10 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".cs",
     ".kt",
     ".sol",
+    ".java",
+    ".dart",
+    ".h",
+    ".hpp",
     ".yaml",
 ];
 
@@ -625,6 +633,9 @@ fn render_artifacts(
             let namespace = match target_config.target() {
                 Target::Swift => Some(abi_typegen_codegen::swift::namespace_name(name)),
                 Target::Kotlin => Some(abi_typegen_codegen::kotlin::namespace_name(name)),
+                Target::Dart => Some(abi_typegen_codegen::dart::namespace_name(name)),
+                Target::Java => Some(abi_typegen_codegen::java::namespace_name(name)),
+                Target::C | Target::Cpp => Some(abi_typegen_codegen::c::namespace_name(name)),
                 _ => None,
             };
             if let Some(namespace) = namespace
@@ -661,6 +672,16 @@ fn render_artifacts(
                 format!("{prefix}index.ts"),
                 barrel::render_barrel(&contract_names, target_config),
             );
+        }
+        if matches!(target_config.target(), Target::C | Target::Cpp) {
+            let filename = format!("{prefix}abi_typegen.h");
+            if files.contains_key(&filename) {
+                anyhow::bail!(
+                    "contract output collides with reserved runtime header '{}'",
+                    filename
+                );
+            }
+            files.insert(filename, abi_typegen_codegen::c::RUNTIME_HEADER.to_string());
         }
         if *target_config.target() == Target::Rust {
             files.insert(

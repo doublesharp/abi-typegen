@@ -3,11 +3,11 @@
 </p>
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">14 targets &middot; 8 languages &middot; Foundry &amp; Hardhat</p>
+<p align="center">18 targets &middot; 12 languages &middot; Foundry &amp; Hardhat</p>
 
 # @0xdoublesharp/abi-typegen
 
-Pre-built binary for [abi-typegen](https://github.com/doublesharp/abi-typegen). Reads compiled Solidity artifacts and generates production-ready typed bindings — no native toolchain required.
+Pre-built binary for [abi-typegen](https://github.com/doublesharp/abi-typegen). Reads compiled Solidity artifacts and generates typed bindings. Generating files requires no native toolchain; compiling the generated output requires the target language and its SDK.
 
 ## Install
 
@@ -69,9 +69,17 @@ npx abi-typegen generate --target viem,python,rust
 | C# | `--target csharp` | C# | [Nethereum](https://nethereum.com/) |
 | Kotlin | `--target kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
 | Solidity | `--target solidity` | Solidity | External interfaces |
-| YAML | `--target yaml` | YAML | Human-readable ABI descriptions |
+| Java | `--target java` | Java | [web3j](https://docs.web3j.io/) |
+| Dart | `--target dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
+| C | `--target c` | C11 | Shared Rust ABI runtime |
+| C++ | `--target cpp` | C++17 | Shared Rust ABI runtime |
+| YAML | `--target yaml` | Java | `--target java` | Java | [web3j](https://docs.web3j.io/) |
+| Dart | `--target dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
+| C | `--target c` | C11 | Shared Rust ABI runtime |
+| C++ | `--target cpp` | C++17 | Shared Rust ABI runtime |
+| YAML | Human-readable ABI descriptions |
 
-Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml
+Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp
 
 ## Commands
 
@@ -140,3 +148,11 @@ target = ["viem", "python", "rust"]   # also accepts "viem,python,rust"
 - Multi-target runs write each target to its own subdirectory under the output path
 
 See [github.com/doublesharp/abi-typegen](https://github.com/doublesharp/abi-typegen) for full documentation.
+
+## Native contract bindings
+
+Go, Swift, Kotlin, C#, Java, and Dart wrappers use their runtime SDKs for contract
+calls and transactions. C/C++ bindings link `abi-typegen-runtime` and accept a
+caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
+metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
+for dependencies, ownership rules, tested capabilities, and SDK limits.

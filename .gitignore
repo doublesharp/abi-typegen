@@ -50,3 +50,6 @@ e2e/hardhat-sample/cache/
 e2e/hardhat-sample/node_modules/
 e2e/hardhat-sample/typechain-types/
 e2e/hardhat-sample/abi-typegen-out/
+
+# Temporary generated TypeScript Anvil consumers
+e2e/foundry-sample/.anvil-*/

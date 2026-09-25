@@ -9,9 +9,11 @@ pub mod type_mapper;
 
 // Re-export renderers at crate root for convenience.
 pub use renderers::csharp;
+pub use renderers::dart;
 pub use renderers::ethers5;
 pub use renderers::ethers6 as ethers;
 pub use renderers::go;
+pub use renderers::java;
 pub use renderers::kotlin;
 pub use renderers::python;
 pub use renderers::rust;
@@ -22,6 +24,7 @@ pub use renderers::wagmi;
 pub use renderers::web3js;
 pub use renderers::yaml;
 pub use renderers::zod;
+pub use renderers::{c, cpp};
 
 use abi_typegen_config::{Config, Target};
 use abi_typegen_core::types::ContractIr;
@@ -83,12 +86,15 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             }
         }
         Target::Python => {
-            files.insert(format!("{}.py", ir.name), python::render_python_file(ir));
+            files.insert(
+                format!("{}.py", ir.name),
+                python::render_python_file_with_wrappers(ir, config.wrappers),
+            );
         }
         Target::Go => {
             files.insert(
                 format!("{}.go", ir.name),
-                go::render_go_file(ir, &config.package),
+                go::render_go_file_with_wrappers(ir, &config.package, config.wrappers),
             );
         }
         Target::Rust => {
@@ -98,15 +104,21 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             );
         }
         Target::Swift => {
-            files.insert(format!("{}.swift", ir.name), swift::render_swift_file(ir));
+            files.insert(
+                format!("{}.swift", ir.name),
+                swift::render_swift_file_with_wrappers(ir, config.wrappers),
+            );
         }
         Target::CSharp => {
-            files.insert(format!("{}.cs", ir.name), csharp::render_csharp_file(ir));
+            files.insert(
+                format!("{}.cs", ir.name),
+                csharp::render_csharp_file_with_wrappers(ir, config.wrappers),
+            );
         }
         Target::Kotlin => {
             files.insert(
                 format!("{}.kt", ir.name),
-                kotlin::render_kotlin_file(ir, &config.package),
+                kotlin::render_kotlin_file_with_wrappers(ir, &config.package, config.wrappers),
             );
         }
         Target::Solidity => {
@@ -115,6 +127,30 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
                 format!("{}.sol", interface_name),
                 solidity::render_solidity_file(ir),
             );
+        }
+        Target::Dart => {
+            files.insert(
+                dart::file_name(&ir.name),
+                dart::render_dart_file(ir, config.wrappers),
+            );
+        }
+        Target::Java => {
+            files.insert(
+                format!("{}.java", java::namespace_name(&ir.name)),
+                java::render_java_file(ir, &config.package, config.wrappers),
+            );
+        }
+        Target::C | Target::Cpp => {
+            files.insert(
+                format!("{}.h", c::namespace_name(&ir.name)),
+                c::render_c_file(ir, config.wrappers),
+            );
+            if *config.target() == Target::Cpp {
+                files.insert(
+                    format!("{}.hpp", c::namespace_name(&ir.name)),
+                    cpp::render_cpp_file(ir, config.wrappers),
+                );
+            }
         }
         Target::Yaml => {
             files.insert(format!("{}.yaml", ir.name), yaml::render_yaml_file(ir));

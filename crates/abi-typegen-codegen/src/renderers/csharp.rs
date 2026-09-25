@@ -1,11 +1,104 @@
+use crate::tuples::TupleRegistry;
 use crate::type_mapper::{overload_suffix, safe_param_name};
 use abi_typegen_core::types::{ContractIr, SolType, TupleComponent};
 use heck::ToUpperCamelCase;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+mod wrappers;
+
+fn csharp_property_name(name: &str, index: usize) -> String {
+    let candidate = safe_param_name(name, index).to_upper_camel_case();
+    if candidate.is_empty() || !candidate.starts_with(|ch: char| ch.is_ascii_alphabetic()) {
+        format!("Arg{index}")
+    } else {
+        candidate
+    }
+}
+
+fn csharp_property_names<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
+    let mut used = HashSet::new();
+    names
+        .enumerate()
+        .map(|(index, name)| {
+            let base = csharp_property_name(name, index);
+            let mut candidate = base.clone();
+            let mut suffix = 2;
+            while !used.insert(candidate.clone()) {
+                candidate = format!("{base}{suffix}");
+                suffix += 1;
+            }
+            candidate
+        })
+        .collect()
+}
+
+fn function_stems(ir: &ContractIr) -> Vec<String> {
+    let mut raw_counts = HashMap::new();
+    for function in &ir.functions {
+        *raw_counts.entry(function.name.as_str()).or_insert(0usize) += 1;
+    }
+    let mut used = HashSet::new();
+    ir.functions
+        .iter()
+        .map(|function| {
+            let suffix = if raw_counts[function.name.as_str()] > 1 {
+                overload_suffix(&function.inputs)
+            } else {
+                String::new()
+            };
+            let base = format!("{}{}", function.name.to_upper_camel_case(), suffix);
+            let mut candidate = base.clone();
+            let mut index = 2;
+            while !used.insert(candidate.clone()) {
+                candidate = format!("{base}{index}");
+                index += 1;
+            }
+            candidate
+        })
+        .collect()
+}
+
+fn item_stems<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
+    let mut used = HashSet::new();
+    names
+        .map(|name| {
+            let base = name.to_upper_camel_case();
+            let mut candidate = base.clone();
+            let mut index = 2;
+            while !used.insert(candidate.clone()) {
+                candidate = format!("{base}{index}");
+                index += 1;
+            }
+            candidate
+        })
+        .collect()
+}
+
+fn item_class_stems<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
+    let mut used = HashSet::new();
+    names
+        .map(|name| {
+            let base = name.to_string();
+            let mut candidate = base.clone();
+            let mut index = 2;
+            while !used.insert(candidate.clone()) {
+                candidate = format!("{base}{index}");
+                index += 1;
+            }
+            candidate
+        })
+        .collect()
+}
 
 /// Generates `<ContractName>.cs` — a C# source file with typed classes
 /// compatible with Nethereum's `[Parameter]` and `[Event]` attributes.
 pub fn render_csharp_file(ir: &ContractIr) -> String {
+    render_csharp_file_with_wrappers(ir, false)
+}
+
+/// Generates C# ABI metadata and types, optionally with callable Nethereum bindings.
+pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> String {
+    let registry = TupleRegistry::new(ir);
     let mut out = String::new();
 
     // Header
@@ -18,39 +111,81 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
     }
     out.push_str("using System.Collections.Generic;\n");
     out.push_str("using Nethereum.ABI.FunctionEncoding.Attributes;\n");
+    out.push_str("using Nethereum.Contracts;\n");
+    if wrappers {
+        out.push_str("using System;\nusing System.Threading.Tasks;\nusing Nethereum.ABI.FunctionEncoding;\nusing Nethereum.Hex.HexTypes;\nusing Nethereum.RPC.Eth.DTOs;\nusing Nethereum.Web3;\n");
+    }
 
     out.push_str("\nnamespace Contracts\n{\n");
 
-    let mut first_class = true;
+    let abi = serde_json::to_string(&ir.raw_abi)
+        .expect("ABI JSON serializes")
+        .replace('"', "\"\"");
+    out.push_str(&format!(
+        "    /// <summary>Embedded ABI of {}.</summary>\n    public static class {}AbiMetadata\n    {{\n        public const string ABI = @\"{}\";\n    }}\n",
+        ir.name, ir.name, abi
+    ));
 
-    // Count function name occurrences for overload detection
-    let mut name_counts: HashMap<&str, u32> = HashMap::new();
-    for f in &ir.functions {
-        *name_counts.entry(f.name.as_str()).or_insert(0) += 1;
+    for def in registry.defs() {
+        let class_name = format!("{}{}", ir.name, def.name);
+        out.push_str(&format!("\n    /// <summary>ABI tuple {}.</summary>\n    [Struct(\"{}\")]\n    public class {}\n    {{\n", def.name, def.name, class_name));
+        let field_names = csharp_property_names(
+            def.components
+                .iter()
+                .map(|component| component.name.as_str()),
+        );
+        for (i, component) in def.components.iter().enumerate() {
+            let name = safe_param_name(&component.name, i);
+            let ty = map_type(
+                &component.ty,
+                component.internal_type.as_deref(),
+                &registry,
+                &ir.name,
+            );
+            out.push_str(&format!(
+                "        [Parameter(\"{}\", \"{}\", {})]\n        public {} {} {{ get; set; }}\n",
+                sol_type_to_sol_string(&component.ty),
+                name,
+                i + 1,
+                ty,
+                field_names[i]
+            ));
+        }
+        out.push_str("    }\n");
     }
 
-    // Function param classes
-    for f in &ir.functions {
-        if f.inputs.is_empty() {
-            continue;
+    if let Some(constructor) = &ir.constructor {
+        out.push_str(&format!("\n    /// <summary>Constructor arguments for {}.</summary>\n    public class {}ConstructorParams\n    {{\n", ir.name, ir.name));
+        let field_names =
+            csharp_property_names(constructor.inputs.iter().map(|param| param.name.as_str()));
+        for (i, param) in constructor.inputs.iter().enumerate() {
+            let ty = map_type(
+                &param.ty,
+                param.internal_type.as_deref(),
+                &registry,
+                &ir.name,
+            );
+            let name = safe_param_name(&param.name, i);
+            out.push_str(&format!(
+                "        [Parameter(\"{}\", \"{}\", {})]\n        public {} {} {{ get; set; }}\n",
+                sol_type_to_sol_string(&param.ty),
+                name,
+                i + 1,
+                ty,
+                field_names[i]
+            ));
         }
-        if !first_class {
-            out.push('\n');
-        }
-        first_class = false;
+        out.push_str("    }\n");
+    }
 
-        let count = *name_counts.get(f.name.as_str()).unwrap_or(&1);
-        let suffix = if count > 1 {
-            overload_suffix(&f.inputs)
-        } else {
-            String::new()
-        };
-        let class_name = format!(
-            "{}{}{}Params",
-            ir.name,
-            f.name.to_upper_camel_case(),
-            suffix
-        );
+    // Count function name occurrences for overload detection
+    let stems = function_stems(ir);
+
+    // Function param classes
+    for (f, stem) in ir.functions.iter().zip(&stems) {
+        out.push('\n');
+
+        let class_name = format!("{}{}Params", ir.name, stem);
 
         // Doc comment
         if let Some(ref natspec) = f.natspec {
@@ -72,14 +207,23 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
             ));
         }
 
-        out.push_str(&format!("    public class {}\n    {{\n", class_name));
+        out.push_str(&format!(
+            "    [Function(\"{}\")]\n    public class {} : FunctionMessage\n    {{\n",
+            f.name, class_name
+        ));
+        let field_names = csharp_property_names(f.inputs.iter().map(|param| param.name.as_str()));
         for (i, param) in f.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
             }
             let sol_name = safe_param_name(&param.name, i);
-            let field_name = sol_name.to_upper_camel_case();
-            let cs_type = sol_type_to_csharp(&param.ty);
+            let field_name = &field_names[i];
+            let cs_type = map_type(
+                &param.ty,
+                param.internal_type.as_deref(),
+                &registry,
+                &ir.name,
+            );
             let sol_type_str = sol_type_to_sol_string(&param.ty);
             let order = i + 1;
             out.push_str(&format!(
@@ -92,16 +236,36 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
             ));
         }
         out.push_str("    }\n");
+
+        let result_name = format!("{}{}Result", ir.name, stem);
+        out.push_str(&format!("\n    /// <summary>Outputs of {}.</summary>\n    [FunctionOutput]\n    public class {} : IFunctionOutputDTO\n    {{\n", f.name, result_name));
+        let field_names = csharp_property_names(f.outputs.iter().map(|param| param.name.as_str()));
+        for (i, param) in f.outputs.iter().enumerate() {
+            let name = safe_param_name(&param.name, i);
+            let ty = map_type(
+                &param.ty,
+                param.internal_type.as_deref(),
+                &registry,
+                &ir.name,
+            );
+            out.push_str(&format!(
+                "        [Parameter(\"{}\", \"{}\", {})]\n        public {} {} {{ get; set; }}\n",
+                sol_type_to_sol_string(&param.ty),
+                name,
+                i + 1,
+                ty,
+                field_names[i]
+            ));
+        }
+        out.push_str("    }\n");
     }
 
     // Event classes
-    for event in &ir.events {
-        if !first_class {
-            out.push('\n');
-        }
-        first_class = false;
+    let event_stems = item_class_stems(ir.events.iter().map(|event| event.name.as_str()));
+    for (event, stem) in ir.events.iter().zip(&event_stems) {
+        out.push('\n');
 
-        let class_name = format!("{}{}Event", ir.name, event.name);
+        let class_name = format!("{}{}Event", ir.name, stem);
 
         // Doc comment
         if let Some(ref natspec) = event.natspec {
@@ -124,16 +288,27 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
         }
 
         out.push_str(&format!(
-            "    [Event(\"{}\")]\n    public class {}\n    {{\n",
+            "    [Event(\"{}\")]\n    public class {} : IEventDTO\n    {{\n",
             event.name, class_name
         ));
+        let field_names =
+            csharp_property_names(event.inputs.iter().map(|param| param.name.as_str()));
         for (i, param) in event.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
             }
             let sol_name = safe_param_name(&param.name, i);
-            let field_name = sol_name.to_upper_camel_case();
-            let cs_type = sol_type_to_csharp(&param.ty);
+            let field_name = &field_names[i];
+            let cs_type = if param.indexed && indexed_topic_is_hash(&param.ty) {
+                "byte[]".to_string()
+            } else {
+                map_type(
+                    &param.ty,
+                    param.internal_type.as_deref(),
+                    &registry,
+                    &ir.name,
+                )
+            };
             let sol_type_str = sol_type_to_sol_string(&param.ty);
             let order = i + 1;
             out.push_str(&format!(
@@ -152,16 +327,11 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
     }
 
     // Error classes
-    for error in &ir.errors {
-        if error.inputs.is_empty() {
-            continue;
-        }
-        if !first_class {
-            out.push('\n');
-        }
-        first_class = false;
+    let error_stems = item_class_stems(ir.errors.iter().map(|error| error.name.as_str()));
+    for (error, stem) in ir.errors.iter().zip(&error_stems) {
+        out.push('\n');
 
-        let class_name = format!("{}{}Error", ir.name, error.name);
+        let class_name = format!("{}{}Error", ir.name, stem);
 
         // Doc comment
         if let Some(ref natspec) = error.natspec {
@@ -183,14 +353,24 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
             ));
         }
 
-        out.push_str(&format!("    public class {}\n    {{\n", class_name));
+        out.push_str(&format!(
+            "    [Error(\"{}\")]\n    public class {} : IErrorDTO\n    {{\n",
+            error.name, class_name
+        ));
+        let field_names =
+            csharp_property_names(error.inputs.iter().map(|param| param.name.as_str()));
         for (i, param) in error.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
             }
             let sol_name = safe_param_name(&param.name, i);
-            let field_name = sol_name.to_upper_camel_case();
-            let cs_type = sol_type_to_csharp(&param.ty);
+            let field_name = &field_names[i];
+            let cs_type = map_type(
+                &param.ty,
+                param.internal_type.as_deref(),
+                &registry,
+                &ir.name,
+            );
             let sol_type_str = sol_type_to_sol_string(&param.ty);
             let order = i + 1;
             out.push_str(&format!(
@@ -205,6 +385,9 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
         out.push_str("    }\n");
     }
 
+    if wrappers {
+        out.push_str(&wrappers::render(ir));
+    }
     out.push_str("}\n");
 
     out
@@ -244,6 +427,47 @@ fn sol_type_to_csharp(ty: &SolType) -> String {
     }
 }
 
+fn map_type(
+    ty: &SolType,
+    internal_type: Option<&str>,
+    registry: &TupleRegistry,
+    contract: &str,
+) -> String {
+    match ty {
+        SolType::Tuple(components) => {
+            format!("{contract}{}", registry.name(components, internal_type))
+        }
+        SolType::Array(inner) | SolType::FixedArray(inner, _) => {
+            format!(
+                "List<{}>",
+                map_type(inner, internal_type, registry, contract)
+            )
+        }
+        SolType::Bool
+        | SolType::StringType
+        | SolType::Address
+        | SolType::Bytes
+        | SolType::BytesN(_)
+        | SolType::Uint(_)
+        | SolType::Int(_) => sol_type_to_csharp(ty),
+    }
+}
+
+fn indexed_topic_is_hash(ty: &SolType) -> bool {
+    match ty {
+        SolType::StringType
+        | SolType::Bytes
+        | SolType::Array(_)
+        | SolType::FixedArray(_, _)
+        | SolType::Tuple(_) => true,
+        SolType::Bool
+        | SolType::Address
+        | SolType::BytesN(_)
+        | SolType::Uint(_)
+        | SolType::Int(_) => false,
+    }
+}
+
 /// Converts a [`SolType`] back to its Solidity type string for use in
 /// Nethereum `[Parameter]` attributes.
 fn sol_type_to_sol_string(ty: &SolType) -> String {
@@ -263,13 +487,7 @@ fn sol_type_to_sol_string(ty: &SolType) -> String {
             let inner_sol = sol_type_to_sol_string(inner);
             format!("{}[{}]", inner_sol, n)
         }
-        SolType::Tuple(components) => {
-            let fields: Vec<String> = components
-                .iter()
-                .map(|c| sol_type_to_sol_string(&c.ty))
-                .collect();
-            format!("({})", fields.join(","))
-        }
+        SolType::Tuple(_) => "tuple".into(),
     }
 }
 
@@ -591,10 +809,7 @@ mod tests {
             vec![],
         );
         let out = render_csharp_file(&ir);
-        assert!(
-            !out.contains("TotalSupplyParams"),
-            "Should not generate params class for functions with no inputs, got:\n{out}"
-        );
+        assert!(out.contains("public class TokenTotalSupplyParams"), "{out}");
     }
 
     #[test]
@@ -873,7 +1088,7 @@ mod tests {
     }
 
     #[test]
-    fn csharp_skips_error_classes_with_no_inputs() {
+    fn csharp_includes_error_classes_with_no_inputs() {
         let ir = make_ir(
             "Vault",
             vec![],
@@ -887,11 +1102,11 @@ mod tests {
 
         let out = render_csharp_file(&ir);
 
-        assert!(!out.contains("VaultUnauthorizedError"));
+        assert!(out.contains("public class VaultUnauthorizedError"));
     }
 
     #[test]
-    fn csharp_tuple_types_use_object_and_drive_big_integer_detection() {
+    fn csharp_tuple_types_use_named_classes_and_drive_big_integer_detection() {
         let tuple = SolType::Tuple(vec![TupleComponent {
             name: "amount".to_string(),
             ty: SolType::Uint(256),
@@ -917,10 +1132,77 @@ mod tests {
         let out = render_csharp_file(&ir);
 
         assert!(out.contains("using System.Numerics;"));
-        assert!(out.contains("[Parameter(\"(uint256)\", \"position\", 1)]"));
-        assert!(out.contains("public object Position { get; set; }"));
-        assert_eq!(sol_type_to_csharp(&tuple), "object");
-        assert_eq!(sol_type_to_csharp(&SolType::Tuple(vec![])), "object");
-        assert_eq!(sol_type_to_sol_string(&tuple), "(uint256)");
+        assert!(
+            out.contains("[Parameter(\"tuple\", \"position\", 1)]"),
+            "{out}"
+        );
+        assert!(
+            out.contains("public VaultSetPositionPosition Position { get; set; }"),
+            "{out}"
+        );
+        assert!(
+            out.contains("public class VaultSetPositionPosition"),
+            "{out}"
+        );
+        assert_eq!(sol_type_to_sol_string(&tuple), "tuple");
+    }
+
+    #[test]
+    fn csharp_wrappers_are_opt_in_and_embed_abi_metadata() {
+        let ir = erc20();
+        let plain = render_csharp_file_with_wrappers(&ir, false);
+        assert_eq!(plain, render_csharp_file(&ir));
+        assert!(plain.contains("public const string ABI"), "{plain}");
+        assert!(!plain.contains("public class ERC20Binding"), "{plain}");
+        let wrapped = render_csharp_file_with_wrappers(&ir, true);
+        assert!(wrapped.contains("public class ERC20Binding"), "{wrapped}");
+        assert!(wrapped.contains("GetFunctionBySignature"), "{wrapped}");
+        assert!(wrapped.contains("EncodeTransfer"), "{wrapped}");
+        assert!(wrapped.contains("DecodeTransferResult"), "{wrapped}");
+        assert!(wrapped.contains("FilterTransfer"), "{wrapped}");
+    }
+
+    #[test]
+    fn csharp_overloaded_events_and_errors_have_distinct_dtos_and_methods() {
+        let param = |ty| AbiParam {
+            name: "value".into(),
+            ty,
+            internal_type: None,
+        };
+        let event = |ty| AbiEvent {
+            name: "Changed".into(),
+            inputs: vec![AbiEventParam {
+                name: "value".into(),
+                ty,
+                indexed: true,
+                internal_type: None,
+            }],
+            anonymous: false,
+            natspec: None,
+        };
+        let error = |ty| AbiError {
+            name: "Denied".into(),
+            inputs: vec![param(ty)],
+            natspec: None,
+        };
+        let ir = make_ir(
+            "Collision",
+            vec![],
+            vec![event(SolType::Uint(256)), event(SolType::Address)],
+            vec![error(SolType::Uint(256)), error(SolType::Address)],
+        );
+        let out = render_csharp_file_with_wrappers(&ir, true);
+        for name in [
+            "CollisionChangedEvent",
+            "CollisionChanged2Event",
+            "CollisionDeniedError",
+            "CollisionDenied2Error",
+            "DecodeChangedEvent",
+            "DecodeChanged2Event",
+            "DecodeDeniedError",
+            "DecodeDenied2Error",
+        ] {
+            assert!(out.contains(name), "missing {name}: {out}");
+        }
     }
 }

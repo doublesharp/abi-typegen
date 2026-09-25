@@ -1,0 +1,9 @@
+{
+  "contractName": "Numeric",
+  "abi": [
+    {"type":"function","name":"uint8Value","stateMutability":"pure","inputs":[{"name":"value","type":"uint8"}],"outputs":[]},
+    {"type":"function","name":"int8Value","stateMutability":"pure","inputs":[{"name":"value","type":"int8"}],"outputs":[]},
+    {"type":"function","name":"fixedBytesValue","stateMutability":"pure","inputs":[{"name":"value","type":"bytes2"}],"outputs":[]},
+    {"type":"function","name":"fixedArrayValue","stateMutability":"pure","inputs":[{"name":"value","type":"uint256[2]"}],"outputs":[]}
+  ]
+}

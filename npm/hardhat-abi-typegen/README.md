@@ -105,9 +105,17 @@ npx abi-typegen generate --hardhat --target viem
 | C# | `csharp` | C# | [Nethereum](https://nethereum.com/) |
 | Kotlin | `kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
 | Solidity | `solidity` | Solidity | External interfaces |
-| YAML | `yaml` | YAML | Human-readable ABI descriptions |
+| Java | `java` | Java | [web3j](https://docs.web3j.io/) |
+| Dart | `dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
+| C | `c` | C11 | Shared Rust ABI runtime |
+| C++ | `cpp` | C++17 | Shared Rust ABI runtime |
+| YAML | `yaml` | Java | `java` | Java | [web3j](https://docs.web3j.io/) |
+| Dart | `dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
+| C | `c` | C11 | Shared Rust ABI runtime |
+| C++ | `cpp` | C++17 | Shared Rust ABI runtime |
+| YAML | Human-readable ABI descriptions |
 
-Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml
+Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp
 
 Multi-target examples — each target gets its own output subdirectory:
 
@@ -122,3 +130,11 @@ target: ["viem", "python", "rust"]  // array of strings
 - Use comma-separated multi-target generation instead of the removed `all` and `all-ts` aliases
 
 See [github.com/doublesharp/abi-typegen](https://github.com/doublesharp/abi-typegen) for full documentation.
+
+## Native contract bindings
+
+Go, Swift, Kotlin, C#, Java, and Dart wrappers use their runtime SDKs for contract
+calls and transactions. C/C++ bindings link `abi-typegen-runtime` and accept a
+caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
+metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
+for dependencies, ownership rules, tested capabilities, and SDK limits.

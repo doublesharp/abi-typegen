@@ -27,7 +27,7 @@ jobs:
               fail=1
             fi
           }
-          for crate in abi-typegen abi-typegen-core abi-typegen-config abi-typegen-codegen; do
+          for crate in abi-typegen abi-typegen-core abi-typegen-config abi-typegen-codegen abi-typegen-runtime; do
             check "$crate" "$(cargo metadata --no-deps --format-version 1 |
               jq -r --arg c "$crate" '.packages[] | select(.name == $c) | .version')"
           done
@@ -158,7 +158,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          for crate in abi-typegen-core abi-typegen-config abi-typegen-codegen abi-typegen; do
+          for crate in abi-typegen-core abi-typegen-config abi-typegen-codegen abi-typegen-runtime abi-typegen; do
             if curl -sf -A "abi-typegen-release (github.com/doublesharp/abi-typegen)" \
               "https://crates.io/api/v1/crates/$crate/$version" >/dev/null; then
               echo "$crate $version is already on crates.io; skipping"

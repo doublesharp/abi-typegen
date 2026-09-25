@@ -1,0 +1,19 @@
+[package]
+name = "abi-typegen-runtime"
+version = "0.5.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Shared ABI codec runtime for generated C and C++ contract bindings"
+license = "MIT"
+repository = "https://github.com/doublesharp/abi-typegen"
+homepage = "https://github.com/doublesharp/abi-typegen"
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+alloy-dyn-abi = { version = "1.7.3", default-features = false, features = ["std"] }
+alloy-json-abi = "1.7.3"
+alloy-primitives = "1.7.3"
+serde_json = { workspace = true }
+thiserror = { workspace = true }
