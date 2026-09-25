@@ -57,7 +57,7 @@ jobs:
             -ex 'set pagination off' \
             -ex run \
             -ex 'thread apply all bt 30' \
-            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/with-extension" --import --quit \
+            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/with-extension" --import --quit-after 600 \
             > e2e/native/godot/TestResults/gdb-with-extension.log 2>&1
 
           cp -a "$source_project" "$diagnostic_root/without-extension"
@@ -68,7 +68,7 @@ jobs:
             -ex 'set pagination off' \
             -ex run \
             -ex 'thread apply all bt 30' \
-            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/without-extension" --import --quit \
+            --args "$GODOT_BIN" --headless --editor --path "$diagnostic_root/without-extension" --import --quit-after 600 \
             > e2e/native/godot/TestResults/gdb-without-extension.log 2>&1
 
           rm -rf "$diagnostic_root"

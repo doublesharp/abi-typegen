@@ -1,6 +1,7 @@
 import importlib.util
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 RUNNER = Path(__file__).with_name("run.py")
@@ -10,6 +11,21 @@ SPEC.loader.exec_module(godot_runner)
 
 
 class RunnerOutputTests(unittest.TestCase):
+    def test_import_waits_for_deferred_editor_work(self):
+        with patch.object(godot_runner, "run_command", return_value="") as command:
+            godot_runner.run_import("godot")
+        args = command.call_args.args[0]
+        self.assertEqual(args[-3:], ["--import", "--quit-after", "600"])
+        self.assertNotIn("--quit", args)
+
+    def test_import_still_rejects_engine_failures(self):
+        with patch.object(godot_runner, "run_command", side_effect=RuntimeError("exit 134")):
+            with self.assertRaisesRegex(RuntimeError, "exit 134"):
+                godot_runner.run_import("godot")
+        with patch.object(godot_runner, "run_command", return_value="ERROR: broken extension\n"):
+            with self.assertRaisesRegex(RuntimeError, "ERROR or SCRIPT ERROR"):
+                godot_runner.run_import("godot")
+
     def test_requires_suite_marker(self):
         self.assertTrue(godot_runner.suite_passed("PASS codec\n", "codec"))
         self.assertFalse(godot_runner.suite_passed("Godot exited successfully\n", "codec"))

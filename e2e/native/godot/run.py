@@ -69,8 +69,12 @@ def run_command(command: list[str], *, timeout: int, env: dict[str, str] | None 
 
 
 def run_import(binary: str) -> None:
+    # Godot 4.7.2 can queue extension-doc generation during the first scan and
+    # crash during early shutdown. Retain --import's scan wait and allow 600
+    # editor iterations for deferred work before shutdown. See
+    # https://github.com/godotengine/godot-cpp/issues/2024.
     output = run_command(
-        [binary, "--headless", "--editor", "--path", str(PROJECT), "--import", "--quit"],
+        [binary, "--headless", "--editor", "--path", str(PROJECT), "--import", "--quit-after", "600"],
         timeout=180,
     )
     if has_failure_diagnostic(output):
