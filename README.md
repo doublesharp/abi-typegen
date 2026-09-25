@@ -151,6 +151,7 @@ with an adapter package.
 | C        | `c`      | [Shared Rust runtime](docs/native-bindings.md#c-and-c)                                                 | C11 codecs and client helpers with explicit ownership             |
 | C++      | `cpp`    | [Shared Rust runtime](docs/native-bindings.md#c-and-c)                                                 | C++17 codecs and client helpers with automatic cleanup            |
 | C#       | `csharp` | [Nethereum](https://docs.nethereum.com/)                                                               | Typed DTOs, contract methods, and deployment                      |
+| COBOL    | `cobol` |  [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) | Reads taking one address and returning one uint256 🤷 |
 | Dart     | `dart`   | [web3dart](https://pub.dev/packages/web3dart)                                                          | Typed values, codecs, calls, and transactions                     |
 | Elixir   | `elixir` | [Ethers](https://ethers.hexdocs.pm/Ethers.html)                                                        | Transaction data, reads, sends, events, and errors                |
 | Go       | `go`     | [go-ethereum](https://geth.ethereum.org/docs/developers)                                               | Typed calls, transactions, deployment, and events                 |
@@ -184,12 +185,6 @@ See [engine packages](integrations/README.md) for setup and
 Zod, Solidity, and YAML describe or validate contracts; they do not submit
 transactions. See [native bindings](docs/native-bindings.md) for SDK versions
 and [configuration](docs/configuration.md) for target aliases.
-
-### COBOL
-
-| Target  | Works with                                                                                | What you get                                          |
-| ------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Reads taking one address and returning one uint256 🤷 |
 
 ### Generate for more than one app
 
