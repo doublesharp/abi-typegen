@@ -468,7 +468,7 @@ Common generation options:
 `forge-install` supports Bash, Zsh, and Fish; follow the
 [Forge setup guide](docs/forge-integration.md) to load the printed integration.
 See [configuration](docs/configuration.md) for complete examples and
-`abi-typegen <command> --help` for command-specific options.
+`abi-typegen help <command>` for command-specific options.
 
 ## Docs and support
 

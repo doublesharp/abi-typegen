@@ -48,32 +48,66 @@ npx abi-typegen generate --target viem,python,rust
 
 ## Targets
 
-| Target    | Flag       | Language   | Ecosystem                                                |
-| --------- | ---------- | ---------- | -------------------------------------------------------- |
-| viem      | `viem`     | TypeScript | [viem](https://viem.sh/)                                 |
-| zod       | `zod`      | TypeScript | [Zod](https://zod.dev/) 4                                |
-| wagmi     | `wagmi`    | TypeScript | [wagmi](https://wagmi.sh/) v2                            |
-| ethers v6 | `ethers`   | TypeScript | [ethers](https://docs.ethers.org/v6/) v6                 |
-| ethers v5 | `ethers5`  | TypeScript | ethers v5                                                |
-| web3.js   | `web3js`   | TypeScript | [web3.js](https://docs.web3js.org/) v4                   |
-| Python    | `python`   | Python     | [web3.py](https://web3py.readthedocs.io/)                |
-| Go        | `go`       | Go         | [go-ethereum](https://geth.ethereum.org/)                |
-| Rust      | `rust`     | Rust       | [alloy](https://alloy.rs/)                               |
-| Swift     | `swift`    | Swift      | [web3swift](https://github.com/web3swift-team/web3swift) |
-| C#        | `csharp`   | C#         | [Nethereum](https://nethereum.com/)                      |
-| Kotlin    | `kotlin`   | Kotlin     | [web3j](https://docs.web3j.io/)                          |
-| Solidity  | `solidity` | Solidity   | External interfaces                                      |
-| Java      | `java`     | Java       | [web3j](https://docs.web3j.io/)                          |
-| Dart      | `dart`     | Dart       | [web3dart](https://pub.dev/packages/web3dart)            |
-| PHP       | `php`      | PHP        | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          |
-| COBOL     | `cobol`    | COBOL      | Experimental GnuCOBOL read subset; shared Rust runtime   |
-| Ruby      | `ruby`     | Ruby       | eth gem                                                  |
-| Shell     | `shell`    | Bash       | Foundry cast                                             |
-| Godot     | `godot`    | GDScript   | Godot 4 GDExtension                                      |
-| Unreal    | `unreal`   | C++        | Unreal Engine plugin and shared Rust ABI runtime         |
-| C         | `c`        | C11        | Shared Rust ABI runtime                                  |
-| C++       | `cpp`      | C++17      | Shared Rust ABI runtime                                  |
-| YAML      | `yaml`     | Data       | Human-readable ABI descriptions                          |
+There are 25 CLI targets across 18 languages. Unity uses the `csharp` target
+with an adapter package.
+
+### JavaScript and TypeScript
+
+| Target    | Framework or SDK                         | What you get                                     |
+| --------- | ---------------------------------------- | ------------------------------------------------ |
+| `viem`    | [viem](https://viem.sh/)                 | Typed contract helpers and ABI                   |
+| `wagmi`   | [wagmi](https://wagmi.sh/)               | React hooks for reads, writes, and events        |
+| `ethers`  | [ethers v6](https://docs.ethers.org/v6/) | Typed contract interfaces and connection helpers |
+| `ethers5` | [ethers v5](https://docs.ethers.org/v5/) | Typed contract interfaces and connection helpers |
+| `web3js`  | [web3.js v4](https://docs.web3js.org/)   | Typed contract methods                           |
+| `zod`     | [Zod 4](https://zod.dev/)                | Validation schemas and ABI                       |
+
+### Native languages
+
+| Language | Target   | Runtime or SDK                                                                                              | What you get                                                      |
+| -------- | -------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| C        | `c`      | [Shared Rust runtime](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md#c-and-c) | C11 codecs and client helpers with explicit ownership             |
+| C++      | `cpp`    | [Shared Rust runtime](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md#c-and-c) | C++17 codecs and client helpers with automatic cleanup            |
+| C#       | `csharp` | [Nethereum](https://docs.nethereum.com/)                                                                    | Typed DTOs, contract methods, and deployment                      |
+| Dart     | `dart`   | [web3dart](https://pub.dev/packages/web3dart)                                                               | Typed values, codecs, calls, and transactions                     |
+| Elixir   | `elixir` | [Ethers](https://ethers.hexdocs.pm/Ethers.html)                                                             | Transaction data, reads, sends, events, and errors                |
+| Go       | `go`     | [go-ethereum](https://geth.ethereum.org/docs/developers)                                                    | Typed calls, transactions, deployment, and events                 |
+| Java     | `java`   | [web3j](https://docs.web3j.io/latest/)                                                                      | Typed values, codecs, calls, and transactions                     |
+| Kotlin   | `kotlin` | [web3j](https://docs.web3j.io/latest/)                                                                      | Typed values, codecs, calls, and transactions                     |
+| PHP      | `php`    | [Brick Math](https://github.com/brick/math), [ethereum-tx](https://github.com/web3p/ethereum-tx), cURL      | Codecs, RPC reads, signed legacy transactions, receipts, and logs |
+| Python   | `python` | [web3.py](https://web3py.readthedocs.io/en/stable/)                                                         | Reads, transaction builders, codecs, events, and errors           |
+| Ruby     | `ruby`   | [eth](https://github.com/q9f/eth.rb)                                                                        | Calls, transaction builders, codecs, events, and errors           |
+| Rust     | `rust`   | [Alloy](https://alloy.rs/introduction/getting-started/)                                                     | `sol!` types, codecs, and contract instances                      |
+| Swift    | `swift`  | [web3swift](https://github.com/web3swift-team/web3swift)                                                    | Typed values, codecs, and contract operations                     |
+
+### Game engines
+
+| Engine                                                                        | Target                                                                                                                                 | What you get                                                             |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Unity](https://docs.unity3d.com/Manual/index.html)                           | `csharp` + [Unity adapter](https://github.com/doublesharp/abi-typegen/tree/main/integrations/unity/com.doublesharp.abi-typegen.unity/) | C# bindings with Unity HTTP transport and object lifecycle support       |
+| [Godot](https://docs.godotengine.org/en/stable/)                              | `godot`                                                                                                                                | GDScript bindings and a native extension for codecs and asynchronous RPC |
+| [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/) | `unreal`                                                                                                                               | C++ codecs and Blueprint nodes for asynchronous scalar reads             |
+
+See [engine packages](https://github.com/doublesharp/abi-typegen/blob/main/integrations/README.md) for setup and
+[native bindings](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md) for supported features and platforms.
+
+### Shell and ABI formats
+
+| Target     | Works with                                                                                                    | What you get                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `shell`    | [Bash](https://www.gnu.org/software/bash/manual/bash.html) and [Foundry cast](https://www.getfoundry.sh/cast) | Sourceable helpers for encoding, reads, sends, deployment, and logs |
+| `solidity` | [Solidity](https://docs.soliditylang.org/en/latest/)                                                          | Interfaces, tuple structs, events, and errors                       |
+| `yaml`     | [YAML](https://yaml.org/)                                                                                     | Readable ABI descriptions                                           |
+
+Zod, Solidity, and YAML describe or validate contracts; they do not submit
+transactions. See [native bindings](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md) for SDK versions
+and [configuration](https://github.com/doublesharp/abi-typegen/blob/main/docs/configuration.md) for target aliases.
+
+### COBOL
+
+| Target  | Works with                                                                                | What you get                                          |
+| ------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Reads taking one address and returning one uint256 🤷 |
 
 Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp
 
@@ -86,16 +120,22 @@ npx abi-typegen generate --clean         # remove stale generated files
 npx abi-typegen diff                     # show what would change (dry run)
 npx abi-typegen json --pretty            # dump parsed ABI as JSON
 npx abi-typegen watch                    # watch artifacts and regenerate
+npx abi-typegen init                     # add Foundry configuration
+npx abi-typegen forge-install --shell zsh # print Forge shell integration
+npx abi-typegen help generate            # show command help
+npx abi-typegen --version                # print the installed version
 npx abi-typegen fetch --name WETH \
-  --network mainnet 0xc02aaa...          # fetch ABI from block explorer
+  --network mainnet 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2          # fetch ABI from block explorer
 npx abi-typegen fetch --name WETH \
   --file ./WETH.abi.json                 # import a local ABI file
 ```
 
-## CLI Options
+## Generation options
 
 | Option                 | Description                                            |
 | ---------------------- | ------------------------------------------------------ |
+| `--config <path>`      | Configuration file                                     |
+| `--package <name>`     | Package, namespace, or Unreal module name              |
 | `--target <name>`      | Target name or comma-separated names (see table above) |
 | `--artifacts <path>`   | Path to compiled artifacts directory                   |
 | `--out <path>`         | Output directory                                       |
