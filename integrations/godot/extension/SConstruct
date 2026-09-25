@@ -13,6 +13,10 @@ opts.Add("atg_runtime_include", "Directory containing abi_typegen.h", os.environ
 opts.Add("atg_runtime_lib", "Path to the shared Rust runtime static library", os.environ.get("ATG_RUNTIME_LIB", ""))
 opts.Add("atg_runtime_link_flags", "Additional native linker flags required by the Rust staticlib", os.environ.get("ATG_RUNTIME_LINK_FLAGS", ""))
 opts.Update(local_env)
+# godot-cpp's build profile trims generated bindings and object files to the
+# engine classes used by this extension. Use an absolute path because the
+# dependency's SConstruct runs from its own directory.
+local_env["build_profile"] = os.path.abspath("build_profile.json")
 Help(opts.GenerateHelpText(local_env))
 
 if not (os.path.isdir("godot-cpp") and os.listdir("godot-cpp")):
