@@ -28,9 +28,8 @@ otherwise return zero when an extension is missing.
 
 The extension is compiled against C ABI v1 and statically links the selected
 runtime archive. There is no runtime ABI version negotiation. The Godot CI
-workflow is configured to build Linux x86_64 with the official Godot 4.7.2
-release archive and a pinned SHA-256 digest; a green workflow run is still needed
-before calling that platform qualified. The local full Make run has passed on
+workflow builds Linux x86_64 with the official Godot 4.7.2 release archive and
+a pinned SHA-256 digest, then runs the full suite. The local full Make run has passed on
 macOS arm64 with Godot 4.7.2. This target does not bundle local signing,
 deployment helpers, event subscriptions, or fallback/receive wrappers. ABI
 uint256 values use exact 32-byte `PackedByteArray` words. Export templates,

@@ -328,8 +328,8 @@ runs Anvil reads/writes, event decoding, revert handling, and request-lifetime
 tests. The command fetches the pinned godot-cpp dependency when it is absent.
 Godot import can exit successfully despite a missing extension, so the runner
 checks engine diagnostics and requires a fresh suite pass marker. The full local
-macOS arm64 suite passed. Public Linux CI is configured but has not yet run, so
-Linux remains unqualified.
+macOS arm64 suite passed. The same suite runs on Linux x86_64 in the public
+[Godot compatibility workflow](../.github/workflows/godot-compat.yml).
 
 Use `--no-wrappers` to emit ABI metadata without generated codec/client calls.
 The GDExtension is not needed to load that metadata-only output. Write wrappers
