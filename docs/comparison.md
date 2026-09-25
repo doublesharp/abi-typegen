@@ -14,10 +14,10 @@ Hardhat plugin use Node.
 The [output guide](generated-output.md) describes the generated files. TypeScript
 wrapper targets provide SDK-specific helpers or interfaces. The Rust target
 provides Alloy contract bindings. Go, Swift, Kotlin, C#, Java, and Dart provide
-SDK-backed contract APIs; C/C++ use a shared codec runtime and application-supplied
-transport. See the [native guide](native-bindings.md) for the runtime requirements
-and tested boundaries. Generated APIs are not drop-in replacements for every
-SDK-specific generator.
+SDK-backed contract APIs. PHP generates codecs and JSON-RPC/signing helpers. C/C++
+use a shared codec runtime and application-supplied transport. See the [native
+guide](native-bindings.md) for runtime requirements and tested boundaries.
+Generated APIs are not drop-in replacements for every SDK-specific generator.
 
 ## Related tools
 
@@ -25,7 +25,7 @@ SDK-specific generator.
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [TypeChain](https://github.com/dethcrypto/TypeChain)      | You need its SDK-specific TypeScript output or compatibility with an existing TypeChain integration. Check its repository for maintenance status and supported targets. |
 | [ABIType](https://github.com/wevm/abitype)                | You need TypeScript type transformations and inference directly from ABI literals. abi-typegen's `as const` ABI modules can be inputs to this approach.                 |
-| [abigen](https://geth.ethereum.org/docs/tools/abigen)     | You need Go contract bindings and call/transact integration with go-ethereum. Compare that generated API with abi-typegen's Go wrappers.                                 |
+| [abigen](https://geth.ethereum.org/docs/tools/abigen)     | You need Go contract bindings and call/transact integration with go-ethereum. Compare that generated API with abi-typegen's Go wrappers.                                |
 | [forge bind](https://getfoundry.sh/forge/reference/bind/) | You need Foundry's Rust binding workflow. Compare its contract interaction output with abi-typegen's Rust data types.                                                   |
 
 Use each tool's documentation for its supported SDK versions and output contract.

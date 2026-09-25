@@ -1,0 +1,14 @@
+{
+  "name": "doublesharp/abi-typegen-php-consumer",
+  "description": "Generated PHP binding consumer tests",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2",
+    "ext-curl": "*",
+    "brick/math": "^1.0",
+    "web3p/ethereum-tx": "^0.4.3"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

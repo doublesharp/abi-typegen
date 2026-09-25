@@ -15,6 +15,7 @@ pub use renderers::ethers6 as ethers;
 pub use renderers::go;
 pub use renderers::java;
 pub use renderers::kotlin;
+pub use renderers::php;
 pub use renderers::python;
 pub use renderers::rust;
 pub use renderers::solidity;
@@ -126,6 +127,12 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             files.insert(
                 format!("{}.sol", interface_name),
                 solidity::render_solidity_file(ir),
+            );
+        }
+        Target::Php => {
+            files.insert(
+                format!("{}.php", php::namespace_name(&ir.name)),
+                php::render_php_file(ir, &config.package, config.wrappers),
             );
         }
         Target::Dart => {

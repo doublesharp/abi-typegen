@@ -2561,6 +2561,64 @@ fn native_namespace_collisions_fail_before_writing() {
 }
 
 #[test]
+fn php_contract_classes_collide_case_insensitively() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Php);
+    // Separate source paths keep this test valid on case-insensitive filesystems.
+    let first = dir.path().join("first.json");
+    let second = dir.path().join("second.json");
+    std::fs::write(&first, TARGET_MATRIX_ARTIFACT_JSON).unwrap();
+    std::fs::write(&second, TARGET_MATRIX_ARTIFACT_JSON).unwrap();
+    let artifacts = vec![("Token".to_string(), first), ("TOKEN".to_string(), second)];
+    let error = render_artifacts(&config, &artifacts)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("Token") && error.contains("TOKEN"),
+        "{error}"
+    );
+}
+
+#[test]
+fn php_auxiliary_class_collisions_fail_before_writing() {
+    let dir = tempfile::tempdir().unwrap();
+    let config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Php);
+    for name in ["Token", "TokenClient"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    std::fs::create_dir_all(&config.out_dir).unwrap();
+    let existing = config.out_dir.join("Token.php");
+    std::fs::write(&existing, "previous bindings").unwrap();
+    let error = run_generate(&config, true).unwrap_err().to_string();
+    assert!(
+        error.contains("TokenClient") && error.contains("Token"),
+        "{error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(existing).unwrap(),
+        "previous bindings"
+    );
+    assert!(run_check(&config).is_err());
+}
+
+#[test]
+fn php_no_wrappers_keeps_distinct_contract_classes_without_auxiliaries() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut config = generated_config(dir.path().join("out"), dir.path().join("gen"), Target::Php);
+    config.wrappers = false;
+    for name in ["Token", "TokenClient"] {
+        write_target_matrix_artifact(&config.artifacts_dir, name);
+    }
+    run_generate(&config, false).unwrap();
+    assert_file_contains(&config.out_dir.join("Token.php"), "final class Token");
+    assert_file_contains(
+        &config.out_dir.join("TokenClient.php"),
+        "final class TokenClient",
+    );
+    run_check(&config).unwrap();
+}
+
+#[test]
 fn c_and_cpp_share_one_runtime_header_and_keep_types_without_wrappers() {
     let dir = temp_test_dir("native_c_targets");
     let artifacts_dir = dir.join("out");

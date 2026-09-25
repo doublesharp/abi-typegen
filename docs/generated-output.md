@@ -32,20 +32,21 @@ Each selected contract produces its primary language files. C/C++ also emit a
 shared runtime header. These targets do not emit
 TypeScript ABI modules or an `index.ts` barrel.
 
-| Target     | File           | Output purpose                                                |
-| ---------- | -------------- | ------------------------------------------------------------- |
-| `python`   | `<Name>.py`    | ABI, typed values, codecs, and web3.py contract wrappers        |
-| `go`       | `<Name>.go`    | ABI, value types, codecs, and go-ethereum contract wrappers |
-| `rust`     | `<name>.rs`    | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`      |
-| `swift`    | `<Name>.swift` | ABI, public value types, codecs, and web3swift operations |
-| `csharp`   | `<Name>.cs`    | ABI, Nethereum DTOs, codecs, and contract wrappers |
-| `kotlin`   | `<Name>.kt`    | ABI, value types, codecs, and web3j contract wrappers |
-| `solidity` | `I<Name>.sol`  | Solidity interface reconstructed from ABI data                |
-| `java`     | `<Name>.java` | ABI, value types, codecs, and web3j contract wrappers |
-| `dart`     | `<name>.dart` | ABI, value types, codecs, and web3dart contract wrappers |
-| `c`        | `atg_<Name>.h` | Typed C API using the shared Rust codec runtime |
-| `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp` | C API with C++ ownership and client helpers |
-| `yaml`     | `<Name>.yaml`  | Human-readable functions, events, errors, and parameter types |
+| Target     | File                             | Output purpose                                                               |
+| ---------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| `python`   | `<Name>.py`                      | ABI, typed values, codecs, and web3.py contract wrappers                     |
+| `go`       | `<Name>.go`                      | ABI, value types, codecs, and go-ethereum contract wrappers                  |
+| `rust`     | `<name>.rs`                      | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`                     |
+| `swift`    | `<Name>.swift`                   | ABI, public value types, codecs, and web3swift operations                    |
+| `csharp`   | `<Name>.cs`                      | ABI, Nethereum DTOs, codecs, and contract wrappers                           |
+| `kotlin`   | `<Name>.kt`                      | ABI, value types, codecs, and web3j contract wrappers                        |
+| `solidity` | `I<Name>.sol`                    | Solidity interface reconstructed from ABI data                               |
+| `java`     | `<Name>.java`                    | ABI, value types, codecs, and web3j contract wrappers                        |
+| `dart`     | `<name>.dart`                    | ABI, value types, codecs, and web3dart contract wrappers                     |
+| `php`      | `<Name>.php`                     | ABI, named value types, strict codecs, and optional JSON-RPC client/wrappers |
+| `c`        | `atg_<Name>.h`                   | Typed C API using the shared Rust codec runtime                              |
+| `cpp`      | `atg_<Name>.h`, `atg_<Name>.hpp` | C API with C++ ownership and client helpers                                  |
+| `yaml`     | `<Name>.yaml`                    | Human-readable functions, events, errors, and parameter types                |
 
 The Solidity target reconstructs tuple structs and emits events, errors,
 overloads, and external function signatures. It cannot recover a contract's
@@ -53,10 +54,13 @@ implementation from an ABI.
 
 Output APIs vary by language. Rust output includes alloy's contract instance.
 Go, Swift, Kotlin, and C# include SDK-backed callable wrappers by default.
-Java and Dart also generate SDK-backed wrappers. C/C++ use a shared codec runtime
+Java, Dart, and PHP also generate callable wrappers. PHP's generated client uses
+cURL and supports JSON-RPC reads, legacy signed writes, receipt and log queries.
+C/C++ use a shared codec runtime
 and caller-supplied transport. See [native bindings](native-bindings.md) for
 dependencies, ownership, and local-chain validation. Java filenames follow the
-normalized public class name; Dart filenames use its lower-camel-case form.
+normalized public class name; Dart filenames use its lower-camel-case form. PHP
+uses the normalized public class name and configured namespace.
 C/C++ filenames and symbols use an `atg_` prefix.
 
 ## Go, Rust, Swift, and Kotlin
@@ -64,12 +68,12 @@ C/C++ filenames and symbols use an `atg_` prefix.
 Each file embeds the contract's JSON ABI plus the canonical signature and selector
 of every function, event, and error. Each tuple becomes a named type.
 
-| Target | SDK and dependencies                                                       | Layout                                                |
-| ------ | -------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Go     | `github.com/ethereum/go-ethereum` (`common`, plus `math/big`)              | One file per contract in the configured `package`     |
-| Rust   | `alloy` with `contract` and `serde` (or `sol-types`, `json`, `serde` without wrappers), and `serde` with `derive` | `<name>.rs` per contract, re-exported from `mod.rs` |
-| Swift  | web3swift 3.x (`BigInt`, `Web3Core`); depend on the `web3swift` product    | `public enum <Name>` holding every type and constant  |
-| Kotlin | `org.web3j:core` for wrappers, `org.web3j:abi` for types (web3j 6 requires JDK 21)                                  | `object <Name>` in the configured `package`           |
+| Target | SDK and dependencies                                                                                              | Layout                                               |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Go     | `github.com/ethereum/go-ethereum` (`common`, plus `math/big`)                                                     | One file per contract in the configured `package`    |
+| Rust   | `alloy` with `contract` and `serde` (or `sol-types`, `json`, `serde` without wrappers), and `serde` with `derive` | `<name>.rs` per contract, re-exported from `mod.rs`  |
+| Swift  | web3swift 3.x (`BigInt`, `Web3Core`); depend on the `web3swift` product                                           | `public enum <Name>` holding every type and constant |
+| Kotlin | `org.web3j:core` for wrappers, `org.web3j:abi` for types (web3j 6 requires JDK 21)                                | `object <Name>` in the configured `package`          |
 
 - **Go** follows abigen. Constants are `<Name>TransferSignature`,
   `<Name>TransferSelector` (`[4]byte`), `<Name>TransferEventTopic`
@@ -150,11 +154,11 @@ quoted signature, such as `methods['deposit(uint256)']`.
 
 The native targets number overloads the way their SDKs do, in ABI order:
 
-| Target        | `safeTransferFrom(a,b,c)`          | `safeTransferFrom(a,b,c,d)`        |
-| ------------- | ---------------------------------- | ---------------------------------- |
-| Go            | `TokenSafeTransferFromParams`      | `TokenSafeTransferFrom0Params`     |
-| Rust (alloy)  | `safeTransferFrom_0Call`           | `safeTransferFrom_1Call`           |
-| Swift, Kotlin | `SafeTransferFrom0Params`          | `SafeTransferFrom1Params`          |
+| Target        | `safeTransferFrom(a,b,c)`     | `safeTransferFrom(a,b,c,d)`    |
+| ------------- | ----------------------------- | ------------------------------ |
+| Go            | `TokenSafeTransferFromParams` | `TokenSafeTransferFrom0Params` |
+| Rust (alloy)  | `safeTransferFrom_0Call`      | `safeTransferFrom_1Call`       |
+| Swift, Kotlin | `SafeTransferFrom0Params`     | `SafeTransferFrom1Params`      |
 
 Names keep acronyms: `tokenURI` gives `TokenURI`, not `TokenUri`. Treat generated
 names as part of the output API and recompile consumers when the ABI changes.
@@ -224,8 +228,7 @@ address inputs use `AddressLike`.
 ## Integer output mappings
 
 Unsigned examples below show the size boundaries. Go and Rust use a native integer
-only for widths their SDKs decode natively (Go: 8, 16, 32, and 64 bits; alloy also
-128) and a big-integer type otherwise. Swift uses `BigUInt`/`BigInt` and Kotlin
+only for widths their SDKs decode natively (Go: 8, 16, 32, and 64 bits; alloy also 128) and a big-integer type otherwise. Swift uses `BigUInt`/`BigInt` and Kotlin
 uses `BigInteger` for every width.
 
 | Solidity  | Viem     | Ethers v6 | Ethers v5   | web3.js  | Go         | Rust   |
@@ -253,12 +256,12 @@ A raw ABI without documentation metadata cannot supply source comments.
 
 Parameter names that match reserved words are adjusted:
 
-| Language | Examples                                                   |
-| -------- | ---------------------------------------------------------- |
-| Python   | `from` becomes `_from`; `lambda` becomes `_lambda`         |
-| Rust     | `type` becomes `type_`; `self` becomes `self_`             |
+| Language | Examples                                                       |
+| -------- | -------------------------------------------------------------- |
+| Python   | `from` becomes `_from`; `lambda` becomes `_lambda`             |
+| Rust     | `type` becomes `type_`; `self` becomes `self_`                 |
 | Swift    | `default` becomes `` `default` ``; `func` becomes `` `func` `` |
-| Kotlin   | `in` becomes `` `in` ``; `when` becomes `` `when` ``        |
+| Kotlin   | `in` becomes `` `in` ``; `when` becomes `` `when` ``           |
 
 Compile or type-check generated files in the consuming project, especially after
 changing SDK versions, tuple shapes, overloads, or contract names. Regenerate from

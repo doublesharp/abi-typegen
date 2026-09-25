@@ -28,7 +28,7 @@ pub enum ConfigError {
     },
 }
 
-/// Package name used by the Go, Kotlin, and Java targets when none is configured.
+/// Package name used by the Go, Kotlin, Java, and PHP targets when none is configured.
 pub const DEFAULT_PACKAGE: &str = "contracts";
 
 const GO_KEYWORDS: &[&str] = &[
@@ -156,8 +156,8 @@ fn is_identifier(segment: &str) -> bool {
 /// Checks `package` against the rules of each target that uses it.
 ///
 /// Go needs a lowercase identifier that is not a keyword. Kotlin and Java need
-/// dot-separated identifiers without reserved keywords. Other targets
-/// ignore the package.
+/// dot-separated identifiers without reserved keywords. PHP needs a nonempty
+/// backslash-separated namespace. Other targets ignore the package.
 pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigError> {
     let invalid = |target, reason| ConfigError::InvalidPackage {
         package: package.to_string(),
@@ -197,6 +197,14 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
                     .any(|segment| JAVA_KEYWORDS.contains(&segment))
                 {
                     return Err(invalid("java", "a package segment is a Java keyword"));
+                }
+            }
+            Target::Php => {
+                if package.is_empty() || !package.split('\\').all(is_identifier) {
+                    return Err(invalid(
+                        "php",
+                        "expected backslash-separated namespace identifiers",
+                    ));
                 }
             }
             Target::Viem
@@ -239,6 +247,7 @@ pub fn parse_target(s: &str) -> Option<Target> {
         "solidity" | "sol" => Some(Target::Solidity),
         "java" => Some(Target::Java),
         "dart" => Some(Target::Dart),
+        "php" => Some(Target::Php),
         "c" => Some(Target::C),
         "cpp" | "c++" => Some(Target::Cpp),
         "yaml" | "yml" => Some(Target::Yaml),
@@ -276,6 +285,8 @@ pub enum Target {
     Kotlin,
     /// Generate Solidity interfaces.
     Solidity,
+    /// Generate PHP classes, ABI codecs, and JSON-RPC wrappers.
+    Php,
     /// Generate Dart bindings using web3dart.
     Dart,
     /// Generate Java bindings using web3j.
@@ -319,6 +330,7 @@ impl Target {
             | Self::C
             | Self::Cpp
             | Self::Dart
+            | Self::Php
             | Self::Yaml => false,
         }
     }
@@ -343,6 +355,7 @@ impl Target {
             | Self::C
             | Self::Cpp
             | Self::Dart
+            | Self::Php
             | Self::Yaml => None,
         }
     }
@@ -353,7 +366,7 @@ impl<'de> Deserialize<'de> for Target {
         let s = String::deserialize(d)?;
         parse_target(&s).ok_or_else(|| {
             serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|solidity|c|cpp|yaml",
                 s
             ))
         })
@@ -415,7 +428,7 @@ fn deserialize_targets<'de, D: serde::Deserializer<'de>>(
             while let Some(s) = seq.next_element::<String>()? {
                 let t = parse_target(s.trim()).ok_or_else(|| {
                     de::Error::custom(format!(
-                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
+                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|solidity|c|cpp|yaml",
                         s
                     ))
                 })?;
@@ -438,7 +451,7 @@ fn parse_targets_from_str(s: &str) -> Result<Vec<Target>, String> {
     for part in parts {
         let t = parse_target(part).ok_or_else(|| {
             format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|solidity|c|cpp|yaml",
                 part
             )
         })?;
@@ -513,7 +526,7 @@ pub struct Config {
     pub contracts: Vec<String>,
     /// Exclude contracts matching these glob patterns.
     pub exclude: Vec<String>,
-    /// Package or namespace for Go, Kotlin, and Java output. See [`validate_package`].
+    /// Package or namespace for Go, Kotlin, Java, and PHP output. See [`validate_package`].
     pub package: String,
 }
 
@@ -606,6 +619,7 @@ contracts = ["MyToken", "Vault"]
         for (name, target) in [
             ("java", Target::Java),
             ("dart", Target::Dart),
+            ("php", Target::Php),
             ("c", Target::C),
             ("cpp", Target::Cpp),
             ("c++", Target::Cpp),
@@ -882,6 +896,23 @@ target = "viem,badtarget"
             );
         }
         assert!(validate_package("com.example.contracts", &[Target::Kotlin]).is_ok());
+    }
+
+    #[test]
+    fn php_namespace_rejects_invalid_segments() {
+        for bad in [
+            "",
+            "App.Contracts",
+            "App\\\\Contracts",
+            "App\\1Token",
+            "App; echo 1",
+            " App",
+        ] {
+            assert!(validate_package(bad, &[Target::Php]).is_err(), "{bad}");
+        }
+        for valid in ["contracts", "App\\Contracts"] {
+            assert!(validate_package(valid, &[Target::Php]).is_ok(), "{valid}");
+        }
     }
 
     #[test]

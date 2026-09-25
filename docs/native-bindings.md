@@ -3,7 +3,7 @@
 Generate bindings from the same artifacts used for TypeScript:
 
 ```sh
-abi-typegen generate --target go,swift,kotlin,csharp,java,dart,c,cpp
+abi-typegen generate --target go,swift,kotlin,csharp,java,dart,php,c,cpp
 ```
 
 When selecting multiple targets, each gets its own output directory. Install the consuming language's SDK
@@ -12,27 +12,72 @@ primary ABI metadata and value types while omitting callable helpers.
 
 ## Runtime dependencies
 
-| Target | Consumer runtime |
-| --- | --- |
-| Python | web3.py; the consumer fixture pins 8.0.0 (Python 3.10+) |
-| Go | go-ethereum; the consumer fixture pins 1.17.6 |
-| Swift | web3swift 3.x with Web3Core and BigInt; Swift 6 |
-| Kotlin, Java | web3j 6; JDK 21 |
-| C# | Nethereum.Web3; the consumer fixture pins 6.1.0 |
-| Dart | web3dart; the consumer fixture pins 3.0.3 |
-| C, C++ | `abi-typegen-runtime`, built with Rust/Alloy; C11 or C++17 compiler |
+| Target       | Consumer runtime                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Python       | web3.py; the consumer fixture pins 8.0.0 (Python 3.10+)                                                        |
+| Go           | go-ethereum; the consumer fixture pins 1.17.6                                                                  |
+| Swift        | web3swift 3.x with Web3Core and BigInt; Swift 6                                                                |
+| Kotlin, Java | web3j 6; JDK 21                                                                                                |
+| C#           | Nethereum.Web3; the consumer fixture pins 6.1.0                                                                |
+| Dart         | web3dart; the consumer fixture pins 3.0.3                                                                      |
+| PHP          | PHP 8.2+, Brick Math 1.0.0, `web3p/ethereum-tx` 0.4.3, and cURL; enable `curl`, `gmp`, `mbstring`, and `iconv` |
+| C, C++       | `abi-typegen-runtime`, built with Rust/Alloy; C11 or C++17 compiler                                            |
 
 SDK-backed wrappers use the application's provider and signing configuration.
-They do not create wallets, choose RPC endpoints, or manage private keys. Read
-operations return typed results; write operations expose the target SDK's
-transaction or operation object. Preparing a transaction, submitting it, and
-waiting for its receipt are distinct operations.
+The generated PHP client accepts an RPC URL and can sign locally with a supplied
+private key; the application remains responsible for storing that key. Other
+targets leave RPC and signing to the SDK integration. Read operations return typed
+results; write operations expose the target SDK's transaction or operation object.
+Preparing a transaction, submitting it, and waiting for its receipt are distinct
+operations.
 
 Canonical signatures select overloads. Generated codecs cover positional
 arguments, tuples, arrays, results, declared custom errors, and events. Indexed
 strings, bytes, arrays, and tuples decode to their 32-byte topic hashes because
 the original values are absent from the log. Anonymous events have no signature
 topic; the caller must choose the appropriate event decoder.
+
+## PHP
+
+PHP output requires PHP 8.2 or newer, the `curl`, `gmp`, `mbstring`, and `iconv`
+extensions, Brick Math 1.0.0, and `web3p/ethereum-tx` 0.4.3. Install the PHP
+packages in the consuming project:
+
+```sh
+composer require brick/math:^1.0 web3p/ethereum-tx:^0.4.3
+abi-typegen generate --target php --out ./generated --package 'App\Contracts'
+```
+
+Generated files include named tuple, event, error, and transaction-option classes,
+plus one contract class per ABI. Contract classes provide strict offline encoders
+and decoders, JSON-RPC read helpers, signed transaction helpers, receipt queries,
+log queries, event filters and decoders, and declared custom-error decoders. The
+client signs legacy EIP-155 transactions. It does not generate
+EIP-1559 transactions, deployment helpers, or subscriptions. The upstream signing
+package emits `ArrayAccess` return-type deprecation notices on PHP 8.5.
+
+Given a generated `Token` binding, a read uses the configured RPC client:
+
+```php
+<?php
+require __DIR__ . '/vendor/autoload.php';
+foreach (glob(__DIR__ . '/generated/*.php') ?: [] as $file) require_once $file;
+
+use App\Contracts\Token;
+use App\Contracts\TokenClient;
+use Brick\Math\BigInteger;
+
+$client = new TokenClient(getenv('TOKEN_ADDRESS'), getenv('RPC_URL'));
+$balance = Token::callBalanceOf(
+    $client,
+    getenv('ACCOUNT_ADDRESS'),
+);
+echo $balance->toBase(10);
+```
+
+For writes, construct the client with a private key, sender address, and chain ID.
+Pass gas price and gas limit through the generated transaction options, then wait
+for a receipt before treating the returned hash as a successful transaction.
 
 ## C and C++
 
@@ -90,7 +135,7 @@ python3 e2e/native/anvil.py --cwd e2e/native/go \
 ```
 
 The native Make targets generate source, compile consumers, run codec tests, and
-exercise RPC submissions where supported. GitHub Actions installs Foundry and
+exercise RPC submissions where supported. PHP uses `make e2e-php`. GitHub Actions installs Foundry and
 each language's toolchain before running those same targets. These tests need no
 external chain, RPC service, or repository secret.
 
@@ -108,6 +153,9 @@ qualification.
 - Deployment helpers are available for Python, Go, C#, C, and C++. Supply creation bytecode
   from your compiler artifacts. Other targets can use their underlying SDK's
   deployment API.
+- PHP submits legacy EIP-155 transactions. It does not generate EIP-1559
+  transactions, deployment helpers, or subscriptions. `web3p/ethereum-tx` emits
+  `ArrayAccess` return-type deprecation notices on PHP 8.5.
 - Event query and subscription convenience APIs vary by target. Go includes typed
   subscriptions through a backend that supports subscriptions (for example WebSocket). Swift and C/C++
   provide topic builders and decoders; their provider integration remains with the

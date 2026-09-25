@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -65,7 +65,7 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 
 NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
 
-e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python ## E2E: all native-language targets
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php ## E2E: all native-language targets
 
 e2e-native-artifacts: build
 	cd e2e/foundry-sample && forge build
@@ -221,3 +221,13 @@ e2e-python: e2e-native-artifacts
 	cd e2e/native/python && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target python
 	cd e2e/native/python && .venv/bin/python -m compileall -q Generated && .venv/bin/python test_consumer.py
 	python3 e2e/native/anvil.py --cwd e2e/native/python .venv/bin/python test_consumer.py
+
+e2e-php: e2e-native-artifacts
+	cd e2e/native/php && composer install --no-interaction --prefer-dist
+	cd e2e/native/php && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target php --package NativeBindings
+	find e2e/native/php/Generated -name '*.php' -print0 | xargs -0 -n1 php -l
+	cd e2e/native/php && php test_consumer.php
+	cd e2e/native/php && rm -rf Metadata && $(NATIVE_TYPEGEN) --out ./Metadata --target php --package NativeBindings --no-wrappers
+	find e2e/native/php/Metadata -name '*.php' -print0 | xargs -0 -n1 php -l
+	cd e2e/native/php && php test_metadata.php Metadata
+	python3 e2e/native/anvil.py --cwd e2e/native/php php test_consumer.php

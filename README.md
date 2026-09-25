@@ -137,37 +137,33 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
-There are 18 CLI targets:
+There are 19 CLI targets across 13 languages:
 
-| Target     | Works with                                               | What you get                                                 |
-| ---------- | -------------------------------------------------------- | ------------------------------------------------------------ |
-| `viem`     | [viem](https://viem.sh/)                                 | Typed contract helpers and ABI                               |
-| `wagmi`    | [wagmi](https://wagmi.sh/)                               | React hooks for reads, writes, and events                    |
-| `ethers`   | [ethers v6](https://docs.ethers.org/v6/)                 | Typed contract interfaces and connection helpers             |
-| `ethers5`  | ethers v5                                                | Typed contract interfaces and connection helpers             |
-| `web3js`   | [web3.js v4](https://docs.web3js.org/)                   | Typed contract methods                                       |
-| `python`   | [web3.py](https://web3py.readthedocs.io/)                | Reads, transaction builders, codecs, and event/error helpers |
-| `go`       | [go-ethereum](https://geth.ethereum.org/)                | Typed calls, transactions, deployment, and events            |
-| `rust`     | [Alloy](https://alloy.rs/)                               | `sol!` types, codecs, and contract instances                 |
-| `swift`    | [web3swift](https://github.com/web3swift-team/web3swift) | Typed values, codecs, and contract operations                |
-| `csharp`   | [Nethereum](https://nethereum.com/)                      | Typed DTOs, contract methods, and deployment                 |
-| `kotlin`   | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                |
-| `java`     | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                |
-| `dart`     | [web3dart](https://pub.dev/packages/web3dart)            | Typed values, codecs, calls, and transactions                |
-| `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership          |
-| `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup            |
-| `zod`      | [Zod 4](https://zod.dev/)                                | Validation schemas and ABI                                   |
-| `solidity` | Solidity                                                 | Interfaces, tuple structs, events, and errors                |
-| `yaml`     | Any YAML reader                                          | Readable ABI descriptions                                    |
+| Target     | Works with                                               | What you get                                                                                     |
+| ---------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `viem`     | [viem](https://viem.sh/)                                 | Typed contract helpers and ABI                                                                   |
+| `wagmi`    | [wagmi](https://wagmi.sh/)                               | React hooks for reads, writes, and events                                                        |
+| `ethers`   | [ethers v6](https://docs.ethers.org/v6/)                 | Typed contract interfaces and connection helpers                                                 |
+| `ethers5`  | ethers v5                                                | Typed contract interfaces and connection helpers                                                 |
+| `web3js`   | [web3.js v4](https://docs.web3js.org/)                   | Typed contract methods                                                                           |
+| `python`   | [web3.py](https://web3py.readthedocs.io/)                | Reads, transaction builders, codecs, and event/error helpers                                     |
+| `go`       | [go-ethereum](https://geth.ethereum.org/)                | Typed calls, transactions, deployment, and events                                                |
+| `rust`     | [Alloy](https://alloy.rs/)                               | `sol!` types, codecs, and contract instances                                                     |
+| `swift`    | [web3swift](https://github.com/web3swift-team/web3swift) | Typed values, codecs, and contract operations                                                    |
+| `csharp`   | [Nethereum](https://nethereum.com/)                      | Typed DTOs, contract methods, and deployment                                                     |
+| `kotlin`   | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                                                    |
+| `java`     | [web3j](https://docs.web3j.io/)                          | Typed values, codecs, calls, and transactions                                                    |
+| `dart`     | [web3dart](https://pub.dev/packages/web3dart)            | Typed values, codecs, calls, and transactions                                                    |
+| `php`      | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          | ABI codecs, JSON-RPC reads, signed legacy transactions, receipts, logs, and event/error decoding |
+| `c`        | Shared Rust/Alloy runtime                                | C11 codecs and a client API with explicit ownership                                              |
+| `cpp`      | Shared Rust/Alloy runtime                                | C++17 client helpers and automatic result cleanup                                                |
+| `zod`      | [Zod 4](https://zod.dev/)                                | Validation schemas and ABI                                                                       |
+| `solidity` | Solidity                                                 | Interfaces, tuple structs, events, and errors                                                    |
+| `yaml`     | Any YAML reader                                          | Readable ABI descriptions                                                                        |
 
 Zod, Solidity, and YAML describe or validate contracts; they do not submit
 transactions. See [native bindings](docs/native-bindings.md) for tested SDK
 versions and [configuration](docs/configuration.md) for target aliases.
-
-The PHP renderer source has also been added. CLI registration and PHP consumer
-tests are still pending, so `--target php` is not available yet. Its current design
-uses PHP 8.2+, Brick Math for large integers, cURL for RPC, and
-`web3p/ethereum-tx` for legacy transaction signing.
 
 ### Generate for more than one app
 
@@ -233,6 +229,46 @@ calldata = token.encode_transfer(owner, 10**18)
 Write helpers build transactions for your signing flow. Other targets expose
 their SDK's transaction or operation types. A submitted transaction hash is not
 proof of success; check the mined receipt.
+
+### Call or sign with PHP
+
+The PHP target generates ABI codecs and a small JSON-RPC client. Install its
+runtime dependencies, generate the bindings, then pass the RPC URL and signing
+settings to the generated client:
+
+```sh
+composer require brick/math:^1.0 web3p/ethereum-tx:^0.4.3
+abi-typegen generate --target php --out ./generated --package 'App\Contracts'
+```
+
+```php
+<?php
+require __DIR__ . '/vendor/autoload.php';
+foreach (glob(__DIR__ . '/generated/*.php') ?: [] as $file) require_once $file;
+
+use App\Contracts\Token;
+use App\Contracts\TokenClient;
+use App\Contracts\TokenTransactionOptions;
+use Brick\Math\BigInteger;
+
+$client = new TokenClient(
+    getenv('TOKEN_ADDRESS'),
+    getenv('RPC_URL'),
+    getenv('PRIVATE_KEY'),
+    getenv('FROM_ADDRESS'),
+    (int) getenv('CHAIN_ID'),
+);
+$options = new TokenTransactionOptions($client->gasPrice(), BigInteger::of(500000));
+$hash = Token::sendApprove($client, getenv('SPENDER'), BigInteger::of('1000'), $options);
+$receipt = $client->getTransactionReceipt($hash);
+```
+
+PHP 8.2 or newer needs the `curl`, `gmp`, `mbstring`, and `iconv` extensions. The
+client signs legacy EIP-155 transactions locally. It does not build EIP-1559
+transactions or deploy contracts. Poll for a receipt before treating a returned
+transaction hash as success. Event log filters, event decoders, and declared
+custom-error decoders are also generated. The upstream signing library emits
+ArrayAccess return-type deprecation notices on PHP 8.5.
 
 ### Link C or C++
 

@@ -34,13 +34,13 @@ Node or Python.
 | `src/`                        | CLI commands, artifact discovery, generation, watching, and ABI fetching |
 | `crates/abi-typegen-core/`    | ABI parsing and intermediate types                                       |
 | `crates/abi-typegen-config/`  | Configuration and target selection                                       |
-| `crates/abi-typegen-runtime/` | Shared Rust/Alloy codec and C ABI for C/C++ consumers |
+| `crates/abi-typegen-runtime/` | Shared Rust/Alloy codec and C ABI for C/C++ consumers                    |
 | `crates/abi-typegen-codegen/` | Target renderers and type mapping                                        |
 | `npm/abi-typegen/`            | npm launcher, binary installation, and checksum preparation              |
 | `npm/hardhat-abi-typegen/`    | Hardhat 2 and Hardhat 3 plugin entry points                              |
 | `tests/`, `npm/tests/`        | CLI, packaging, installer, and storage regression tests                  |
 | `e2e/`                        | Foundry and Hardhat projects used to exercise generated bindings         |
-| `e2e/native/`                 | Native language consumers that compile and exercise generated bindings  |
+| `e2e/native/`                 | Native language consumers that compile and exercise generated bindings   |
 | `fuzz/`                       | Fuzz targets, curated seeds, and local corpus/output                     |
 
 ## Rust checks
@@ -93,12 +93,14 @@ manifest until [release preparation](releasing.md) runs.
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
 - Native-language integration: `make e2e-native` runs Go, Rust, Swift, Kotlin,
-  Java, C#, Dart, Python, C, and C++ consumers. Individual `e2e-<target>` tasks
+  Java, C#, Dart, PHP, Python, C, and C++ consumers. Individual `e2e-<target>` tasks
   generate bindings from `e2e/foundry-sample` into
   the consumers under `e2e/native/` and run each language's formatter, linter,
   and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
   JDK 21. C/C++ additionally need a C11/C++17 compiler, C# needs .NET 10,
-  Dart needs its SDK, and Python needs Python 3.11+ with venv support. The consumers do not build until a
+  Dart needs its SDK, PHP needs PHP 8.2+, Composer, and the curl, gmp, mbstring,
+  and iconv extensions, and Python needs Python 3.11+ with venv support. The
+  consumers do not build until a
   target has generated their bindings.
 - Coverage: `make coverage` requires `cargo-llvm-cov` and Node/npm.
 - Fuzzing: the `fuzz-*` Makefile targets require `cargo-fuzz` and nightly Rust.

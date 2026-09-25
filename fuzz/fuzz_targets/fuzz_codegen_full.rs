@@ -49,6 +49,7 @@ fuzz_target!(|data: &[u8]| {
         abi_typegen_config::Target::CSharp,
         abi_typegen_config::Target::Java,
         abi_typegen_config::Target::Dart,
+        abi_typegen_config::Target::Php,
     ] {
         let config = abi_typegen_config::Config {
             targets: vec![target],

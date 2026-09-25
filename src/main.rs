@@ -43,7 +43,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package or namespace for Go, Kotlin, and Java output (default: "contracts")
+        /// Package or namespace for Go, Kotlin, Java, and PHP output (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -79,7 +79,7 @@ enum Commands {
         /// Disable wrapper generation
         #[arg(long)]
         no_wrappers: bool,
-        /// Package or namespace for Go, Kotlin, and Java output (default: "contracts")
+        /// Package or namespace for Go, Kotlin, Java, and PHP output (default: "contracts")
         #[arg(long)]
         package: Option<String>,
         /// Limit generation to these contract names (repeat or comma-separate)
@@ -368,6 +368,7 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::Solidity => "solidity",
         Target::Java => "java",
         Target::Dart => "dart",
+        Target::Php => "php",
         Target::C => "c",
         Target::Cpp => "cpp",
         Target::Yaml => "yaml",
@@ -376,7 +377,7 @@ fn target_dir_name(target: &Target) -> &'static str {
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "java", "dart", "c", "cpp", "yaml",
+    "csharp", "kotlin", "solidity", "java", "dart", "php", "c", "cpp", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -429,7 +430,7 @@ fn apply_overrides(
             let trimmed = part.trim();
             let parsed = parse_target(trimmed).ok_or_else(|| {
                 anyhow::anyhow!(
-                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|solidity|c|cpp|yaml",
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|solidity|c|cpp|yaml",
                     trimmed
                 )
             })?;
@@ -526,6 +527,7 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".sol",
     ".java",
     ".dart",
+    ".php",
     ".h",
     ".hpp",
     ".yaml",
@@ -638,15 +640,23 @@ fn render_artifacts(
                 Target::C | Target::Cpp => Some(abi_typegen_codegen::c::namespace_name(name)),
                 _ => None,
             };
-            if let Some(namespace) = namespace
-                && let Some(previous) = namespace_owners.insert((prefix, namespace.clone()), name)
-            {
-                anyhow::bail!(
-                    "contracts '{}' and '{}' both generate namespace '{}'",
-                    previous,
-                    name,
-                    namespace
-                );
+            let namespaces = if *target_config.target() == Target::Php {
+                abi_typegen_codegen::php::declared_class_names(&ir, target_config.wrappers)
+                    .into_iter()
+                    .map(|name| name.to_ascii_lowercase())
+                    .collect()
+            } else {
+                namespace.into_iter().collect::<Vec<_>>()
+            };
+            for namespace in namespaces {
+                if let Some(previous) = namespace_owners.insert((prefix, namespace.clone()), name) {
+                    anyhow::bail!(
+                        "contracts '{}' and '{}' both generate namespace '{}'",
+                        previous,
+                        name,
+                        namespace
+                    );
+                }
             }
             for (filename, content) in generate_contract_files(&ir, target_config) {
                 let filename = format!("{prefix}{filename}");

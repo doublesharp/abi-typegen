@@ -31,13 +31,13 @@ exclude = ["*Test", "*Mock"]
 | ----------- | ----------------- | ----------------------------------------------------------------- |
 | `out`       | `"src/generated"` | Generated output directory; created as needed                     |
 | `target`    | `"viem"`          | One target, a comma-separated string, or an array of target names |
-| `wrappers`  | `true`            | Emit callable wrappers for supported targets             |
+| `wrappers`  | `true`            | Emit callable wrappers for supported targets                      |
 | `contracts` | `[]`              | Exact contract names to include; empty selects all                |
 | `exclude`   | `[]`              | Contract-name patterns to exclude; `*` matches any sequence       |
-| `package`   | `"contracts"`     | Go package name or Kotlin/Java package              |
+| `package`   | `"contracts"`     | Go package name, Kotlin/Java package, or PHP namespace            |
 
 Targets are `viem`, `zod`, `wagmi`, `ethers`, `ethers5`, `web3js`, `python`, `go`,
-`rust`, `swift`, `csharp`, `kotlin`, `java`, `dart`, `c`, `cpp`, `solidity`, and `yaml`.
+`rust`, `swift`, `csharp`, `kotlin`, `java`, `dart`, `php`, `c`, `cpp`, `solidity`, and `yaml`.
 Aliases are `ethers6` for `ethers`, `web3` for `web3js`, `cs` for `csharp`, `kt` for
 `kotlin`, `c++` for `cpp`, `sol` for `solidity`, and `yml` for `yaml`.
 
@@ -58,14 +58,15 @@ Use explicit target lists; `all` and `all-ts` are not supported.
 Setting `wrappers = false` suppresses wrappers for `viem`, `wagmi`, `ethers`,
 `ethers5`, and `web3js` while retaining their ABI modules. For Rust it removes
 alloy's `rpc` contract instance and keeps the types, ABI, and selectors. For Go,
-Python, Swift, Kotlin, C#, Java, Dart, C, and C++ it omits callable wrappers while keeping
+Python, Swift, Kotlin, C#, Java, Dart, PHP, C, and C++ it omits callable wrappers while keeping
 primary ABI metadata and value types. It does
 not suppress Zod schemas, Solidity interfaces, or other output. See
 [generated output](generated-output.md) for filenames.
 
-`package` sets the Go package name (a lowercase identifier that is not a keyword)
-and the Kotlin/Java package (dot-separated identifiers). abi-typegen rejects values that
-are invalid for any selected target. Other targets ignore it.
+`package` sets the Go package name (a lowercase identifier that is not a keyword),
+the Kotlin/Java package (dot-separated identifiers), or the PHP namespace
+(backslash-separated identifiers). The default is `contracts`. abi-typegen rejects
+values that are invalid for any selected target. Other targets ignore it.
 
 ## CLI overrides
 
@@ -82,19 +83,19 @@ abi-typegen generate \
   --clean
 ```
 
-| Flag                   | Meaning                                                                |
-| ---------------------- | ---------------------------------------------------------------------- |
-| `--artifacts <path>`   | Compiled artifact directory                                            |
-| `--out <path>`         | Generated output directory                                             |
-| `--target <names>`     | One target or a comma-separated list                                   |
-| `--contracts <names>`  | Contract allowlist, repeated or comma-separated                        |
-| `--exclude <patterns>` | Comma-separated contract-name patterns; quote shell wildcards          |
+| Flag                   | Meaning                                                                    |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `--artifacts <path>`   | Compiled artifact directory                                                |
+| `--out <path>`         | Generated output directory                                                 |
+| `--target <names>`     | One target or a comma-separated list                                       |
+| `--contracts <names>`  | Contract allowlist, repeated or comma-separated                            |
+| `--exclude <patterns>` | Comma-separated contract-name patterns; quote shell wildcards              |
 | `--no-wrappers`        | Suppress wrappers (and Rust's `rpc` instance) while keeping primary output |
-| `--package <name>`     | On `generate` and `diff`, the Go package or Kotlin/Java package             |
-| `--clean`              | On `generate`, remove stale generated files                            |
-| `--check`              | On `generate`, compare output without writing; exit nonzero if stale   |
-| `--config <path>`      | Select a Foundry-style TOML configuration file                         |
-| `--hardhat`            | Use the Hardhat artifact layout and defaults                           |
+| `--package <name>`     | On `generate` and `diff`, the Go package or Kotlin/Java package            |
+| `--clean`              | On `generate`, remove stale generated files                                |
+| `--check`              | On `generate`, compare output without writing; exit nonzero if stale       |
+| `--config <path>`      | Select a Foundry-style TOML configuration file                             |
+| `--hardhat`            | Use the Hardhat artifact layout and defaults                               |
 
 Generation validates the selected artifacts and renders the output before writing
 or cleaning. Invalid artifacts and duplicate output names fail without modifying

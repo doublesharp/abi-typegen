@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   custom-error helpers. `--no-wrappers` retains primary metadata and value types.
 - Go event subscriptions return typed events through the configured provider.
 - Java and Dart targets using web3j and web3dart.
+- PHP 8.2 target with named ABI types, strict offline codecs, JSON-RPC reads,
+  signed legacy EIP-155 transactions, receipt and log queries, and event/error
+  decoding. PHP namespaces use the configured `package` value.
 - Callable Python wrappers replace generated stub methods when wrappers are enabled.
 - C11 and C++17 targets backed by a shared Rust/Alloy runtime. C exposes explicit
   result ownership; C++ wraps results with RAII. Transport and signing are supplied
@@ -35,7 +38,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Add native input and decode checks, including nonpayable transaction values and
   canonical ABI data validation in the C runtime. Regenerate bindings and compile
   consumers when upgrading.
-
 
 ## [0.5.1] - 2026-09-24
 
@@ -130,47 +132,47 @@ names to new ones. TypeScript, Python, C#, Solidity, and YAML output is unchange
 
 Go (`TupleCases`, `Vault`, and `Token` from the sample project):
 
-| 0.4                                                  | 0.5                                   |
-| ---------------------------------------------------- | ------------------------------------- |
-| `package contracts` (fixed)                          | `package <package>`                   |
-| Inline `struct { Account common.Address }`           | `TupleCasesTupleAccountPosition`      |
-| `VaultDepositUint256AddressParams`                   | `VaultDepositParams`                  |
-| `VaultDepositUint256Params`                          | `VaultDeposit0Params`                 |
-| `uint24` field as `uint32`                           | `*big.Int`                            |
-| `TokenTokenUriParams`                                | `TokenTokenURIParams`                 |
-| Field `Arg0`                                         | Field named after its type (`Address`) |
+| 0.4                                        | 0.5                                    |
+| ------------------------------------------ | -------------------------------------- |
+| `package contracts` (fixed)                | `package <package>`                    |
+| Inline `struct { Account common.Address }` | `TupleCasesTupleAccountPosition`       |
+| `VaultDepositUint256AddressParams`         | `VaultDepositParams`                   |
+| `VaultDepositUint256Params`                | `VaultDeposit0Params`                  |
+| `uint24` field as `uint32`                 | `*big.Int`                             |
+| `TokenTokenUriParams`                      | `TokenTokenURIParams`                  |
+| Field `Arg0`                               | Field named after its type (`Address`) |
 
 Rust:
 
-| 0.4                                          | 0.5                                          |
-| -------------------------------------------- | -------------------------------------------- |
-| `Token.rs`, no module file                   | `token.rs` plus `mod.rs` re-exporting `Token` |
-| `TokenTransferParams`                        | `Token::transferCall`                        |
-| `TokenTransferEvent`                         | `Token::Transfer`                            |
-| `TokenInsufficientBalanceError`              | `Token::InsufficientBalance`                 |
-| `TupleCasesDepositTupleAddressEndTupleParams` | `TupleCases::deposit_0Call`                  |
-| Serde `deposited_at`                         | Serde `depositedAt`                          |
+| 0.4                                           | 0.5                                           |
+| --------------------------------------------- | --------------------------------------------- |
+| `Token.rs`, no module file                    | `token.rs` plus `mod.rs` re-exporting `Token` |
+| `TokenTransferParams`                         | `Token::transferCall`                         |
+| `TokenTransferEvent`                          | `Token::Transfer`                             |
+| `TokenInsufficientBalanceError`               | `Token::InsufficientBalance`                  |
+| `TupleCasesDepositTupleAddressEndTupleParams` | `TupleCases::deposit_0Call`                   |
+| Serde `deposited_at`                          | Serde `depositedAt`                           |
 
 Swift:
 
-| 0.4                                     | 0.5                                        |
-| --------------------------------------- | ------------------------------------------ |
-| `struct TokenTransferParams` (internal) | `public struct Token.TransferParams`       |
-| `struct TokenTransferEvent`             | `Token.TransferEvent`                      |
-| Tuple field `(account: EthereumAddress)` | `TupleCases.TupleAccountPosition`         |
-| `VaultDepositUint256Params`             | `Vault.Deposit1Params`                     |
+| 0.4                                      | 0.5                                  |
+| ---------------------------------------- | ------------------------------------ |
+| `struct TokenTransferParams` (internal)  | `public struct Token.TransferParams` |
+| `struct TokenTransferEvent`              | `Token.TransferEvent`                |
+| Tuple field `(account: EthereumAddress)` | `TupleCases.TupleAccountPosition`    |
+| `VaultDepositUint256Params`              | `Vault.Deposit1Params`               |
 
 Kotlin:
 
-| 0.4                                        | 0.5                                          |
-| ------------------------------------------ | -------------------------------------------- |
-| `package contracts` (fixed)                | `package <package>`                          |
-| `data class TokenTransferParams`           | `Token.TransferParams`                       |
-| `data class TokenTransferEvent`            | `Token.TransferEvent`                        |
-| `TokenpausedEvent` (event `paused`)        | `Token.PausedEvent`                          |
-| Tuple as `Map<String, Any>`                | `Vault.Position` (a web3j `StaticStruct`)    |
-| `ByteArray` for `bytes32` / `bytes`        | web3j `Bytes32` / `DynamicBytes`             |
-| `UInt` / `ULong` for small integers        | `BigInteger`                                 |
+| 0.4                                 | 0.5                                       |
+| ----------------------------------- | ----------------------------------------- |
+| `package contracts` (fixed)         | `package <package>`                       |
+| `data class TokenTransferParams`    | `Token.TransferParams`                    |
+| `data class TokenTransferEvent`     | `Token.TransferEvent`                     |
+| `TokenpausedEvent` (event `paused`) | `Token.PausedEvent`                       |
+| Tuple as `Map<String, Any>`         | `Vault.Position` (a web3j `StaticStruct`) |
+| `ByteArray` for `bytes32` / `bytes` | web3j `Bytes32` / `DynamicBytes`          |
+| `UInt` / `ULong` for small integers | `BigInteger`                              |
 
 ## [0.4.3] - 2026-09-23
 

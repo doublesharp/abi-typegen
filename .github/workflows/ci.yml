@@ -151,6 +151,8 @@ jobs:
             os: ubuntu-latest
           - target: dart
             os: ubuntu-latest
+          - target: php
+            os: ubuntu-latest
           - target: python
             os: ubuntu-latest
     steps:
@@ -189,6 +191,13 @@ jobs:
         uses: dart-lang/setup-dart@v1
         with:
           sdk: "3.13.4"
+      - if: matrix.target == 'php'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, gmp, mbstring, iconv
+          tools: composer:v2
+          coverage: none
       - run: make e2e-${{ matrix.target }}
 
   e2e-hardhat:

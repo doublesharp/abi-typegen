@@ -26,3 +26,6 @@ pub mod java;
 
 /// Dart contract bindings.
 pub mod dart;
+
+/// PHP contract bindings.
+pub mod php;

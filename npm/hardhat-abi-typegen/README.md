@@ -31,11 +31,11 @@ export default defineConfig({
   plugins: [abiTypegen],
   solidity: "0.8.34",
   typegen: {
-    out: "src/generated",       // output directory (default: "src/generated")
-    target: "viem",             // target name or comma-separated targets
-    wrappers: true,             // emit typed wrappers (default: true)
-    contracts: ["Token"],       // optional - limit to named contracts
-    exclude: ["*Test", "*Mock"],// optional - exclude by glob pattern
+    out: "src/generated", // output directory (default: "src/generated")
+    target: "viem", // target name or comma-separated targets
+    wrappers: true, // emit typed wrappers (default: true)
+    contracts: ["Token"], // optional - limit to named contracts
+    exclude: ["*Test", "*Mock"], // optional - exclude by glob pattern
   },
 });
 ```
@@ -50,11 +50,11 @@ import "@0xdoublesharp/hardhat-abi-typegen";
 const config: HardhatUserConfig = {
   solidity: "0.8.34",
   typegen: {
-    out: "src/generated",       // output directory (default: "src/generated")
-    target: "viem",             // target name or comma-separated targets
-    wrappers: true,             // emit typed wrappers (default: true)
-    contracts: ["Token"],       // optional - limit to named contracts
-    exclude: ["*Test", "*Mock"],// optional - exclude by glob pattern
+    out: "src/generated", // output directory (default: "src/generated")
+    target: "viem", // target name or comma-separated targets
+    wrappers: true, // emit typed wrappers (default: true)
+    contracts: ["Token"], // optional - limit to named contracts
+    exclude: ["*Test", "*Mock"], // optional - exclude by glob pattern
   },
 };
 
@@ -80,48 +80,45 @@ npx abi-typegen generate --hardhat --target viem
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `out` | `string` | `"src/generated"` | Output directory for generated files |
-| `target` | `string \| string[]` | `"viem"` | Target name, comma-separated targets, or array of targets (see below) |
-| `wrappers` | `boolean` | `true` | Emit typed wrapper files when supported |
-| `contracts` | `string[]` | `[]` | Limit to named contracts (empty = all) |
-| `exclude` | `string[]` | `[]` | Exclude contracts matching glob patterns |
+| Option      | Type                 | Default           | Description                                                           |
+| ----------- | -------------------- | ----------------- | --------------------------------------------------------------------- |
+| `out`       | `string`             | `"src/generated"` | Output directory for generated files                                  |
+| `target`    | `string \| string[]` | `"viem"`          | Target name, comma-separated targets, or array of targets (see below) |
+| `wrappers`  | `boolean`            | `true`            | Emit typed wrapper files when supported                               |
+| `contracts` | `string[]`           | `[]`              | Limit to named contracts (empty = all)                                |
+| `exclude`   | `string[]`           | `[]`              | Exclude contracts matching glob patterns                              |
 
 ## Targets
 
-| Target | Flag | Language | Ecosystem |
-|---|---|---|---|
-| viem | `viem` | TypeScript | [viem](https://viem.sh/) |
-| zod | `zod` | TypeScript | [Zod](https://zod.dev/) 4 |
-| wagmi | `wagmi` | TypeScript | [wagmi](https://wagmi.sh/) v2 |
-| ethers v6 | `ethers` | TypeScript | [ethers](https://docs.ethers.org/v6/) v6 |
-| ethers v5 | `ethers5` | TypeScript | ethers v5 |
-| web3.js | `web3js` | TypeScript | [web3.js](https://docs.web3js.org/) v4 |
-| Python | `python` | Python | [web3.py](https://web3py.readthedocs.io/) |
-| Go | `go` | Go | [go-ethereum](https://geth.ethereum.org/) |
-| Rust | `rust` | Rust | [alloy](https://alloy.rs/) |
-| Swift | `swift` | Swift | [web3swift](https://github.com/web3swift-team/web3swift) |
-| C# | `csharp` | C# | [Nethereum](https://nethereum.com/) |
-| Kotlin | `kotlin` | Kotlin | [web3j](https://docs.web3j.io/) |
-| Solidity | `solidity` | Solidity | External interfaces |
-| Java | `java` | Java | [web3j](https://docs.web3j.io/) |
-| Dart | `dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
-| C | `c` | C11 | Shared Rust ABI runtime |
-| C++ | `cpp` | C++17 | Shared Rust ABI runtime |
-| YAML | `yaml` | Java | `java` | Java | [web3j](https://docs.web3j.io/) |
-| Dart | `dart` | Dart | [web3dart](https://pub.dev/packages/web3dart) |
-| C | `c` | C11 | Shared Rust ABI runtime |
-| C++ | `cpp` | C++17 | Shared Rust ABI runtime |
-| YAML | Human-readable ABI descriptions |
+| Target    | Flag       | Language   | Ecosystem                                                |
+| --------- | ---------- | ---------- | -------------------------------------------------------- |
+| viem      | `viem`     | TypeScript | [viem](https://viem.sh/)                                 |
+| zod       | `zod`      | TypeScript | [Zod](https://zod.dev/) 4                                |
+| wagmi     | `wagmi`    | TypeScript | [wagmi](https://wagmi.sh/) v2                            |
+| ethers v6 | `ethers`   | TypeScript | [ethers](https://docs.ethers.org/v6/) v6                 |
+| ethers v5 | `ethers5`  | TypeScript | ethers v5                                                |
+| web3.js   | `web3js`   | TypeScript | [web3.js](https://docs.web3js.org/) v4                   |
+| Python    | `python`   | Python     | [web3.py](https://web3py.readthedocs.io/)                |
+| Go        | `go`       | Go         | [go-ethereum](https://geth.ethereum.org/)                |
+| Rust      | `rust`     | Rust       | [alloy](https://alloy.rs/)                               |
+| Swift     | `swift`    | Swift      | [web3swift](https://github.com/web3swift-team/web3swift) |
+| C#        | `csharp`   | C#         | [Nethereum](https://nethereum.com/)                      |
+| Kotlin    | `kotlin`   | Kotlin     | [web3j](https://docs.web3j.io/)                          |
+| Solidity  | `solidity` | Solidity   | External interfaces                                      |
+| Java      | `java`     | Java       | [web3j](https://docs.web3j.io/)                          |
+| Dart      | `dart`     | Dart       | [web3dart](https://pub.dev/packages/web3dart)            |
+| PHP       | `php`      | PHP        | PHP 8.2+, Brick Math, cURL, `web3p/ethereum-tx`          |
+| C         | `c`        | C11        | Shared Rust ABI runtime                                  |
+| C++       | `cpp`      | C++17      | Shared Rust ABI runtime                                  |
+| YAML      | `yaml`     | Data       | Human-readable ABI descriptions                          |
 
 Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp
 
 Multi-target examples — each target gets its own output subdirectory:
 
 ```typescript
-target: "viem,python,rust"          // comma-separated string
-target: ["viem", "python", "rust"]  // array of strings
+target: "viem,python,rust"; // comma-separated string
+target: ["viem", "python", "rust"]; // array of strings
 ```
 
 ## Notes
@@ -134,7 +131,9 @@ See [github.com/doublesharp/abi-typegen](https://github.com/doublesharp/abi-type
 ## Native contract bindings
 
 Go, Swift, Kotlin, C#, Java, and Dart wrappers use their runtime SDKs for contract
-calls and transactions. C/C++ bindings link `abi-typegen-runtime` and accept a
+calls and transactions. PHP includes ABI codecs, JSON-RPC reads, legacy transaction
+signing, receipt and log queries, and event/error decoding. It requires PHP 8.2+ with
+cURL, GMP, mbstring, and iconv. It does not generate EIP-1559 or deployment helpers. C/C++ bindings link `abi-typegen-runtime` and accept a
 caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
 metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
 for dependencies, ownership rules, tested capabilities, and SDK limits.
