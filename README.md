@@ -135,14 +135,14 @@ with an adapter package.
 
 ### JavaScript and TypeScript
 
-| Target    | Framework or SDK                         | What you get                                     |
-| --------- | ---------------------------------------- | ------------------------------------------------ |
-| `viem`    | [viem](https://viem.sh/)                 | Typed contract helpers and ABI                   |
-| `wagmi`   | [wagmi](https://wagmi.sh/)               | React hooks for reads, writes, and events        |
-| `ethers`  | [ethers v6](https://docs.ethers.org/v6/) | Typed contract interfaces and connection helpers |
-| `ethers5` | [ethers v5](https://docs.ethers.org/v5/) | Typed contract interfaces and connection helpers |
-| `web3js`  | [web3.js v4](https://docs.web3js.org/)   | Typed contract methods                           |
-| `zod`     | [Zod 4](https://zod.dev/)                | Validation schemas and ABI                       |
+| Library    | Target    | Runtime or SDK                        | What you get                                     |
+| ---------- | --------- | ------------------------------------- | ------------------------------------------------ |
+| Viem       | `viem`    | [viem](https://viem.sh/)                | Typed contract helpers and ABI                   |
+| Wagmi      | `wagmi`   | [wagmi](https://wagmi.sh/)              | React hooks for reads, writes, and events         |
+| Ethers v6  | `ethers`  | [ethers v6](https://docs.ethers.org/v6/) | Typed contract interfaces and connection helpers |
+| Ethers v5  | `ethers5` | [ethers v5](https://docs.ethers.org/v5/) | Typed contract interfaces and connection helpers |
+| Web3.js v4 | `web3js`  | [web3.js v4](https://docs.web3js.org/)   | Typed contract methods                           |
+| Zod 4      | `zod`     | [Zod 4](https://zod.dev/)               | Validation schemas and ABI                       |
 
 ### Native languages
 
@@ -165,22 +165,22 @@ with an adapter package.
 
 ### Game engines
 
-| Engine                                                                        | Target                                                                            | What you get                                                             |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [Unity](https://docs.unity3d.com/Manual/index.html)                           | `csharp` + [Unity adapter](integrations/unity/com.doublesharp.abi-typegen.unity/) | C# bindings with Unity HTTP transport and object lifecycle support       |
-| [Godot](https://docs.godotengine.org/en/stable/)                              | `godot`                                                                           | GDScript bindings and a native extension for codecs and asynchronous RPC |
-| [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/) | `unreal`                                                                          | C++ codecs and Blueprint nodes for asynchronous scalar reads             |
+| Language | Target   | Runtime or SDK                                                                                                                 | What you get                                                           |
+| -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| C#       | `csharp` | [Unity](https://docs.unity3d.com/Manual/index.html) + [Unity adapter](integrations/unity/com.doublesharp.abi-typegen.unity/)      | C# bindings with Unity HTTP transport and object lifecycle support      |
+| GDScript | `godot`  | [Godot](https://docs.godotengine.org/en/stable/)                                                                                  | GDScript bindings and a native extension for codecs and asynchronous RPC |
+| C++      | `unreal` | [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/)                                                     | C++ codecs and Blueprint nodes for asynchronous scalar reads            |
 
 See [engine packages](integrations/README.md) for setup and
 [native bindings](docs/native-bindings.md) for supported features and platforms.
 
 ### Shell and ABI formats
 
-| Target     | Works with                                                                                                    | What you get                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `shell`    | [Bash](https://www.gnu.org/software/bash/manual/bash.html) and [Foundry cast](https://www.getfoundry.sh/cast) | Sourceable helpers for encoding, reads, sends, deployment, and logs |
-| `solidity` | [Solidity](https://docs.soliditylang.org/en/latest/)                                                          | Interfaces, tuple structs, events, and errors                       |
-| `yaml`     | [YAML](https://yaml.org/)                                                                                     | Readable ABI descriptions                                           |
+| Language | Target     | Runtime or SDK                                                                                           | What you get                                                      |
+| -------- | ---------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Bash     | `shell`    | [Bash](https://www.gnu.org/software/bash/manual/bash.html) and [Foundry cast](https://www.getfoundry.sh/cast) | Sourceable helpers for encoding, reads, sends, deployment, and logs |
+| Solidity | `solidity` | [Solidity](https://docs.soliditylang.org/en/latest/)                                                       | Interfaces, tuple structs, events, and errors                      |
+| YAML     | `yaml`     | [YAML](https://yaml.org/)                                                                                 | Readable ABI descriptions                                         |
 
 Zod, Solidity, and YAML describe or validate contracts; they do not submit
 transactions. See [native bindings](docs/native-bindings.md) for SDK versions
