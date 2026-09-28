@@ -16,3 +16,7 @@ extend-exclude = [
   "fuzz/corpus/",
   "npm/pnpm-lock.yaml",
 ]
+
+[default.extend-words]
+# OCaml compiled bytecode object extension.
+cmo = "cmo"
