@@ -1,0 +1,87 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "deployment",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "constructor",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "tupleFoo",
+      "inputs": [
+        {
+          "name": "foo",
+          "type": "tuple",
+          "internalType": "struct FooParams",
+          "components": [
+            {
+              "name": "tag",
+              "type": "uint8"
+            },
+            {
+              "name": "tag",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "get_value",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getValue",
+      "inputs": [
+        {
+          "name": "type",
+          "type": "bool"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "StaticTuple",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "pair",
+          "type": "tuple",
+          "indexed": true,
+          "components": [
+            {
+              "name": "x",
+              "type": "uint256"
+            },
+            {
+              "name": "y",
+              "type": "bool"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

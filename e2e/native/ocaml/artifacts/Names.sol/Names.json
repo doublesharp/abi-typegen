@@ -1,0 +1,204 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "foo",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "another",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "foo_error",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "type_0",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "tuple_0",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct Names.Foo",
+          "components": [
+            {
+              "name": "type",
+              "type": "uint8"
+            },
+            {
+              "name": "type",
+              "type": "uint8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "foo",
+      "inputs": []
+    }
+  ]
+}

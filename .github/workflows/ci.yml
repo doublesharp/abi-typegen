@@ -154,6 +154,10 @@ jobs:
             os: ubuntu-latest
           - target: csharp
             os: ubuntu-latest
+          - target: fsharp
+            os: ubuntu-latest
+          - target: ocaml
+            os: ubuntu-latest
           - target: java
             os: ubuntu-latest
           - target: dart
@@ -211,10 +215,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "9.7.1"
-      - if: matrix.target == 'csharp'
+      - if: matrix.target == 'csharp' || matrix.target == 'fsharp'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+      - if: matrix.target == 'ocaml'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ocaml ocaml-findlib libzarith-ocaml-dev
       - if: matrix.target == 'dart'
         uses: dart-lang/setup-dart@v1
         with:

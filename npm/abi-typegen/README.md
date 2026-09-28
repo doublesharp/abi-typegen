@@ -48,7 +48,7 @@ npx abi-typegen generate --target viem,python,rust
 
 ## Targets
 
-There are 25 CLI targets across 18 languages. Unity uses the `csharp` target
+There are 28 CLI targets across 21 languages. Unity uses the `csharp` target
 with an adapter package.
 
 ### JavaScript and TypeScript
@@ -71,11 +71,14 @@ with an adapter package.
 | C#       | `csharp` | [Nethereum](https://docs.nethereum.com/)                                                                    | Typed DTOs, contract methods, and deployment                      |
 | Dart     | `dart`   | [web3dart](https://pub.dev/packages/web3dart)                                                               | Typed values, codecs, calls, and transactions                     |
 | Elixir   | `elixir` | [Ethers](https://ethers.hexdocs.pm/Ethers.html)                                                             | Transaction data, reads, sends, events, and errors                |
+| F#       | `fsharp` | [Nethereum](https://docs.nethereum.com/)                                                                    | Records, ABI codecs, and contract helpers                         |
 | Go       | `go`     | [go-ethereum](https://geth.ethereum.org/docs/developers)                                                    | Typed calls, transactions, deployment, and events                 |
 | Java     | `java`   | [web3j](https://docs.web3j.io/latest/)                                                                      | Typed values, codecs, calls, and transactions                     |
 | Kotlin   | `kotlin` | [web3j](https://docs.web3j.io/latest/)                                                                      | Typed values, codecs, calls, and transactions                     |
+| OCaml    | `ocaml`  | [Zarith](https://github.com/ocaml/Zarith) and shared Rust runtime                                           | Records, ABI codecs, and caller-supplied transport                |
 | PHP      | `php`    | [Brick Math](https://github.com/brick/math), [ethereum-tx](https://github.com/web3p/ethereum-tx), cURL      | Codecs, RPC reads, signed legacy transactions, receipts, and logs |
 | Python   | `python` | [web3.py](https://web3py.readthedocs.io/en/stable/)                                                         | Reads, transaction builders, codecs, events, and errors           |
+| q        | `q`      | [kdb+](https://code.kx.com/q/) and shared Rust runtime                                                      | Event table schemas, decoders, and log rows                       |
 | Ruby     | `ruby`   | [eth](https://github.com/q9f/eth.rb)                                                                        | Calls, transaction builders, codecs, events, and errors           |
 | Rust     | `rust`   | [Alloy](https://alloy.rs/introduction/getting-started/)                                                     | `sol!` types, codecs, and contract instances                      |
 | Swift    | `swift`  | [web3swift](https://github.com/web3swift-team/web3swift)                                                    | Typed values, codecs, and contract operations                     |
@@ -109,7 +112,7 @@ and [configuration](https://github.com/doublesharp/abi-typegen/blob/main/docs/co
 | ------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | `cobol` | [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) and the shared Rust runtime | Reads taking one address and returning one uint256 🤷 |
 
-Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp
+Target aliases: `ethers6` → ethers, `web3` → web3js, `cs` → csharp, `kt` → kotlin, `sol` → solidity, `yml` → yaml, `c++` → cpp, `fs`/`f#` → fsharp, `ml` → ocaml, `kdb`/`kdb+` → q
 
 ## Commands
 
@@ -187,10 +190,13 @@ See [github.com/doublesharp/abi-typegen](https://github.com/doublesharp/abi-type
 
 ## Native contract bindings
 
-Go, Swift, Kotlin, C#, Java, and Dart wrappers use their runtime SDKs for contract
+Go, Swift, Kotlin, C#, F#, Java, and Dart wrappers use their runtime SDKs for contract
 calls and transactions. PHP includes ABI codecs, JSON-RPC reads, legacy transaction
 signing, receipt and log queries, and event/error decoding. It requires PHP 8.2+ with
 cURL, GMP, mbstring, and iconv. It does not generate EIP-1559 or deployment helpers. C/C++ bindings link `abi-typegen-runtime` and accept a
-caller-supplied transport/signing adapter. `--no-wrappers` preserves primary ABI
-metadata and value types. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
+caller-supplied transport/signing adapter. OCaml uses Zarith integers and the
+shared runtime with application-supplied transport. q/kdb+ generates event schemas,
+decoders, and log rows; it does not include an RPC client. OCaml and q also require
+compiled bridges linked to the shared runtime. `--no-wrappers` preserves primary
+ABI metadata, value types, and q table schemas. See the [native binding guide](https://github.com/doublesharp/abi-typegen/blob/main/docs/native-bindings.md)
 for dependencies, ownership rules, supported features, and SDK limits.

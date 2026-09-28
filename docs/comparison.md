@@ -13,11 +13,13 @@ Hardhat plugin use Node.
 
 The [output guide](generated-output.md) describes the generated files. TypeScript
 wrapper targets provide SDK-specific helpers or interfaces. The Rust target
-provides Alloy contract bindings. Go, Swift, Kotlin, C#, Java, and Dart provide
+provides Alloy contract bindings. Go, Swift, Kotlin, C#, F#, Java, and Dart provide
 SDK-backed contract APIs. PHP generates codecs and JSON-RPC/signing helpers. Ruby uses the eth gem; shell
 bindings delegate to Foundry cast. COBOL supports address-to-uint256
 reads through the shared runtime. C/C++
-use a shared codec runtime and application-supplied transport. See the [native
+and OCaml use a shared codec runtime and application-supplied transport.
+q/kdb+ generates event table schemas and shared-runtime decoders for logs supplied
+by your ingestion pipeline. See the [native
 guide](native-bindings.md) for runtime requirements and tested boundaries.
 Generated APIs are not drop-in replacements for every SDK-specific generator.
 

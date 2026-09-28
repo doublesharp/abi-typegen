@@ -19,6 +19,9 @@ primary ABI metadata and value types while omitting callable helpers.
 | Swift        | web3swift 3.x with Web3Core and BigInt; Swift 6                                                                |
 | Kotlin, Java | web3j 6; JDK 21                                                                                                |
 | C#           | Nethereum.Web3 6.1                                                                                             |
+| F#           | Nethereum.Web3 6.1 and .NET; the consumer fixture uses .NET 10                                                  |
+| OCaml        | OCaml, Zarith, a C compiler, and `abi-typegen-runtime`                                                         |
+| q            | kdb+ with its official `k.h` C header, a C compiler, and `abi-typegen-runtime`                                 |
 | Dart         | web3dart 3                                                                                                     |
 | PHP          | PHP 8.2+, Brick Math 1.0.0, `web3p/ethereum-tx` 0.4.3, and cURL; enable `curl`, `gmp`, `mbstring`, and `iconv` |
 | Ruby         | eth 0.5.17 and Bundler                                                                                         |
@@ -37,12 +40,110 @@ results; write operations expose the target SDK's transaction or operation objec
 Preparing a transaction, submitting it, and waiting for its receipt are distinct
 operations.
 
-Canonical signatures select overloads. Except for the limited COBOL target,
+Canonical signatures select overloads. Except for the limited COBOL target and
+the event-only q target,
 generated codecs cover positional
 arguments, tuples, arrays, results, declared custom errors, and events. Indexed
 strings, bytes, arrays, and tuples decode to their 32-byte topic hashes because
 the original values are absent from the log. Anonymous events have no signature
 topic; the caller must choose the appropriate event decoder.
+
+## F#
+
+```sh
+abi-typegen generate --target fsharp --out ./Generated
+dotnet add package Nethereum.Web3 --version 6.1.0
+```
+
+Add the generated `.fs` files to your project's compile items before the files
+that consume them. Each contract is a module under `Contracts`. ABI tuples,
+arguments, results, events, and errors use records with Nethereum attributes.
+`CLIMutable` supports SDK decoding. Integers use `BigInteger`, addresses are hex
+strings, and ABI arrays use `ResizeArray<T>` for Nethereum decoding. Indexed
+strings, bytes, arrays, and tuples expose their topic hash as a hex string.
+Solidity enum member names are not present
+in ABI JSON, so integer values remain integers.
+
+`bind` accepts your `Web3` client and contract address. Generated `encode…`
+functions encode calls without RPC, `decode…Result` functions decode return
+data, `call…` functions perform reads, and `send…` functions submit writes
+through the configured transaction manager. Constructor helpers accept creation
+bytecode supplied by the caller. Event filters, queries, and decoders and
+declared custom-error decoders use Nethereum. Inspect receipts after sending.
+Anonymous-event queries omit the signature topic. Events with the same indexed
+parameter count can still have ambiguous layouts; choose the decoder and block
+range using your contract context.
+
+`--no-wrappers` keeps ABI metadata and attributed records. These records still
+require Nethereum. It removes callable contract helpers.
+
+## OCaml
+
+```sh
+abi-typegen generate --target ocaml --out ./generated
+cargo build --release -p abi-typegen-runtime
+opam install zarith ocamlfind
+```
+
+Each contract produces an OCaml compilation unit such as `Atg_token.ml`, a
+companion `Atg_token.ocaml.c`, and the shared `abi_typegen.h`. Compile the C
+stubs with the OCaml headers and link the consumer to `libabi_typegen_runtime`.
+The runnable build example is [the OCaml consumer](../e2e/native/ocaml/run.sh).
+
+Integers use Zarith `Z.t` with Solidity-width checks on encoding. Addresses,
+bytes, and strings use OCaml strings containing raw bytes, not hex text. Arrays
+use OCaml arrays; tuples and parameter groups use records. Codecs handle calls,
+results, constructors, declared errors, and events. Indexed complex event
+parameters retain their topic hashes. Some generated record and field names
+contain type-order numbers; ABI changes can renumber them. Regenerate and
+recompile consumers together.
+
+Generated call helpers take a transport callback receiving `write`, `address`,
+`data`, and `value`. It returns raw response bytes for reads and the
+application's transaction result bytes for writes. The application owns RPC,
+signing, transaction options, receipts, and any asynchronous adapter.
+`--no-wrappers` keeps ABI metadata and value types, requiring Zarith for integer
+types, and omits callable helpers, C stubs, and the runtime header.
+
+## q/kdb+
+
+```sh
+abi-typegen generate --target q --out ./generated
+cargo build --release -p abi-typegen-runtime
+```
+
+The q target generates event tables and log decoders. It does not generate RPC
+calls, a subscription service, or persistent ingestion. Each `<Name>.q` defines
+a contract namespace such as `.atgToken`. Event identifiers include their position in the event list,
+such as `e0Transfer`; fields include their position, such as `f0from`.
+This keeps overloads, duplicate names, q keywords, and metadata names distinct.
+The generated `Names`, `Types`, and `Indexed` metadata preserve ABI details.
+
+Compile the shared generated `abi_typegen_q.c` with KX's official `k.h`, the
+generated `abi_typegen.h`, and `libabi_typegen_runtime`. Compiler commands are
+included in the bridge source. Load the resulting library explicitly:
+
+```q
+.atgToken.loadBridge[`:./abi_typegen_q]
+```
+
+Each event has a `…Table` empty schema, `…Decode[topics;data]`, and
+`…Row[metadata;topics;data]`. Supply topics as one byte vector containing
+consecutive 32-byte topics, including the signature topic for non-anonymous
+events. Supply data as raw bytes. The row helper requires a metadata dictionary
+with `chainId`, `contract`, `blockNumber`, `blockHash`, `transactionHash`,
+`logIndex`, and boolean `removed`. The caller supplies consistent metadata types
+and handles reorgs and duplicate logs. Block timestamps and token decimals are
+not inferred from an ABI.
+
+Integer values remain exact 32-byte big-endian words; signed values use two's
+complement. Convert explicitly before numeric analytics. Addresses are 20-byte
+vectors, hashes are 32-byte vectors, strings are UTF-8 character vectors, and
+arrays and tuples contain nested values in ABI order. Indexed complex values
+remain hashes. The bridge limits decoded nesting to 64 levels.
+`--no-wrappers` keeps ABI metadata and table schemas and omits the decoder, row
+helpers, and C bridge. See [the q consumer](../e2e/native/q/run.sh) for a runnable
+example requiring an installed q interpreter and `K_INCLUDE` header path.
 
 ## PHP
 
@@ -224,9 +325,10 @@ the generated event decoder. Hash indexed reference values before filtering.
 - Java and Kotlin use web3j's input encoder. Fixed arrays outside lengths 1–32,
   including those nested in tuples or arrays, are unsupported inputs and fail
   explicitly. Generated decoders cover nested dynamic arrays and tuples.
-- Deployment helpers are available for Python, Go, C#, C, and C++. Supply creation bytecode
-  from your compiler artifacts. Other targets can use their underlying SDK's
-  deployment API.
+- Deployment helpers are available for Python, Go, C#, F#, C, and C++. Supply creation bytecode
+  from your compiler artifacts. OCaml encodes constructor arguments but leaves
+  deployment to the application. q is limited to events. Other targets can use
+  their underlying SDK's deployment API.
 - PHP submits legacy EIP-155 transactions. It does not generate EIP-1559
   transactions, deployment helpers, or subscriptions. `web3p/ethereum-tx` emits
   `ArrayAccess` return-type deprecation notices on PHP 8.5.
@@ -235,7 +337,9 @@ the generated event decoder. Hash indexed reference values before filtering.
   provide topic builders and decoders; their provider integration remains with the
   application. Generated fallback and receive transaction helpers are not uniform;
   use the SDK's raw transaction API when needed.
-- C/C++ require a separately built runtime library and an application transport.
+- C/C++ and OCaml require a separately built runtime library and an application
+  transport. q requires the runtime and C bridge, with logs supplied by the
+  application.
   Release executables do not bundle a precompiled runtime for every platform.
 
 These boundaries differ from information that Ethereum never supplies: indexed

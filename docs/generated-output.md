@@ -29,7 +29,8 @@ supports those import conventions.
 ## Other targets
 
 Each selected contract produces its primary language files. C/C++ also emit a
-shared runtime header. These targets do not emit
+shared runtime header. OCaml and q emit `abi_typegen.h` when wrappers are enabled;
+`--no-wrappers` omits their C bridges and runtime header. These targets do not emit
 TypeScript ABI modules or an `index.ts` barrel.
 
 | Target     | File                                                   | Output purpose                                                               |
@@ -39,6 +40,9 @@ TypeScript ABI modules or an `index.ts` barrel.
 | `rust`     | `<name>.rs`                                            | alloy `sol!` bindings plus the JSON ABI, with a `mod.rs`                     |
 | `swift`    | `<Name>.swift`                                         | ABI, public value types, codecs, and web3swift operations                    |
 | `csharp`   | `<Name>.cs`                                            | ABI, Nethereum DTOs, codecs, and contract wrappers                           |
+| `fsharp`   | `<Name>.fs`                                            | ABI, records, and optional Nethereum contract helpers                        |
+| `ocaml`    | `Atg_<name>.ml`, `Atg_<name>.ocaml.c`                  | ABI, records, and optional shared-runtime codecs and transport helpers       |
+| `q`        | `<Name>.q`, shared `abi_typegen_q.c`                   | ABI, event table schemas, and optional shared-runtime event decoders         |
 | `kotlin`   | `<Name>.kt`                                            | ABI, value types, codecs, and web3j contract wrappers                        |
 | `solidity` | `I<Name>.sol`                                          | Solidity interface reconstructed from ABI data                               |
 | `java`     | `<Name>.java`                                          | ABI, value types, codecs, and web3j contract wrappers                        |
@@ -59,11 +63,12 @@ overloads, and external function signatures. It cannot recover a contract's
 implementation from an ABI.
 
 Output APIs vary by language. Rust output includes alloy's contract instance.
-Go, Swift, Kotlin, and C# include SDK-backed callable wrappers by default.
+Go, Swift, Kotlin, C#, and F# include SDK-backed callable wrappers by default.
 Java, Dart, and PHP also generate callable wrappers. PHP's generated client uses
 cURL and supports JSON-RPC reads, legacy signed writes, receipt and log queries.
-C/C++ use a shared codec runtime
-and caller-supplied transport. See [native bindings](native-bindings.md) for
+C/C++ and OCaml use a shared codec runtime
+and caller-supplied transport. q uses the runtime for event decoding and generates
+table schemas and log rows, with no RPC client. See [native bindings](native-bindings.md) for
 dependencies, ownership, and local-chain validation. Java filenames follow the
 normalized public class name; Dart filenames use its lower-camel-case form. PHP
 uses the normalized public class name and configured namespace.

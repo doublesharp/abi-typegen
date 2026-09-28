@@ -1,0 +1,170 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "echo",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "payload",
+          "type": "tuple",
+          "internalType": "struct Sample.Payload",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "rows",
+              "type": "int256[][]"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            },
+            {
+              "name": "flags",
+              "type": "bool[2]"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "payload",
+          "type": "tuple",
+          "internalType": "struct Sample.Payload",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "rows",
+              "type": "int256[][]"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            },
+            {
+              "name": "flags",
+              "type": "bool[2]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "setPayload",
+      "stateMutability": "payable",
+      "inputs": [
+        {
+          "name": "payload",
+          "type": "tuple",
+          "internalType": "struct Sample.Payload",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "rows",
+              "type": "int256[][]"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            },
+            {
+              "name": "flags",
+              "type": "bool[2]"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "payload",
+          "type": "tuple",
+          "internalType": "struct Sample.Payload",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "rows",
+              "type": "int256[][]"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            },
+            {
+              "name": "flags",
+              "type": "bool[2]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "code",
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "Message",
+      "anonymous": true,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "string",
+          "indexed": true
+        },
+        {
+          "name": "code",
+          "type": "uint256",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "constructor",
+      "stateMutability": "payable",
+      "inputs": [
+        {
+          "name": "payload",
+          "type": "tuple",
+          "internalType": "struct Sample.Payload",
+          "components": [
+            {
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "name": "rows",
+              "type": "int256[][]"
+            },
+            {
+              "name": "label",
+              "type": "string"
+            },
+            {
+              "name": "flags",
+              "type": "bool[2]"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

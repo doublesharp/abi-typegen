@@ -130,7 +130,7 @@ its runtime dependency; it does not install that dependency for you.
 abi-typegen generate --target go
 ```
 
-There are 25 CLI targets across 18 languages. Unity uses the `csharp` target
+There are 28 CLI targets across 21 languages. Unity uses the `csharp` target
 with an adapter package.
 
 ### JavaScript and TypeScript
@@ -154,11 +154,14 @@ with an adapter package.
 | COBOL    | `cobol` |  [GnuCOBOL](https://gnucobol.sourceforge.io/doc/gnucobol.html) | Reads taking one address and returning one uint256 🤷 |
 | Dart     | `dart`   | [web3dart](https://pub.dev/packages/web3dart)                                                          | Typed values, codecs, calls, and transactions                     |
 | Elixir   | `elixir` | [Ethers](https://ethers.hexdocs.pm/Ethers.html)                                                        | Transaction data, reads, sends, events, and errors                |
+| F#       | `fsharp` | [Nethereum](https://docs.nethereum.com/)                                                               | Records, ABI codecs, and contract helpers                         |
 | Go       | `go`     | [go-ethereum](https://geth.ethereum.org/docs/developers)                                               | Typed calls, transactions, deployment, and events                 |
 | Java     | `java`   | [web3j](https://docs.web3j.io/latest/)                                                                 | Typed values, codecs, calls, and transactions                     |
 | Kotlin   | `kotlin` | [web3j](https://docs.web3j.io/latest/)                                                                 | Typed values, codecs, calls, and transactions                     |
+| OCaml    | `ocaml`  | [Zarith](https://github.com/ocaml/Zarith) and shared Rust runtime                                      | Records, ABI codecs, and caller-supplied transport                |
 | PHP      | `php`    | [Brick Math](https://github.com/brick/math), [ethereum-tx](https://github.com/web3p/ethereum-tx), cURL | Codecs, RPC reads, signed legacy transactions, receipts, and logs |
 | Python   | `python` | [web3.py](https://web3py.readthedocs.io/en/stable/)                                                    | Reads, transaction builders, codecs, events, and errors           |
+| q        | `q`      | [kdb+](https://code.kx.com/q/) and shared Rust runtime                                                 | Event table schemas, decoders, and log rows                       |
 | Ruby     | `ruby`   | [eth](https://github.com/q9f/eth.rb)                                                                   | Calls, transaction builders, codecs, events, and errors           |
 | Rust     | `rust`   | [Alloy](https://alloy.rs/introduction/getting-started/)                                                | `sol!` types, codecs, and contract instances                      |
 | Swift    | `swift`  | [web3swift](https://github.com/web3swift-team/web3swift)                                               | Typed values, codecs, and contract operations                     |
@@ -320,6 +323,22 @@ consumer. C emits `atg_<Name>.h`; C++ also emits `atg_<Name>.hpp`. Both include
 `abi_typegen.h`. The [native guide](docs/native-bindings.md#c-and-c) explains
 result ownership, transport callbacks, and deployment bytecode.
 
+### Use F#, OCaml, or q/kdb+
+
+```sh
+abi-typegen generate --target fsharp,ocaml,q
+```
+
+F# generates Nethereum records, codecs, calls, signed transactions, deployment,
+and event helpers. OCaml uses Zarith integers and the shared Rust runtime for
+codecs; your application supplies transport and signing.
+
+q generates event table schemas, decoders, and log rows for ingestion into kdb+.
+It preserves Solidity integers as 32-byte vectors, so values retain their full
+precision. Your pipeline fetches logs and chooses any numeric conversions.
+See the [native binding guide](docs/native-bindings.md) for dependencies,
+bridge compilation, and generated APIs.
+
 ## Know what the bindings cover
 
 Typed arguments help catch mistakes before a call reaches the chain. They cannot
@@ -334,7 +353,9 @@ and subscriptions differ by target.
 - Indexed strings, bytes, arrays, and tuples appear in logs as hashes. Their
   original values cannot be decoded from those topics.
 - Anonymous events have no signature topic, so the caller must choose the decoder.
-- C/C++ consumers build and link the runtime separately.
+- C/C++, OCaml, and q consumers build and link the runtime separately.
+- q provides event ingestion helpers. It does not generate RPC clients or contract
+  transaction wrappers.
 
 See [current boundaries](docs/native-bindings.md#current-boundaries) for the full
 list. Regenerate when upgrading, and check the [changelog](CHANGELOG.md) for API

@@ -4,11 +4,17 @@ pub mod csharp;
 pub mod ethers5;
 pub mod ethers6;
 mod ethers_common;
+/// F# records and Nethereum contract helpers.
+pub mod fsharp;
 pub mod go;
 /// Godot 4 GDScript bindings backed by the shared C runtime.
 pub mod godot;
 pub mod kotlin;
+/// OCaml values and shared-runtime codecs.
+pub mod ocaml;
 pub mod python;
+/// q/kdb+ event tables and decoders.
+pub mod q;
 pub mod rust;
 pub mod solidity;
 pub mod swift;

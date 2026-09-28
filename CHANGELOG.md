@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-28
+
+Adds F#, OCaml, and q/kdb+ targets, bringing the generator to 28 targets across
+21 languages. Regenerate bindings when upgrading.
+
+### Added
+
+- F# target with records and Nethereum ABI codecs and contract helpers.
+- OCaml target with records, exact Zarith integers, shared-runtime ABI codecs,
+  and application-supplied transport.
+- q/kdb+ target with event table schemas, lossless ABI values, a shared-runtime
+  event decoder, and log-to-row helpers.
+- Generated-consumer and Anvil tests for F#, OCaml, and q, with F# and OCaml
+  included in the native CI matrix. q tests use a developer-supplied installation.
+
 ## [0.6.0] - 2026-09-25
 
 Adds native language bindings, engine integrations, and contract wrappers.

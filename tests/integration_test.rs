@@ -861,8 +861,8 @@ fn ethers_overload_bindings_use_canonical_recursive_abi_types() {
 
 // ── Native targets never panic ──────────────────────────────────────────────
 
-/// Renders every fixture and fuzz seed that parses through the Go, Rust,
-/// Swift, and Kotlin renderers. Named-type lookups inside these renderers rely
+/// Renders every fixture and fuzz seed that parses through the native
+/// renderers below. Named-type lookups inside these renderers rely
 /// on the tuple registry covering every tuple, so a gap would panic here.
 #[test]
 fn native_renderers_handle_every_fixture_and_seed() {
@@ -879,7 +879,7 @@ fn native_renderers_handle_every_fixture_and_seed() {
             inputs.extend(entries.map(|entry| entry.unwrap().path()));
         }
     }
-    let configs: Vec<Config> = ["go", "rust", "swift", "kotlin"]
+    let configs: Vec<Config> = ["go", "rust", "swift", "kotlin", "fsharp", "ocaml", "q"]
         .iter()
         .map(|target| {
             Config::from_toml_str(&format!("[abi-typegen]\ntarget = \"{target}\"\n")).unwrap()

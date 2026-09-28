@@ -16,14 +16,14 @@ For version-specific changes, see the [changelog](../CHANGELOG.md).
 - [Choosing a binding tool](comparison.md): output tradeoffs and how to measure
   generation performance for your project.
 - [Native contract bindings](native-bindings.md): runtime dependencies, C/C++
-  ownership, contract wrappers, and engine integrations.
+  ownership, F# and OCaml wrappers, q event tables, and engine integrations.
 
 ## Contributing
 
 - [Contributing](../CONTRIBUTING.md): bug reports, code conventions, tests, and
   pull-request guidance.
 - [Development](development.md): source builds, repository layout, and validation
-  commands.
+  commands, Rust coverage interpretation, and Anvil consumer tests.
 - [Build and cache storage](development-storage.md): optional local storage
   configuration, migration, and returning to defaults.
 - [Releasing](releasing.md): matching package versions, binary assets, checksum

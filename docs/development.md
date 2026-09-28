@@ -34,7 +34,7 @@ Node or Python.
 | `src/`                        | CLI commands, artifact discovery, generation, watching, and ABI fetching |
 | `crates/abi-typegen-core/`    | ABI parsing and intermediate types                                       |
 | `crates/abi-typegen-config/`  | Configuration and target selection                                       |
-| `crates/abi-typegen-runtime/` | Shared Rust/Alloy codec and C ABI for C/C++ consumers                    |
+| `crates/abi-typegen-runtime/` | Shared Rust/Alloy codec and C ABI for native consumers                    |
 | `crates/abi-typegen-codegen/` | Target renderers and type mapping                                        |
 | `npm/abi-typegen/`            | npm launcher, binary installation, and checksum preparation              |
 | `npm/hardhat-abi-typegen/`    | Hardhat 2 and Hardhat 3 plugin entry points                              |
@@ -94,15 +94,15 @@ manifest until [release preparation](releasing.md) runs.
   or `e2e/hardhat3-sample` directory, then run `make e2e-hardhat` or
   `make e2e-hardhat3`.
 - Native-language integration: `make e2e-native` runs Go, Rust, Swift, Kotlin,
-  Java, C#, Dart, PHP, Python, Ruby, shell, Elixir, COBOL, C, and C++ consumers. Individual `e2e-<target>` tasks
+  Java, C#, F#, OCaml, Dart, PHP, Python, Ruby, shell, Elixir, COBOL, C, and C++ consumers. Individual `e2e-<target>` tasks
   generate bindings from `e2e/foundry-sample` into
   the consumers under `e2e/native/` and run each language's formatter, linter,
   and tests. They need Go, Rust with clippy and rustfmt, Swift 6, and Gradle with
-  JDK 21. C/C++ additionally need a C11/C++17 compiler, C# needs .NET 10,
+  JDK 21. C/C++ additionally need a C11/C++17 compiler, C# and F# need .NET 10,
   Dart needs its SDK, PHP needs PHP 8.2+, Composer, and the curl, gmp, mbstring,
-  and iconv extensions, and Python needs Python 3.11+ with venv support. The
-  consumers do not build until a
-  target has generated their bindings.
+  and iconv extensions, and Python needs Python 3.11+ with venv support.
+  OCaml needs `ocamlfind`, Zarith, and a C compiler. Generate bindings before
+  building a consumer directly.
 - Engine integrations are separate from `make e2e-native`: `make e2e-godot`
   requires Godot 4.7.2 and SCons 4.10.0; `make e2e-unity` requires the Unity
   6000.6.3f1 Editor and modules; `make e2e-unreal UNREAL_ROOT=<path>` requires
@@ -115,6 +115,31 @@ manifest until [release preparation](releasing.md) runs.
 - Coverage: `make coverage` requires `cargo-llvm-cov` and Node/npm.
 - Fuzzing: the `fuzz-*` Makefile targets require `cargo-fuzz` and nightly Rust.
   Curated seeds stay under `fuzz/seeds`; discovered corpus and logs are local data.
+
+## Coverage
+
+For Rust workspace coverage without the HTML report tooling:
+
+```sh
+cargo llvm-cov --workspace --summary-only
+```
+
+Install `cargo-llvm-cov` and the Rust `llvm-tools-preview` component first.
+`make coverage` builds the Doublcov report at `coverage/report/index.html`.
+
+These reports measure Rust code exercised by Rust tests, including renderers,
+CLI tests, and shared-runtime tests. Generated F#, OCaml, q, and other language
+code has separate consumer tests. Executing a renderer and checking its output
+contributes to Rust coverage; that percentage does not measure execution of the
+generated code or embedded runtime templates. Anvil consumer tests also run
+separately from this coverage command.
+
+Line, region, and function coverage measure different things. Branch coverage is
+not collected by the default command. Check ignored tests and per-file gaps
+alongside the aggregate percentage. The Swift collision compilation test is
+ignored by default because it requires a Swift compiler; run it explicitly on a
+host with that toolchain. Published coverage describes the CI revision that
+produced it, not local changes.
 
 ## Documentation and changes
 
@@ -154,3 +179,30 @@ Elixir consumers require Elixir and Erlang/OTP, plus Foundry for the independent
 ABI comparison and Anvil tests. Run `make e2e-elixir` to compile every generated
 contract, compile metadata-only modules without Ethers, and run offline and
 signed RPC tests. Mix dependencies are pinned in the consumer lockfile.
+
+## F#, OCaml, and q consumers
+
+`make e2e-fsharp` generates the Foundry fixtures and runs the F# consumer with
+.NET 10 and Nethereum 6.1. It checks offline codecs and uses Anvil for signed
+writes, exact integer reads, deployment, and event decoding and queries.
+`make e2e-ocaml` requires OCaml, `ocamlfind`, Zarith, a C compiler, and Foundry.
+It builds and links the shared Rust runtime, checks nested ABI values and invalid
+inputs, and uses a test transport backed by `cast` to exercise generated calls
+against Anvil. These consumers also run in the native CI matrix.
+
+`make e2e-q` requires an existing q installation and `K_INCLUDE` pointing to the
+folder containing KX's official `k.h`. Set `Q` if the executable is not on PATH.
+For example, with paths appropriate to your installation:
+
+```sh
+Q=/path/to/q K_INCLUDE=/path/to/kdb/include make e2e-q
+```
+
+It builds the bridge and runs the event/table consumer, then decodes mined
+Anvil event logs into generated rows and tables. Python and `cast` prepare the
+transactions and fetch the logs; q executes the generated decoder and row
+helpers. This target is separate from the default native suite because q must
+be supplied by the developer. All three suites use isolated disposable Anvil
+processes through `e2e/native/anvil.py`.
+The OCaml and q scripts accept `TYPEGEN` and `RUNTIME_DIR` overrides for local
+build locations.

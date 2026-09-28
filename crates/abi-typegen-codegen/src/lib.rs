@@ -14,12 +14,15 @@ pub use renderers::dart;
 pub use renderers::elixir;
 pub use renderers::ethers5;
 pub use renderers::ethers6 as ethers;
+pub use renderers::fsharp;
 pub use renderers::go;
 pub use renderers::godot;
 pub use renderers::java;
 pub use renderers::kotlin;
+pub use renderers::ocaml;
 pub use renderers::php;
 pub use renderers::python;
+pub use renderers::q;
 pub use renderers::ruby;
 pub use renderers::rust;
 pub use renderers::shell;
@@ -137,6 +140,29 @@ pub fn generate_contract_files(ir: &ContractIr, config: &Config) -> HashMap<Stri
             files.insert(
                 format!("{}.cs", ir.name),
                 csharp::render_csharp_file_with_wrappers(ir, config.wrappers),
+            );
+        }
+        Target::FSharp => {
+            files.insert(
+                format!("{}.fs", fsharp::namespace_name(&ir.name)),
+                fsharp::render_fsharp_file(ir, config.wrappers),
+            );
+        }
+        Target::OCaml => {
+            let artifacts = ocaml::render_ocaml_artifacts(ir, config.wrappers);
+            files.insert(ocaml::file_name(&ir.name), artifacts.source);
+            if config.wrappers {
+                let stem = ocaml::file_name(&ir.name);
+                files.insert(
+                    format!("{}.ocaml.c", stem.trim_end_matches(".ml")),
+                    artifacts.bridge,
+                );
+            }
+        }
+        Target::Q => {
+            files.insert(
+                format!("{}.q", ir.name),
+                q::render_q_artifacts(ir, config.wrappers).source,
             );
         }
         Target::Kotlin => {

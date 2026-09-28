@@ -3,7 +3,7 @@
 # Written once by .cargo/setup-scratch.py; absent in ordinary clones and CI.
 -include .cargo/scratch.local.mk
 
-.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir e2e-unity e2e-unity-generate e2e-godot e2e-godot-generate e2e-unreal e2e-unreal-generate bench coverage coverage-open coverage-summary \
+.PHONY: build test check fmt lint e2e e2e-native e2e-native-artifacts e2e-q e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-fsharp e2e-ocaml e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir e2e-unity e2e-unity-generate e2e-godot e2e-godot-generate e2e-unreal e2e-unreal-generate bench coverage coverage-open coverage-summary \
         fuzz fuzz-parse-artifact fuzz-config-toml fuzz-sol-type fuzz-codegen-full fuzz-barrel \
         fuzz-corpus fuzz-init-corpus scratch-setup scratch-disable test-storage
 
@@ -66,7 +66,7 @@ e2e-hardhat3: build ## E2E: Hardhat 3 plugin → abi-typegen --hardhat → tsc
 
 NATIVE_TYPEGEN := ../../../target/debug/abi-typegen generate --artifacts ../../foundry-sample/out
 
-e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir ## E2E: all native-language targets
+e2e-native: e2e-go e2e-rust e2e-swift e2e-kotlin e2e-c e2e-csharp e2e-fsharp e2e-ocaml e2e-java e2e-dart e2e-python e2e-php e2e-cobol e2e-ruby e2e-shell e2e-elixir ## E2E: all native-language targets
 
 e2e-native-artifacts: build
 	cd e2e/foundry-sample && $(FORGE) build --out out --cache-path cache
@@ -174,7 +174,7 @@ coverage: ## Doublcov report in coverage/report/index.html
 coverage-open: ## Generate HTML coverage report and open in browser
 	$(DOUBLCOV) cargo-llvm-cov --mode standalone --open -- --workspace
 
-coverage-summary: ## Print line/branch coverage summary to stdout
+coverage-summary: ## Print Rust line, region, and function coverage summary
 	cargo llvm-cov --workspace --summary-only
 
 fuzz-corpus: ## Update seeds from test fixtures
@@ -208,6 +208,25 @@ e2e-csharp: e2e-native-artifacts
 	cd e2e/native/csharp && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target csharp
 	cd e2e/native/csharp && dotnet run --project Consumer.csproj
 	python3 e2e/native/anvil.py --cwd e2e/native/csharp dotnet run --project Consumer.csproj
+
+e2e-fsharp: e2e-native-artifacts ## E2E: F# records and Nethereum codecs
+	cd e2e/native/fsharp && $(NATIVE_TYPEGEN) --out ./Metadata --target fsharp --no-wrappers --clean
+	cd e2e/native/fsharp && ../../../target/debug/abi-typegen generate --artifacts ./fixtures --out ./Metadata --target fsharp --no-wrappers
+	cd e2e/native/fsharp && dotnet build Consumer.fsproj -p:MetadataOnly=true -p:GeneratedDir=Metadata
+	cd e2e/native/fsharp && $(NATIVE_TYPEGEN) --out ./Generated --target fsharp --clean
+	cd e2e/native/fsharp && ../../../target/debug/abi-typegen generate --artifacts ./fixtures --out ./Generated --target fsharp
+	cd e2e/native/fsharp && dotnet run --project Consumer.fsproj
+	python3 e2e/native/anvil.py --cwd e2e/native/fsharp dotnet run --project Consumer.fsproj
+
+e2e-ocaml: e2e-native-artifacts ## E2E: OCaml records and shared-runtime codecs
+	cargo build -p abi-typegen-runtime
+	sh e2e/native/ocaml/run.sh
+	python3 e2e/native/anvil.py sh e2e/native/ocaml/run.sh
+
+e2e-q: e2e-native-artifacts ## E2E: q event tables and Anvil logs (requires q and K_INCLUDE)
+	cargo build -p abi-typegen-runtime
+	sh e2e/native/q/run.sh
+	python3 e2e/native/anvil.py sh e2e/native/q/run.sh
 
 e2e-dart: e2e-native-artifacts
 	cd e2e/native/dart && rm -rf lib/generated && $(NATIVE_TYPEGEN) --out ./lib/generated --target dart

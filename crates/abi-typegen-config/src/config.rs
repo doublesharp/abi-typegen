@@ -225,6 +225,9 @@ pub fn validate_package(package: &str, targets: &[Target]) -> Result<(), ConfigE
             | Target::Rust
             | Target::Swift
             | Target::CSharp
+            | Target::FSharp
+            | Target::OCaml
+            | Target::Q
             | Target::Solidity
             | Target::C
             | Target::Shell
@@ -256,6 +259,9 @@ pub fn parse_target(s: &str) -> Option<Target> {
         "rust" => Some(Target::Rust),
         "swift" => Some(Target::Swift),
         "csharp" | "cs" => Some(Target::CSharp),
+        "fsharp" | "f#" | "fs" => Some(Target::FSharp),
+        "ocaml" | "ml" => Some(Target::OCaml),
+        "q" | "kdb" | "kdb+" => Some(Target::Q),
         "kotlin" | "kt" => Some(Target::Kotlin),
         "solidity" | "sol" => Some(Target::Solidity),
         "java" => Some(Target::Java),
@@ -300,6 +306,12 @@ pub enum Target {
     Swift,
     /// Generate C# types (Nethereum compatible).
     CSharp,
+    /// Generate F# records and Nethereum contract helpers.
+    FSharp,
+    /// Generate OCaml values and shared-runtime ABI codecs.
+    OCaml,
+    /// Generate q/kdb+ event tables and shared-runtime decoders.
+    Q,
     /// Generate Kotlin types (web3j compatible).
     Kotlin,
     /// Generate Solidity interfaces.
@@ -355,6 +367,9 @@ impl Target {
             | Self::Rust
             | Self::Swift
             | Self::CSharp
+            | Self::FSharp
+            | Self::OCaml
+            | Self::Q
             | Self::Kotlin
             | Self::Solidity
             | Self::Java
@@ -386,6 +401,9 @@ impl Target {
             | Self::Rust
             | Self::Swift
             | Self::CSharp
+            | Self::FSharp
+            | Self::OCaml
+            | Self::Q
             | Self::Kotlin
             | Self::Solidity
             | Self::Java
@@ -409,7 +427,7 @@ impl<'de> Deserialize<'de> for Target {
         let s = String::deserialize(d)?;
         parse_target(&s).ok_or_else(|| {
             serde::de::Error::custom(format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|godot|unreal|ruby|elixir|shell|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|fsharp|ocaml|q|kotlin|java|dart|php|cobol|godot|unreal|ruby|elixir|shell|solidity|c|cpp|yaml",
                 s
             ))
         })
@@ -471,7 +489,7 @@ fn deserialize_targets<'de, D: serde::Deserializer<'de>>(
             while let Some(s) = seq.next_element::<String>()? {
                 let t = parse_target(s.trim()).ok_or_else(|| {
                     de::Error::custom(format!(
-                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
+                        "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|fsharp|ocaml|q|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                         s
                     ))
                 })?;
@@ -494,7 +512,7 @@ fn parse_targets_from_str(s: &str) -> Result<Vec<Target>, String> {
     for part in parts {
         let t = parse_target(part).ok_or_else(|| {
             format!(
-                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
+                "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|fsharp|ocaml|q|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                 part
             )
         })?;

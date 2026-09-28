@@ -366,6 +366,9 @@ fn target_dir_name(target: &Target) -> &'static str {
         Target::Rust => "rust",
         Target::Swift => "swift",
         Target::CSharp => "csharp",
+        Target::FSharp => "fsharp",
+        Target::OCaml => "ocaml",
+        Target::Q => "q",
         Target::Kotlin => "kotlin",
         Target::Solidity => "solidity",
         Target::Java => "java",
@@ -383,8 +386,8 @@ fn target_dir_name(target: &Target) -> &'static str {
 
 const GENERATED_TARGET_DIRS: &[&str] = &[
     "viem", "zod", "wagmi", "ethers", "ethers5", "web3js", "python", "go", "rust", "swift",
-    "csharp", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby", "elixir", "godot",
-    "unreal", "shell", "c", "cpp", "yaml",
+    "csharp", "fsharp", "ocaml", "q", "kotlin", "solidity", "java", "dart", "php", "cobol", "ruby",
+    "elixir", "godot", "unreal", "shell", "c", "cpp", "yaml",
 ];
 
 /// Resolves the config file path. If `--config` is given, uses that.
@@ -437,7 +440,7 @@ fn apply_overrides(
             let trimmed = part.trim();
             let parsed = parse_target(trimmed).ok_or_else(|| {
                 anyhow::anyhow!(
-                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
+                    "unknown target '{}', expected viem|zod|wagmi|ethers|ethers5|web3js|python|go|rust|swift|csharp|fsharp|ocaml|q|kotlin|java|dart|php|cobol|ruby|elixir|shell|solidity|c|cpp|yaml",
                     trimmed
                 )
             })?;
@@ -530,6 +533,10 @@ const GENERATED_EXTENSIONS: &[&str] = &[
     ".rs",
     ".swift",
     ".cs",
+    ".fs",
+    ".ml",
+    ".q",
+    ".ocaml.c",
     ".kt",
     ".sol",
     ".java",
@@ -548,7 +555,7 @@ const GENERATED_EXTENSIONS: &[&str] = &[
 
 /// Checks if a filename looks like a generated file (matches known patterns).
 fn is_generated_filename(filename: &str) -> bool {
-    if filename == "index.ts" {
+    if filename == "index.ts" || filename == "abi_typegen_q.c" {
         return true;
     }
     GENERATED_EXTENSIONS
@@ -665,6 +672,9 @@ fn render_artifacts(
                 Target::Kotlin => Some(abi_typegen_codegen::kotlin::namespace_name(name)),
                 Target::Dart => Some(abi_typegen_codegen::dart::namespace_name(name)),
                 Target::Java => Some(abi_typegen_codegen::java::namespace_name(name)),
+                Target::FSharp => Some(abi_typegen_codegen::fsharp::namespace_name(name)),
+                Target::OCaml => Some(abi_typegen_codegen::ocaml::namespace_name(name)),
+                Target::Q => Some(abi_typegen_codegen::q::namespace_name(name)),
                 Target::C | Target::Cpp => Some(abi_typegen_codegen::c::namespace_name(name)),
                 _ => None,
             };
@@ -739,7 +749,9 @@ fn render_artifacts(
         if matches!(
             target_config.target(),
             Target::C | Target::Cpp | Target::Cobol | Target::Unreal
-        ) {
+        ) || (target_config.wrappers
+            && matches!(target_config.target(), Target::OCaml | Target::Q))
+        {
             let filename = format!("{prefix}abi_typegen.h");
             if files.contains_key(&filename) {
                 anyhow::bail!(
@@ -748,6 +760,12 @@ fn render_artifacts(
                 );
             }
             files.insert(filename, abi_typegen_codegen::c::RUNTIME_HEADER.to_string());
+        }
+        if *target_config.target() == Target::Q && target_config.wrappers {
+            files.insert(
+                format!("{prefix}abi_typegen_q.c"),
+                abi_typegen_codegen::q::RUNTIME_BRIDGE.to_string(),
+            );
         }
         if *target_config.target() == Target::Rust {
             files.insert(

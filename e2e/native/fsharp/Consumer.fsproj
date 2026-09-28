@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType Condition="'$(MetadataOnly)' != 'true'">Exe</OutputType>
+    <OutputType Condition="'$(MetadataOnly)' == 'true'">Library</OutputType>
+    <GeneratedDir Condition="'$(GeneratedDir)' == ''">Generated</GeneratedDir>
+    <TargetFramework>net10.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(GeneratedDir)/*.fs" />
+    <Compile Include="Program.fs" Condition="'$(MetadataOnly)' != 'true'" />
+    <PackageReference Include="Nethereum.Web3" Version="6.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+</Project>
