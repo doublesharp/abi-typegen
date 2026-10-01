@@ -126,6 +126,8 @@ fn render_read_node(
     function: &AbiFunction,
     api_macro: &str,
 ) {
+    let result = format!("F{contract}{stem}Result");
+    let action = format!("U{contract}{stem}AsyncAction");
     let input_names = reflected_names(
         function.inputs.iter().map(|p| p.name.as_str()),
         &[
@@ -162,15 +164,16 @@ fn render_read_node(
             "GetWorld",
             "GetName",
             "GetOuter",
+            "StaticClass",
+            &action,
         ],
     );
     let output_names = reflected_names(
         function.outputs.iter().map(|p| p.name.as_str()),
-        &["bCompleted"],
+        &["bCompleted", "StaticStruct", &result],
     );
     let input_c_fields = c_field_names(function.inputs.iter().map(|p| p.name.as_str()));
     let output_c_fields = c_field_names(function.outputs.iter().map(|p| p.name.as_str()));
-    let result = format!("F{contract}{stem}Result");
     header.push_str(&format!(
         "\nUSTRUCT(BlueprintType)\nstruct {api_macro} {result}\n{{\n    GENERATED_BODY()\n"
     ));
@@ -188,7 +191,6 @@ fn render_read_node(
 
     let success_delegate = format!("F{contract}{stem}Success");
     let failure_delegate = format!("F{contract}{stem}Failure");
-    let action = format!("U{contract}{stem}AsyncAction");
     header.push_str(&format!(
         "\nDECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam({success_delegate}, {result}, Result);\nDECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam({failure_delegate}, FString, Error);\n\nUCLASS()\nclass {api_macro} {action} : public UAbiTypegenAsyncActionBase\n{{\n    GENERATED_BODY()\npublic:\n    UPROPERTY(BlueprintAssignable) {success_delegate} OnSuccess;\n    UPROPERTY(BlueprintAssignable) {failure_delegate} OnFailure;\n\n"
     ));
