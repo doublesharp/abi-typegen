@@ -201,6 +201,7 @@ e2e-c: e2e-native-artifacts
 
 e2e-java: e2e-native-artifacts
 	cd e2e/native/java && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target java --package com.example.contracts
+	cd e2e/native/java && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./build/generated-contracts --target java --package com.example.contracts
 	cd e2e/native/java && gradle test --console=plain
 	python3 e2e/native/anvil.py --cwd e2e/native/java gradle test --rerun-tasks --console=plain
 
