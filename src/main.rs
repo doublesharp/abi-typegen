@@ -294,6 +294,14 @@ impl<'a> FetchSource<'a> {
 }
 
 fn run_fetch(source: FetchSource<'_>, name: &str, artifacts_dir: &Path, force: bool) -> Result<()> {
+    let mut chars = name.bytes();
+    if !chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || matches!(c, b'_' | b'$'))
+        || !chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'_' | b'$'))
+    {
+        anyhow::bail!("invalid contract name '{name}': expected a Solidity identifier");
+    }
     let dest = fetch::artifact_path(artifacts_dir, name);
     if dest.exists() && !force {
         anyhow::bail!(

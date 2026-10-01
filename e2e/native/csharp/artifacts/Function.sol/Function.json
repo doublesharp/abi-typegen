@@ -1,0 +1,34 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "echo",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "message",
+          "type": "tuple",
+          "internalType": "struct Function.Message",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "output",
+          "type": "tuple",
+          "internalType": "struct Function.Output",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    }
+  ]
+}

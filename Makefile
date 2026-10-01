@@ -90,6 +90,7 @@ e2e-rust: e2e-native-artifacts ## E2E: Rust bindings → rustfmt, clippy, rustdo
 
 e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across modules, tests
 	cd e2e/native/swift && rm -rf Sources/Generated && $(NATIVE_TYPEGEN) --out ./Sources/Generated --target swift
+	cd e2e/native/swift && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./Sources/Generated --target swift
 	cd e2e/native/swift && swift build --build-tests
 	cd e2e/native/swift && swift test
 	python3 e2e/native/anvil.py --cwd e2e/native/swift swift test
@@ -97,6 +98,7 @@ e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across 
 
 e2e-kotlin: e2e-native-artifacts ## E2E: Kotlin bindings → Gradle build with web3j, Java interop tests
 	cd e2e/native/kotlin && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target kotlin --package com.example.contracts
+	cd e2e/native/kotlin && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./build/generated-contracts --target kotlin --package com.example.contracts
 	cd e2e/native/kotlin && gradle test --console=plain
 	python3 e2e/native/anvil.py --cwd e2e/native/kotlin gradle test --rerun-tasks --console=plain
 	@echo "e2e-kotlin: pass"
@@ -201,11 +203,13 @@ e2e-c: e2e-native-artifacts
 
 e2e-java: e2e-native-artifacts
 	cd e2e/native/java && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target java --package com.example.contracts
+	cd e2e/native/java && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./build/generated-contracts --target java --package com.example.contracts
 	cd e2e/native/java && gradle test --console=plain
 	python3 e2e/native/anvil.py --cwd e2e/native/java gradle test --rerun-tasks --console=plain
 
 e2e-csharp: e2e-native-artifacts
 	cd e2e/native/csharp && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target csharp
+	cd e2e/native/csharp && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./Generated --target csharp
 	cd e2e/native/csharp && dotnet run --project Consumer.csproj
 	python3 e2e/native/anvil.py --cwd e2e/native/csharp dotnet run --project Consumer.csproj
 
@@ -239,7 +243,9 @@ e2e-python: e2e-native-artifacts
 	python3 -m venv e2e/native/python/.venv
 	e2e/native/python/.venv/bin/python -m pip install -r e2e/native/python/requirements.txt
 	cd e2e/native/python && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target python
+	cd e2e/native/python && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./Generated --target python
 	cd e2e/native/python && .venv/bin/python -m compileall -q Generated && .venv/bin/python test_consumer.py
+	cd e2e/native/python && .venv/bin/python test_renderer_boundaries.py
 	python3 e2e/native/anvil.py --cwd e2e/native/python .venv/bin/python test_consumer.py
 
 e2e-php: e2e-native-artifacts
@@ -273,8 +279,8 @@ e2e-ruby: e2e-native-artifacts
 	cd e2e/native/ruby && bundle exec ruby verify_generated.rb build/generated-contracts
 	cd e2e/native/ruby && rm -rf build/metadata-contracts && $(NATIVE_TYPEGEN) --out ./build/metadata-contracts --target ruby --no-wrappers
 	cd e2e/native/ruby && ruby verify_generated.rb build/metadata-contracts --metadata
-	cd e2e/native/ruby && bundle exec rspec generated_spec.rb anvil_spec.rb
-	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb anvil_spec.rb
+	cd e2e/native/ruby && bundle exec rspec generated_spec.rb renderer_spec.rb anvil_spec.rb
+	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb renderer_spec.rb anvil_spec.rb
 
 # Unity qualification requires an activated Editor and host player support.
 # It is intentionally separate from e2e-native, whose consumers need no license.

@@ -1,0 +1,62 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "read",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view",
+      "extra": "quote ''' dollar $value backslash \\ newline\n"
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [],
+      "extra": "quote ''' dollar $value backslash \\ newline\n"
+    },
+    {
+      "type": "function",
+      "name": "foo$bar",
+      "inputs": [
+        {
+          "name": "x$y",
+          "type": "uint8"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "Changed$Now",
+      "inputs": [],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Denied$Now",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NestedDenied",
+      "inputs": [
+        {
+          "name": "items",
+          "type": "tuple[]",
+          "internalType": "struct DartLiteralCase.Item[]",
+          "components": [
+            {
+              "name": "count",
+              "type": "int8"
+            },
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -381,6 +381,15 @@ fn java_ident(name: &str) -> String {
         "null",
         "_into",
         "value",
+        // Record accessors cannot use these inherited Object method names.
+        "clone",
+        "finalize",
+        "getClass",
+        "hashCode",
+        "notify",
+        "notifyAll",
+        "toString",
+        "wait",
     ];
     let name = if name.is_empty() { "arg" } else { name };
     if RESERVED.contains(&name) || name == "_" {

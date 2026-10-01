@@ -52,7 +52,12 @@ pub fn render_solidity_file(ir: &ContractIr) -> String {
         append_interface_item(&mut out, &mut has_items, &render_function(function, &defs));
     }
     if ir.has_fallback {
-        append_interface_item(&mut out, &mut has_items, "    fallback() external;");
+        let declaration = if ir.fallback_is_payable() {
+            "    fallback() external payable;"
+        } else {
+            "    fallback() external;"
+        };
+        append_interface_item(&mut out, &mut has_items, declaration);
     }
     if ir.has_receive {
         append_interface_item(&mut out, &mut has_items, "    receive() external payable;");

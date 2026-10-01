@@ -1,0 +1,226 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "payable",
+      "inputs": [
+        {
+          "name": "settings",
+          "type": "tuple",
+          "internalType": "struct RubyCoverage.Settings",
+          "components": [
+            {
+              "name": "to_a",
+              "type": "uint256"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "deposit",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "write",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "echo",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "noop",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "Anonymous",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false
+        }
+      ],
+      "anonymous": true
+    },
+    {
+      "type": "event",
+      "name": "Refs",
+      "inputs": [
+        {
+          "name": "label",
+          "type": "string",
+          "indexed": true
+        },
+        {
+          "name": "payload",
+          "type": "bytes",
+          "indexed": true
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Collections",
+      "inputs": [
+        {
+          "name": "items",
+          "type": "uint256[]",
+          "indexed": true
+        },
+        {
+          "name": "point",
+          "type": "tuple",
+          "indexed": true,
+          "components": [
+            {
+              "name": "x",
+              "type": "uint256"
+            }
+          ]
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Scalar",
+      "inputs": [
+        {
+          "name": "ok",
+          "type": "bool",
+          "indexed": true
+        },
+        {
+          "name": "key",
+          "type": "bytes4",
+          "indexed": true
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "code",
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "foo",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "encodeFoo",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "decodeFooResult",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "class",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "lookup",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "lookup",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "storeSettings",
+      "stateMutability": "nonpayable",
+      "inputs": [
+        {
+          "name": "settings",
+          "type": "tuple",
+          "internalType": "struct RubyCoverage.Settings",
+          "components": [
+            {
+              "name": "to_a",
+              "type": "uint256"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ]
+        }
+      ],
+      "outputs": []
+    }
+  ]
+}

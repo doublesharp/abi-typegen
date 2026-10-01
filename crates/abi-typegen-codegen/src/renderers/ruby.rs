@@ -343,10 +343,11 @@ fn render_wrapper_extras(ir: &ContractIr) -> String {
                 if indexed_hash(&param.ty) {
                     format!("topics[{current}]")
                 } else {
-                    format!(
-                        "Eth::Abi.decode([{}], topics[{current}])[0]",
-                        ruby_string(&param.ty.canonical())
-                    )
+                    let ty = ruby_string(&param.ty.canonical());
+                    decoded_fields.push_str(&format!(
+                        "    indexed_values{current} = Eth::Abi.decode([{ty}], topics[{current}])\n    _assert_canonical([{ty}], indexed_values{current}, topics[{current}])\n"
+                    ));
+                    format!("indexed_values{current}[0]")
                 }
             } else {
                 let current = data_index;
@@ -663,6 +664,19 @@ fn collect_tuple_structs(ir: &ContractIr) -> Vec<(String, Vec<String>)> {
             );
         }
     }
+    if let Some(constructor) = &ir.constructor {
+        for param in &constructor.inputs {
+            collect_tuple_from_type(
+                ir,
+                &param.name,
+                &param.ty,
+                param.internal_type.as_deref(),
+                &mut seen,
+                &mut used,
+                &mut structs,
+            );
+        }
+    }
     structs
 }
 
@@ -866,7 +880,7 @@ const RUNTIME_HELPERS: &str = r#"
   def _abi_value(value)
     case value
     when Struct
-      value.to_a.map { |item| _abi_value(item) }
+      Struct.instance_method(:to_a).bind_call(value).map { |item| _abi_value(item) }
     when Array
       value.map { |item| _abi_value(item) }
     when Eth::Address
@@ -901,7 +915,7 @@ const RUNTIME_HELPERS: &str = r#"
   def self._class_abi_value(value)
     case value
     when Struct
-      value.to_a.map { |item| _class_abi_value(item) }
+      Struct.instance_method(:to_a).bind_call(value).map { |item| _class_abi_value(item) }
     when Array
       value.map { |item| _class_abi_value(item) }
     when Eth::Address

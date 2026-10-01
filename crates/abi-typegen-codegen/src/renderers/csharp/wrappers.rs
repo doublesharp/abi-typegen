@@ -1,19 +1,26 @@
 //! Nethereum-backed C# contract bindings.
 
-use super::{csharp_property_names, function_stems, item_class_stems, item_stems, map_type};
+use super::{
+    csharp_property_names, function_stems, item_class_stems, item_stems, map_type,
+    tuple_class_names,
+};
 use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{ContractIr, StateMutability};
 
 pub(super) fn render(ir: &ContractIr) -> String {
     let contract = &ir.name;
     let registry = TupleRegistry::new(ir);
+    let tuple_names = tuple_class_names(ir, &registry);
     let binding = format!("{contract}Binding");
     let mut out = format!(
         "\n    /// <summary>Typed Nethereum binding for {contract}.</summary>\n    public class {binding}\n    {{\n        private readonly Contract contract;\n\n        public {binding}(Web3 web3, string address)\n        {{\n            if (web3 == null) throw new ArgumentNullException(nameof(web3));\n            contract = web3.Eth.GetContract({contract}AbiMetadata.ABI, address);\n        }}\n\n        /// <summary>The parsed Nethereum contract.</summary>\n        public Contract Contract => contract;\n"
     );
     if let Some(constructor) = &ir.constructor {
-        let names =
-            csharp_property_names(constructor.inputs.iter().map(|param| param.name.as_str()));
+        let names = csharp_property_names(
+            constructor.inputs.iter().map(|param| param.name.as_str()),
+            &format!("{contract}ConstructorParams"),
+            false,
+        );
         let values = names
             .iter()
             .map(|name| format!("args.{name}"))
@@ -45,8 +52,11 @@ pub(super) fn render(ir: &ContractIr) -> String {
                 .map(|byte| format!("{byte:02x}"))
                 .collect::<String>()
         );
-        let field_names =
-            csharp_property_names(function.inputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            function.inputs.iter().map(|param| param.name.as_str()),
+            &params,
+            true,
+        );
         let values = field_names
             .iter()
             .map(|name| format!("args.{name}"))
@@ -107,7 +117,7 @@ pub(super) fn render(ir: &ContractIr) -> String {
                             &param.ty,
                             param.internal_type.as_deref(),
                             &registry,
-                            contract
+                            &tuple_names
                         )
                     )
                 })
@@ -121,7 +131,7 @@ pub(super) fn render(ir: &ContractIr) -> String {
                         &param.ty,
                         param.internal_type.as_deref(),
                         &registry,
-                        contract,
+                        &tuple_names,
                     );
                     format!("topic{index} ?? Array.Empty<{ty}>()")
                 })

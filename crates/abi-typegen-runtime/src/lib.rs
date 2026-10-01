@@ -5,6 +5,12 @@ mod ffi;
 pub use ffi::*;
 
 #[cfg(test)]
+mod coverage_tests;
+
+#[cfg(test)]
+mod boundary_tests;
+
+#[cfg(test)]
 mod tests {
     use crate::codec::{Value, decode, encode};
     use alloy_primitives::{B256, U256};

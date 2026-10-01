@@ -1,0 +1,118 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "from",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "class",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "contract",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "buildDeployment",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "write",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct PythonBranches.Item",
+          "components": [
+            {
+              "name": "class",
+              "type": "uint256"
+            },
+            {
+              "name": "_class",
+              "type": "bool"
+            },
+            {
+              "name": "fooBar",
+              "type": "string"
+            },
+            {
+              "name": "foo_bar",
+              "type": "bytes"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "extra": "line\nbackslash \\ quote ''' end"
+    },
+    {
+      "type": "constructor",
+      "stateMutability": "nonpayable",
+      "inputs": [
+        {
+          "name": "settings",
+          "type": "tuple",
+          "internalType": "struct PythonBranches.Settings",
+          "components": [
+            {
+              "name": "owner",
+              "type": "address"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "setDollar",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct PythonBranches.Dollar$Item",
+          "components": [
+            {
+              "name": "n",
+              "type": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "other",
+          "type": "tuple",
+          "internalType": "struct PythonBranches.Dollar_Item",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "metadata": {
+    "output": {
+      "userdoc": {
+        "notice": "Quoted \"\"\" docs\nwith a backslash \\ and a newline"
+      }
+    }
+  }
+}

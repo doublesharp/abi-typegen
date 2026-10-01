@@ -381,7 +381,7 @@ pub(super) fn render_methods(ir: &ContractIr, php: &Php<'_>) -> String {
         for param in &event.inputs {
             if param.indexed {
                 if indexed_hash(&param.ty) {
-                    args_out.push(format!("$topics[{topic_i}]"));
+                    args_out.push(format!("self::topicHash($topics[{topic_i}])"));
                 } else {
                     let layout = php.layout_expr(&param.ty, param.internal_type.as_deref());
                     let decoded = format!("self::decodeTop($topics[{topic_i}], [{layout}])[0]");
@@ -443,7 +443,9 @@ pub(super) fn render_methods(ir: &ContractIr, php: &Php<'_>) -> String {
             };
             filter_args.push(format!("?{ty} ${name} = null"));
             if indexed_hash(&param.ty) {
-                topic_lines.push_str(&format!("        $topics[] = ${name};\n"));
+                topic_lines.push_str(&format!(
+                    "        $topics[] = ${name} === null ? null : self::topicHash(${name});\n"
+                ));
             } else {
                 let layout = php.layout_expr(&param.ty, param.internal_type.as_deref());
                 let encoded = php.to_abi(
@@ -789,6 +791,14 @@ const CODEC: &str = r#"
         if ($left < 0 || $right < 0) throw new \InvalidArgumentException('negative ABI size');
         if ($left !== 0 && $right > intdiv(PHP_INT_MAX, $left)) throw new \InvalidArgumentException('ABI size overflow');
         return $left * $right;
+    }
+
+    private static function topicHash(mixed $topic): string
+    {
+        if (!is_string($topic) || !preg_match('/\A0x[0-9a-f]{64}\z/i', $topic)) {
+            throw new \InvalidArgumentException('indexed topic hash must be 32-byte hex');
+        }
+        return $topic;
     }
 
     private static function logField(array|object $log, string $name): mixed

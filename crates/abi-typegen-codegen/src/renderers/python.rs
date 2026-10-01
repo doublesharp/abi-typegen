@@ -47,8 +47,9 @@ fn render_python_file_inner(ir: &ContractIr, wrappers: bool, legacy_stub: bool) 
     // Embedded ABI
     let abi_json = serde_json::to_string_pretty(&ir.raw_abi).unwrap_or_else(|_| "[]".to_string());
     out.push_str(&format!(
-        "{}_ABI: list[dict[str, Any]] = json.loads('''\n{}\n''')\n\n\n",
-        name_upper, abi_json
+        "{}_ABI: list[dict[str, Any]] = json.loads({})\n\n\n",
+        name_upper,
+        python_string(&abi_json)
     ));
     if wrappers {
         out.push_str("def _strict_abi_decode(types: list[str], raw: bytes) -> tuple[Any, ...]:\n    values = abi_decode(types, raw)\n    if abi_encode(types, values) != raw:\n        raise ValueError(\"Non-canonical ABI output\")\n    return values\n\n\n");
@@ -81,8 +82,8 @@ fn render_python_file_inner(ir: &ContractIr, wrappers: bool, legacy_stub: bool) 
     if let Some(ref ns) = ir.natspec {
         if let Some(ref notice) = ns.notice {
             out.push_str(&format!(
-                "    \"\"\"{}.\"\"\"\n",
-                notice.trim_end_matches('.')
+                "    {}\n",
+                python_string(&format!("{}.", notice.trim_end_matches('.')))
             ));
         } else {
             out.push_str(&format!(
@@ -244,7 +245,7 @@ fn render_python_wrapper_extras(ir: &ContractIr) -> String {
 fn resolve_method_name(f: &AbiFunction, name_counts: &HashMap<&str, u32>) -> String {
     let count = *name_counts.get(f.name.as_str()).unwrap_or(&1);
     let snake = f.name.to_snake_case();
-    if count > 1 {
+    let method = if count > 1 {
         let suffix = overload_suffix(&f.inputs).to_snake_case();
         if suffix.is_empty() {
             snake
@@ -253,6 +254,11 @@ fn resolve_method_name(f: &AbiFunction, name_counts: &HashMap<&str, u32>) -> Str
         }
     } else {
         snake
+    };
+    if PYTHON_KEYWORDS.contains(&method.as_str()) {
+        format!("_{method}")
+    } else {
+        method
     }
 }
 
@@ -261,7 +267,11 @@ fn python_function_names(ir: &ContractIr) -> Vec<String> {
     for function in &ir.functions {
         *counts.entry(function.name.as_str()).or_insert(0) += 1;
     }
-    let mut used = HashSet::from(["__init__".to_string(), "build_deployment".to_string()]);
+    let mut used = HashSet::from([
+        "__init__".to_string(),
+        "build_deployment".to_string(),
+        "contract".to_string(),
+    ]);
     ir.functions
         .iter()
         .map(|function| {
@@ -461,8 +471,11 @@ fn render_view_function(method_name: &str, f: &AbiFunction, wrappers: bool) -> S
     let mut s = String::new();
     if let Some(doc) = natspec_docstring(f) {
         s.push_str(&format!(
-            "    def {}(self{}) -> {}:\n        \"\"\"{}\"\"\"\n        ...\n",
-            method_name, params, ret, doc
+            "    def {}(self{}) -> {}:\n        {}\n        ...\n",
+            method_name,
+            params,
+            ret,
+            python_string(&doc)
         ));
     } else {
         s.push_str(&format!(
@@ -494,8 +507,10 @@ fn render_write_function(method_name: &str, f: &AbiFunction, wrappers: bool) -> 
     let mut s = String::new();
     if let Some(doc) = natspec_docstring(f) {
         s.push_str(&format!(
-            "    def {}(self{}) -> dict[str, Any]:\n        \"\"\"{}\"\"\"\n        ...\n",
-            method_name, params, doc
+            "    def {}(self{}) -> dict[str, Any]:\n        {}\n        ...\n",
+            method_name,
+            params,
+            python_string(&doc)
         ));
     } else {
         s.push_str(&format!(
@@ -539,83 +554,71 @@ fn natspec_docstring(f: &AbiFunction) -> Option<String> {
 
 /// Collects all tuple types that should be emitted as TypedDict classes.
 fn collect_typed_dicts(ir: &ContractIr, dicts: &mut Vec<(String, Vec<(String, String)>)>) {
-    let mut seen = HashSet::new();
+    let mut seen = Vec::new();
+    let mut names = crate::naming::Scope::with_reserved([format!("{}Contract", ir.name).as_str()]);
 
-    // Collect from function inputs/outputs
-    for f in &ir.functions {
-        for p in f.inputs.iter().chain(f.outputs.iter()) {
-            if let SolType::Tuple(ref components) = p.ty {
-                let struct_name = p
-                    .internal_type
-                    .as_deref()
-                    .and_then(struct_name_from_internal_type)
-                    .unwrap_or(&p.name);
-                if struct_name.is_empty() {
-                    continue;
-                }
-                let class_name = format!("{}{}", ir.name, struct_name);
-                if seen.insert(class_name.clone()) {
-                    let fields = typed_dict_fields(components);
-                    dicts.push((class_name, fields));
-                }
+    let params = ir
+        .constructor
+        .iter()
+        .flat_map(|constructor| &constructor.inputs)
+        .chain(
+            ir.functions
+                .iter()
+                .flat_map(|function| function.inputs.iter().chain(&function.outputs)),
+        )
+        .chain(ir.errors.iter().flat_map(|error| &error.inputs))
+        .map(|param| (&param.name, &param.ty, param.internal_type.as_deref()))
+        .chain(
+            ir.events
+                .iter()
+                .flat_map(|event| &event.inputs)
+                .map(|param| (&param.name, &param.ty, param.internal_type.as_deref())),
+        );
+    for (name, ty, internal_type) in params {
+        if let SolType::Tuple(components) = ty {
+            let struct_name = internal_type
+                .and_then(struct_name_from_internal_type)
+                .unwrap_or(name);
+            if struct_name.is_empty() {
+                continue;
             }
-        }
-    }
-
-    // Collect from event parameters
-    for e in &ir.events {
-        for p in &e.inputs {
-            if let SolType::Tuple(ref components) = p.ty {
-                let struct_name = p
-                    .internal_type
-                    .as_deref()
-                    .and_then(struct_name_from_internal_type)
-                    .unwrap_or(&p.name);
-                if struct_name.is_empty() {
-                    continue;
-                }
-                let class_name = format!("{}{}", ir.name, struct_name);
-                if seen.insert(class_name.clone()) {
-                    let fields = typed_dict_fields(components);
-                    dicts.push((class_name, fields));
-                }
+            let identity = (internal_type.unwrap_or(name), components.as_slice());
+            if seen.contains(&identity) {
+                continue;
             }
-        }
-    }
-
-    // Collect from error parameters
-    for e in &ir.errors {
-        for p in &e.inputs {
-            if let SolType::Tuple(ref components) = p.ty {
-                let struct_name = p
-                    .internal_type
-                    .as_deref()
-                    .and_then(struct_name_from_internal_type)
-                    .unwrap_or(&p.name);
-                if struct_name.is_empty() {
-                    continue;
-                }
-                let class_name = format!("{}{}", ir.name, struct_name);
-                if seen.insert(class_name.clone()) {
-                    let fields = typed_dict_fields(components);
-                    dicts.push((class_name, fields));
-                }
-            }
+            seen.push(identity);
+            let base = format!("{}{}", ir.name, struct_name)
+                .chars()
+                .map(|character| {
+                    if character.is_ascii_alphanumeric() || character == '_' {
+                        character
+                    } else {
+                        '_'
+                    }
+                })
+                .collect::<String>();
+            let class_name = names.claim(&base);
+            dicts.push((class_name, typed_dict_fields(components)));
         }
     }
 }
 
 /// Converts tuple components to TypedDict field definitions.
 fn typed_dict_fields(components: &[TupleComponent]) -> Vec<(String, String)> {
+    let mut scope = crate::naming::Scope::default();
     components
         .iter()
         .enumerate()
         .map(|(i, c)| {
-            let fname = python_safe_param_name(&c.name, i);
+            let fname = scope.claim(&python_safe_param_name(&c.name, i));
             let ftype = sol_type_to_python(&c.ty);
             (fname, ftype)
         })
         .collect()
+}
+
+fn python_string(value: &str) -> String {
+    serde_json::to_string(value).expect("strings serialize")
 }
 
 #[cfg(test)]

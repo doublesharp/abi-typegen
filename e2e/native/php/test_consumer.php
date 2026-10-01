@@ -76,6 +76,31 @@ function offline(): void
     rejects(static fn() => NativeCases::encodeGridValue(new NativeCasesGrid([[BigInteger::of(1), BigInteger::of(2)]], ['false', false], ['0x' . str_repeat('ab', 32)])), 'nested bool accepted string');
 }
 
+function indexed_topic_validation(): void
+{
+    $address = '0x' . str_repeat('00', 20);
+    $hash = '0x' . str_repeat('ab', 32);
+    foreach (['0x', '0x' . str_repeat('ab', 31), '0x' . str_repeat('ab', 33), 'not-hex', '0x' . str_repeat('zz', 32), $hash . "\n", null, 7] as $invalid) {
+        foreach ([1, 2, 3] as $index) {
+            $topics = [NativeCases::INDEXED_REFERENCES_EVENT_TOPIC, $hash, $hash, $hash];
+            $topics[$index] = $invalid;
+            rejects(static fn() => NativeCases::decodeIndexedReferencesEvent(['topics' => $topics, 'data' => '0x']), 'malformed indexed topic accepted');
+        }
+        if (is_string($invalid)) {
+            rejects(static fn() => NativeCases::filterIndexedReferencesEvent($address, 'earliest', 'latest', $invalid), 'malformed filter label accepted');
+            rejects(static fn() => NativeCases::filterIndexedReferencesEvent($address, 'earliest', 'latest', null, $invalid), 'malformed filter payload accepted');
+            rejects(static fn() => NativeCases::filterIndexedReferencesEvent($address, 'earliest', 'latest', null, null, $invalid), 'malformed filter array accepted');
+        }
+    }
+    $upper = '0X' . str_repeat('AB', 32);
+    $log = (object)['topics' => [strtoupper(NativeCases::INDEXED_REFERENCES_EVENT_TOPIC), $upper, $hash, $hash], 'data' => '0x'];
+    check(NativeCases::decodeIndexedReferencesEvent($log)?->label === $upper, 'valid uppercase topic rejected');
+    check(NativeCases::filterIndexedReferencesEvent($address)['topics'] === [NativeCases::INDEXED_REFERENCES_EVENT_TOPIC, null, null, null], 'filter wildcards changed');
+    check(NativeCases::decodeIndexedReferencesEvent(['topics' => [$hash, $hash, $hash, $hash], 'data' => '0x']) === null, 'wrong event topic accepted');
+    check(NativeCases::decodeIndexedReferencesEvent(['topics' => [NativeCases::INDEXED_REFERENCES_EVENT_TOPIC, $hash], 'data' => '0x']) === null, 'wrong topic count accepted');
+    rejects(static fn() => NativeCases::decodeIndexedReferencesEvent(['data' => '0x']), 'missing topics accepted');
+}
+
 function rpc(): void
 {
     $url = getenv('ATG_RPC_URL');
@@ -123,5 +148,6 @@ function receipt(TokenClient $client, string $hash): array
 }
 
 offline();
+indexed_topic_validation();
 rpc();
 echo "PHP generated consumer passed\n";

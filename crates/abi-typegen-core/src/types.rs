@@ -158,3 +158,20 @@ pub struct ContractIr {
     /// Raw ABI JSON value, preserved for `as const` serialization.
     pub raw_abi: serde_json::Value,
 }
+
+impl ContractIr {
+    /// Whether the fallback in the preserved ABI accepts Ether.
+    ///
+    /// Missing fallback mutability retains the legacy nonpayable default.
+    pub fn fallback_is_payable(&self) -> bool {
+        self.raw_abi.as_array().is_some_and(|items| {
+            items.iter().any(|item| {
+                item.get("type").and_then(serde_json::Value::as_str) == Some("fallback")
+                    && item
+                        .get("stateMutability")
+                        .and_then(serde_json::Value::as_str)
+                        == Some("payable")
+            })
+        })
+    }
+}

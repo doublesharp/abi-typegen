@@ -1,0 +1,181 @@
+{
+  "contractName": "RecordNames",
+  "abi": [
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "clone",
+          "type": "bool"
+        },
+        {
+          "name": "finalize",
+          "type": "bool"
+        },
+        {
+          "name": "getClass",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode",
+          "type": "bool"
+        },
+        {
+          "name": "notify",
+          "type": "bool"
+        },
+        {
+          "name": "notifyAll",
+          "type": "bool"
+        },
+        {
+          "name": "toString",
+          "type": "bool"
+        },
+        {
+          "name": "wait",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode_",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "echo",
+      "inputs": [
+        {
+          "name": "clone",
+          "type": "bool"
+        },
+        {
+          "name": "finalize",
+          "type": "bool"
+        },
+        {
+          "name": "getClass",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode",
+          "type": "bool"
+        },
+        {
+          "name": "notify",
+          "type": "bool"
+        },
+        {
+          "name": "notifyAll",
+          "type": "bool"
+        },
+        {
+          "name": "toString",
+          "type": "bool"
+        },
+        {
+          "name": "wait",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode_",
+          "type": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clone",
+          "type": "bool"
+        },
+        {
+          "name": "finalize",
+          "type": "bool"
+        },
+        {
+          "name": "getClass",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode",
+          "type": "bool"
+        },
+        {
+          "name": "notify",
+          "type": "bool"
+        },
+        {
+          "name": "notifyAll",
+          "type": "bool"
+        },
+        {
+          "name": "toString",
+          "type": "bool"
+        },
+        {
+          "name": "wait",
+          "type": "bool"
+        },
+        {
+          "name": "hashCode_",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure",
+      "x-note": "delete\u007fnext\u0085line"
+    },
+    {
+      "type": "event",
+      "name": "Fields",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "clone",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "finalize",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "getClass",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "hashCode",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "notify",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "notifyAll",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "toString",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "wait",
+          "type": "bool",
+          "indexed": false
+        },
+        {
+          "name": "hashCode_",
+          "type": "bool",
+          "indexed": false
+        }
+      ]
+    }
+  ]
+}

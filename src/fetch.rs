@@ -295,19 +295,15 @@ struct ExplorerResponse {
 /// `api_url` is the full endpoint URL including the `/api` path suffix
 /// (e.g. `"https://api.etherscan.io/api"`).
 pub fn fetch_abi(api_url: &str, address: &str, api_key: Option<&str>) -> Result<serde_json::Value> {
-    // If the base URL already contains `?` (e.g. Etherscan V2 `?chainid=1`),
-    // append with `&`; otherwise start a new query string with `?`.
-    let sep = if api_url.contains('?') { '&' } else { '?' };
-    let mut url = format!(
-        "{}{}module=contract&action=getabi&address={}",
-        api_url, sep, address
-    );
+    let mut request = ureq::get(api_url)
+        .query("module", "contract")
+        .query("action", "getabi")
+        .query("address", address);
     if let Some(key) = api_key {
-        url.push_str("&apikey=");
-        url.push_str(key);
+        request = request.query("apikey", key);
     }
 
-    let body: String = ureq::get(&url)
+    let body: String = request
         .call()
         .context("HTTP request to block explorer failed")?
         .into_string()
@@ -335,8 +331,12 @@ pub fn fetch_abi(api_url: &str, address: &str, api_key: Option<&str>) -> Result<
     }
 
     // The `result` field is a double-encoded JSON string containing the ABI array.
-    serde_json::from_str(&resp.result)
-        .context("block explorer returned invalid ABI JSON in `result` field")
+    let abi: serde_json::Value = serde_json::from_str(&resp.result)
+        .context("block explorer returned invalid ABI JSON in `result` field")?;
+    if !abi.is_array() {
+        bail!("block explorer returned a non-array ABI in `result` field");
+    }
+    Ok(abi)
 }
 
 /// Loads an ABI from a local JSON file.
@@ -473,14 +473,33 @@ mod tests {
     }
 
     #[test]
-    fn error_response_not_verified_detected() {
-        // Simulate what fetch_abi would return for an unverified contract
-        // by testing the message pattern matching directly.
-        let msg = "Contract source code not verified";
-        assert!(
-            msg.contains("not verified"),
-            "pattern check for unverified contract"
+    fn fetch_query_values_cannot_add_parameters_or_fragments() {
+        let (url, rx, handle) = serve_once(r#"{"status":"1","result":"[]"}"#);
+        let fetched = fetch_abi(
+            &format!("{url}?chainid=1"),
+            "0x123&action=other",
+            Some("key&address=other#fragment"),
         );
+        let request = rx.recv().expect("request");
+        handle.join().expect("server");
+        fetched.expect("fetch");
+        assert!(request.starts_with("GET /api?chainid=1&module=contract&action=getabi&address=0x123%26action%3Dother&apikey=key%26address%3Dother%23fragment "), "{request}");
+    }
+
+    #[test]
+    fn fetch_success_requires_an_abi_array_and_well_formed_envelope() {
+        for body in [
+            r#"{"status":"1","result":"{}"}"#,
+            r#"{"status":"1","result":"null"}"#,
+            r#"{"status":"1","result":[]}"#,
+            r#"{"result":"[]"}"#,
+            "not-json",
+        ] {
+            let (url, _rx, handle) = serve_once(body);
+            let result = fetch_abi(&url, "0x1", None);
+            handle.join().expect("server");
+            assert!(result.is_err(), "accepted {body}");
+        }
     }
 
     #[test]
@@ -528,6 +547,26 @@ mod tests {
             (
                 r#"{"status":"0","result":"Contract source code not verified"}"#,
                 "not verified on this explorer",
+            ),
+            (
+                r#"{"status":"0","result":"contract not found"}"#,
+                "not verified on this explorer",
+            ),
+            (
+                r#"{"status":"0","result":"No Source available"}"#,
+                "not verified on this explorer",
+            ),
+            (
+                r#"{"status":"0","result":"API Key required"}"#,
+                "invalid or missing API key",
+            ),
+            (
+                r#"{"status":"0","result":"rate_limit reached"}"#,
+                "rate limit reached",
+            ),
+            (
+                r#"{"status":"0","result":"Max rate reached"}"#,
+                "rate limit reached",
             ),
             (
                 r#"{"status":"0","result":"Invalid API Key"}"#,
@@ -592,8 +631,16 @@ mod tests {
     fn load_abi_from_file_rejects_unknown_shape() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("bad.json");
-        std::fs::write(&path, r#"{"name":"Foo"}"#).unwrap();
-        let err = load_abi_from_file(&path).unwrap_err();
-        assert!(format!("{err}").contains("not a JSON ABI array"), "{err}");
+        for json in [
+            r#"{"name":"Foo"}"#,
+            r#"{"abi":null}"#,
+            r#"{"abi":{}}"#,
+            r#"{"abi":"[]"}"#,
+            "null",
+        ] {
+            std::fs::write(&path, json).unwrap();
+            let err = load_abi_from_file(&path).unwrap_err();
+            assert!(format!("{err}").contains("not a JSON ABI array"), "{err}");
+        }
     }
 }

@@ -1,0 +1,28 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "read",
+      "description": "price $5\u0085\u009f😀",
+      "inputs": [
+        {"name": "_", "type": "bool"},
+        {"name": "___", "type": "uint256"},
+        {"name": "when", "type": "bool"}
+      ],
+      "outputs": [],
+      "stateMutability": "view"
+    }
+  ],
+  "metadata": {
+    "output": {
+      "userdoc": {
+        "notice": "Contract /* opener",
+        "methods": {"read(bool,uint256,bool)": {"notice": "Function /* opener"}}
+      },
+      "devdoc": {
+        "details": "Close */ safely",
+        "methods": {"read(bool,uint256,bool)": {"details": "\n\nDetails */ safely"}}
+      }
+    }
+  }
+}

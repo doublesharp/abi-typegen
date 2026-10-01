@@ -1,0 +1,22 @@
+{
+  "contractName": "Web3",
+  "abi": [
+    {
+      "type": "function",
+      "name": "echo",
+      "inputs": [
+        {
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ok",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "pure"
+    }
+  ]
+}

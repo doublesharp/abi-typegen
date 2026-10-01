@@ -17,6 +17,86 @@ import org.web3j.protocol.core.methods.response.Log;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GeneratedTest {
+    @Test void integerExtremesAndNamedResultsRemainExact() {
+        var unsigned = EdgeCases.decodeLargeIntsResult("0x"
+            + "0".repeat(48) + "f".repeat(16)
+            + "0".repeat(32) + "f".repeat(32)
+            + "f".repeat(64));
+        assertEquals(BigInteger.ONE.shiftLeft(64).subtract(BigInteger.ONE), unsigned.a());
+        assertEquals(BigInteger.ONE.shiftLeft(128).subtract(BigInteger.ONE), unsigned.b());
+        assertEquals(BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE), unsigned.c());
+        var signed = EdgeCases.decodeSignedIntsResult("0x"
+            + "f".repeat(62) + "80"
+            + "f".repeat(52) + "800000000000"
+            + "8" + "0".repeat(63));
+        assertEquals(BigInteger.valueOf(-128), signed.a());
+        assertEquals(BigInteger.ONE.shiftLeft(47).negate(), signed.b());
+        assertEquals(BigInteger.ONE.shiftLeft(255).negate(), signed.c());
+        var multiple = EdgeCases.decodeMultiReturnResult("0x"
+            + "0".repeat(63) + "7" + "f".repeat(64) + "0".repeat(63) + "1");
+        assertEquals(BigInteger.valueOf(7), multiple.count());
+        assertEquals(BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE), multiple.total());
+        assertTrue(multiple.flag());
+    }
+
+    @Test void dynamicBytesAndFixedByteOutputsDecodeTheirDeclaredLengths() {
+        var dynamic = EdgeCases.decodeDynamicBytesResult("0x"
+            + "0".repeat(62) + "20" + "0".repeat(63) + "3"
+            + "aabbcc" + "0".repeat(58));
+        assertArrayEquals(new byte[]{(byte)0xaa, (byte)0xbb, (byte)0xcc}, dynamic.getValue());
+        var fixed = EdgeCases.decodeFixedBytesResult("0x"
+            + "aa" + "0".repeat(62) + "bb".repeat(16) + "0".repeat(32)
+            + "cc".repeat(32));
+        assertArrayEquals(new byte[]{(byte)0xaa}, fixed.a().getValue());
+        assertArrayEquals(java.util.HexFormat.of().parseHex("bb".repeat(16)), fixed.b().getValue());
+        assertArrayEquals(java.util.HexFormat.of().parseHex("cc".repeat(32)), fixed.c().getValue());
+    }
+
+    @Test void voidResultsRejectUnexpectedReturnBytes() {
+        assertDoesNotThrow(() -> EdgeCases.decodeResetResult("0x"));
+        assertDoesNotThrow(() -> EdgeCases.decodeResetResult(""));
+        assertThrows(IllegalArgumentException.class, () -> EdgeCases.decodeResetResult("0x" + "0".repeat(64)));
+    }
+
+    @Test void malformedLayoutsFailInsteadOfReturningPartialValues() {
+        assertThrows(IllegalArgumentException.class, () -> Token.decodeBalanceOfResult("00"));
+        assertThrows(IllegalArgumentException.class, () -> Token.decodeBalanceOfResult("0x0"));
+        // web3j reports truncated scalar words as bounds errors.
+        assertThrows(IndexOutOfBoundsException.class, () -> Token.decodeBalanceOfResult("0x"));
+        assertThrows(ArithmeticException.class, () -> EdgeCases.decodeNestedArrayResult("0x" + "f".repeat(64)));
+        assertThrows(IndexOutOfBoundsException.class, () -> EdgeCases.decodeDynamicBytesResult("0x" + "0".repeat(62) + "20"));
+    }
+
+    @Test void eventTopicGatingAndAnonymousLogsUseCorrectPositions() {
+        Log transfer = new Log();
+        transfer.setData("0x");
+        transfer.setTopics(List.of());
+        assertNull(Token.decodeTransferEvent(transfer));
+        transfer.setTopics(List.of("0x" + "f".repeat(64)));
+        assertNull(Token.decodeTransferEvent(transfer));
+        transfer.setData("0x" + "0".repeat(64));
+        transfer.setTopics(List.of("0x" + "f".repeat(64), "0x" + "0".repeat(64), "0x" + "0".repeat(64)));
+        assertNull(Token.decodeTransferEvent(transfer));
+        transfer.setTopics(List.of(Token.TRANSFER_EVENT_TOPIC));
+        assertNull(Token.decodeTransferEvent(transfer));
+        transfer.setTopics(List.of(Token.TRANSFER_EVENT_TOPIC, "0x" + "0".repeat(64), "0x" + "0".repeat(64), "0x" + "0".repeat(64)));
+        assertNull(Token.decodeTransferEvent(transfer));
+        Log anonymous = new Log();
+        anonymous.setTopics(List.of());
+        anonymous.setData("0x" + "0".repeat(62) + "20" + "0".repeat(63) + "2" + "6869" + "0".repeat(60));
+        assertEquals("hi", EdgeCases.decodeDebugLogEvent(anonymous).message());
+        anonymous.setTopics(List.of("0x" + "0".repeat(64)));
+        assertNull(EdgeCases.decodeDebugLogEvent(anonymous));
+    }
+
+    @Test void errorDecodersMatchSelectorsAndSupportZeroArguments() {
+        assertNull(Token.decodeInvalidRecipientError("0x00000000"));
+        assertNotNull(Token.decodeInvalidRecipientError(Token.INVALID_RECIPIENT_ERROR_SELECTOR));
+        assertNotNull(Token.decodeInvalidRecipientError(Token.INVALID_RECIPIENT_ERROR_SELECTOR.toUpperCase(java.util.Locale.ROOT)));
+        assertNull(Vault.decodeInsufficientSharesError("0x00000000"));
+        assertThrows(IndexOutOfBoundsException.class, () -> Vault.decodeInsufficientSharesError(Vault.INSUFFICIENT_SHARES_ERROR_SELECTOR));
+    }
+
     @Test void offlineCallsResultsErrorsAndEvents() {
         String owner = "0x0000000000000000000000000000000000000001";
         assertEquals(Token.BALANCE_OF_SELECTOR, Token.encodeBalanceOf(owner).substring(0, 10));

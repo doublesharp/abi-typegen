@@ -67,8 +67,8 @@ const SWIFT_KEYWORDS: &[&str] = &[
     "while",
 ];
 
-/// SDK types and modules used by generated code. Contract namespaces and nested
-/// structs must not shadow these names.
+/// SDK types, modules, and helper types used by generated code. Contract
+/// namespaces and nested structs must not shadow these names.
 const SDK_NAMES: &[&str] = &[
     "Array",
     "BigInt",
@@ -82,6 +82,20 @@ const SDK_NAMES: &[&str] = &[
     "String",
     "Swift",
     "Web3Core",
+    "web3swift",
+    "Web3",
+    "EthereumContract",
+    "ABI",
+    "ABIDecoder",
+    "CodableTransaction",
+    "EventLog",
+    "EventFilterParameters",
+    "ReadOperation",
+    "WriteOperation",
+    "Error",
+    "Client",
+    "WrapperError",
+    "DecodedCustomError",
 ];
 
 /// Imports a rendered file needs beyond Foundation.
