@@ -1,0 +1,6 @@
+{
+  "abi": [
+    {"type":"function","name":"when","inputs":[{"name":"value","type":"bool"}],"outputs":[],"stateMutability":"view"},
+    {"type":"function","name":"When","inputs":[{"name":"value","type":"uint256"}],"outputs":[],"stateMutability":"view"}
+  ]
+}

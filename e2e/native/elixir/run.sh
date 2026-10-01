@@ -12,7 +12,29 @@ project=e2e/native/elixir
 generated=$project/lib/contracts
 artifacts=${ATG_ELIXIR_ARTIFACTS:-e2e/foundry-sample/out}
 plain=$(mktemp -d)
-trap 'rm -rf "$plain"' EXIT HUP INT TERM
+rejected=$(mktemp -d)
+trap 'rm -rf "$plain" "$rejected"' EXIT HUP INT TERM
+
+if "$TYPEGEN" generate --artifacts "$project/invalid-artifacts" --out "$rejected/contracts" --target elixir >"$rejected/error.log" 2>&1; then
+    echo "Elixir generation accepted SDK metaprogramming names" >&2
+    exit 1
+fi
+case "$(cat "$rejected/error.log")" in
+    *"Elixir SDK typespec collision"*) ;;
+    *) cat "$rejected/error.log" >&2; exit 1 ;;
+esac
+if [ -d "$rejected/contracts" ]; then
+    echo "Elixir SDK rejection created output files" >&2
+    exit 1
+fi
+"$TYPEGEN" generate --artifacts "$project/invalid-artifacts" --out "$rejected/metadata" --target elixir --no-wrappers
+ATG_ELIXIR_METADATA="$rejected/metadata" elixir -e '
+  dir = System.fetch_env!("ATG_ELIXIR_METADATA")
+  Enum.each(Path.wildcard(Path.join(dir, "*.ex")), &Code.compile_file/1)
+  unless String.contains?(MetaprogrammingNames.abi_json(), "unquoteSplicing") do
+    raise "metadata-only generation omitted SDK-unsupported ABI names"
+  end
+'
 
 rm -rf "$generated"
 "$TYPEGEN" generate --artifacts "$artifacts" --out "$generated" --target elixir
