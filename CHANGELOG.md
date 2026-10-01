@@ -8,6 +8,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- ABI parsing rejects unknown mutability values and invalid constructor, fallback,
+  and receive mutability. NatSpec lookup uses canonical integer aliases, including
+  aliases nested inside tuple arrays.
+- Rust and Solidity interfaces retain payable fallback declarations.
+- Java record fields avoid inherited Object methods, and Swift namespaces and
+  tuple types avoid generated helpers and wrapper SDK classes.
+- Python bindings escape embedded ABI and documentation strings and keep keyword
+  methods, tuple fields, and contract-handle names distinct. Constructor-only
+  tuples retain their metadata, and tuple class names remain valid and distinct.
+- Dart bindings preserve ABI strings containing quotes, backslashes, and dollar
+  signs in metadata and custom-error decoders, escape dollar signs in signatures
+  and validation messages, and emit valid constructors for parameterless events.
+  Contract names also escape dollar signs, and result fields avoid inherited
+  Object members while retaining distinct decoder arguments.
+- C# ABI properties avoid containing-class and inherited SDK members. Tuple types
+  avoid generated helper and SDK type names, and `Constructor()` functions retain
+  distinct DTOs from constructor arguments.
+- Kotlin NatSpec escapes both block-comment delimiters, and contracts named only
+  with underscores have a valid namespace.
+- Elixir collision aliases safely handle dollar signs and reserved words.
+  Functions that trigger unsupported SDK typespec generation fail before output
+  is written; metadata-only output remains available.
+- Ruby bindings include constructor-only tuple types, encode Struct fields that
+  shadow `to_a`, and reject noncanonical indexed scalar event topics.
+- Unreal bindings avoid member names that collide with generated types and
+  reflection helpers.
+- Explorer fetches encode query values, reject non-array ABI responses, and reject
+  contract names that cannot be Solidity identifiers before writing artifacts.
+- PHP event decoders and filters reject malformed indexed reference topic hashes.
+- The shared native runtime rejects decoded integers outside their declared ABI
+  width and nonzero fixed-bytes padding, including nested values, custom errors,
+  and event topics and data. Valid 24-byte ABI function values can be encoded.
+
 ## [0.7.0] - 2026-09-28
 
 Adds F#, OCaml, and q/kdb+ targets, bringing the generator to 28 targets across

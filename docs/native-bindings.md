@@ -159,8 +159,10 @@ abi-typegen generate --target php --out ./generated --package 'App\Contracts'
 Generated files include named tuple, event, error, and transaction-option classes,
 plus one contract class per ABI. Contract classes provide strict offline encoders
 and decoders, JSON-RPC read helpers, signed transaction helpers, receipt queries,
-log queries, event filters and decoders, and declared custom-error decoders. The
-client signs legacy EIP-155 transactions. It does not generate
+log queries, event filters and decoders, and declared custom-error decoders.
+Indexed strings, bytes, arrays, and tuples use 32-byte hex topic hashes; event
+decoders and filters reject malformed hashes while preserving null filter
+wildcards. The client signs legacy EIP-155 transactions. It does not generate
 EIP-1559 transactions, deployment helpers, or subscriptions. The upstream signing
 package emits `ArrayAccess` return-type deprecation notices on PHP 8.5.
 
@@ -305,6 +307,10 @@ a typed result struct whose strings and arrays borrow storage from the returned
 runtime result. Keep that result alive until all borrowed fields are no longer
 used. Never free a borrowed `atg_value` child.
 
+The shared runtime rejects decoded integers outside their declared ABI widths
+and nonzero padding in fixed bytes, including values inside arrays and tuples.
+These checks apply to return data, custom errors, and event topics and data.
+
 C++ `Decoded<T>` owns the runtime result and exposes its fields through `value()`
 or `operator->`. It is movable, not copyable. Encoding returns a
 `std::vector<uint8_t>`; failed operations throw `std::runtime_error`.
@@ -369,9 +375,11 @@ live under `Token.Errors`. `Token.abi_json/0` exposes the complete ABI.
 Function names use snake case. Distinct ABI names that would collide receive
 unique aliases while retaining their original selectors. Event-filter name
 collisions, event overloads with indistinguishable indexed arguments, overloaded
-custom-error names, and functions that shadow reserved Ethers helpers are
-rejected before files are written. The generator does not supply a wallet or
-manage transaction receipts for the application.
+custom-error names, functions that shadow reserved Ethers helpers, and function
+or event-filter names `unquote` or `unquote_splicing` after snake-case conversion
+are rejected before files are written. Ethers 0.8.0 cannot compile typespecs for those two
+names; use `--no-wrappers` to retain their ABI metadata. The generator does not
+supply a wallet or manage transaction receipts for the application.
 
 ## Unity compatibility
 
