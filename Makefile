@@ -98,6 +98,7 @@ e2e-swift: e2e-native-artifacts ## E2E: Swift bindings → Swift 6 build across 
 
 e2e-kotlin: e2e-native-artifacts ## E2E: Kotlin bindings → Gradle build with web3j, Java interop tests
 	cd e2e/native/kotlin && rm -rf build/generated-contracts && $(NATIVE_TYPEGEN) --out ./build/generated-contracts --target kotlin --package com.example.contracts
+	cd e2e/native/kotlin && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./build/generated-contracts --target kotlin --package com.example.contracts
 	cd e2e/native/kotlin && gradle test --console=plain
 	python3 e2e/native/anvil.py --cwd e2e/native/kotlin gradle test --rerun-tasks --console=plain
 	@echo "e2e-kotlin: pass"

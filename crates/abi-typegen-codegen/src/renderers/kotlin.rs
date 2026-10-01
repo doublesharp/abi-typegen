@@ -88,6 +88,11 @@ struct Field {
 /// Returns the contract object name, avoiding Kotlin and web3j type names.
 pub fn namespace_name(contract_name: &str) -> String {
     let contract = exported(contract_name);
+    let contract = if contract.is_empty() {
+        "Contract".to_string()
+    } else {
+        contract
+    };
     if is_web3j_generated_name(&contract) {
         format!("{contract}Contract")
     } else {
@@ -763,7 +768,7 @@ fn kdoc(indent: &str, summary: &str, natspec: Option<&NatSpec>) -> String {
         .into_iter()
         .flat_map(|natspec| natspec.notice.iter().chain(natspec.dev.iter()))
         .flat_map(|text| text.lines())
-        .map(|line| line.trim().replace("*/", "*&#47;"))
+        .map(|line| line.trim().replace("/*", "/&#42;").replace("*/", "*&#47;"))
         .collect();
     if lines.is_empty() {
         return format!("{indent}/** {summary} */\n");
