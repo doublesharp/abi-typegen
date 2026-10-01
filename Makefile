@@ -239,7 +239,9 @@ e2e-python: e2e-native-artifacts
 	python3 -m venv e2e/native/python/.venv
 	e2e/native/python/.venv/bin/python -m pip install -r e2e/native/python/requirements.txt
 	cd e2e/native/python && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target python
+	cd e2e/native/python && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./Generated --target python
 	cd e2e/native/python && .venv/bin/python -m compileall -q Generated && .venv/bin/python test_consumer.py
+	cd e2e/native/python && .venv/bin/python test_renderer_boundaries.py
 	python3 e2e/native/anvil.py --cwd e2e/native/python .venv/bin/python test_consumer.py
 
 e2e-php: e2e-native-artifacts
