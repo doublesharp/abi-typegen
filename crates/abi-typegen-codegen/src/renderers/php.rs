@@ -81,6 +81,7 @@ fn method_stems(
         "checkedAdd",
         "checkedMul",
         "logField",
+        "topicHash",
     ] {
         scope.claim(fixed);
     }
