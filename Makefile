@@ -276,8 +276,8 @@ e2e-ruby: e2e-native-artifacts
 	cd e2e/native/ruby && bundle exec ruby verify_generated.rb build/generated-contracts
 	cd e2e/native/ruby && rm -rf build/metadata-contracts && $(NATIVE_TYPEGEN) --out ./build/metadata-contracts --target ruby --no-wrappers
 	cd e2e/native/ruby && ruby verify_generated.rb build/metadata-contracts --metadata
-	cd e2e/native/ruby && bundle exec rspec generated_spec.rb anvil_spec.rb
-	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb anvil_spec.rb
+	cd e2e/native/ruby && bundle exec rspec generated_spec.rb renderer_spec.rb anvil_spec.rb
+	python3 e2e/native/anvil.py --cwd e2e/native/ruby bundle exec rspec generated_spec.rb renderer_spec.rb anvil_spec.rb
 
 # Unity qualification requires an activated Editor and host player support.
 # It is intentionally separate from e2e-native, whose consumers need no license.

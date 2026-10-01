@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require_relative "build/generated-contracts/Token"
-require_relative "build/generated-contracts/Vault"
-require_relative "build/generated-contracts/NativeCases"
-require_relative "build/generated-contracts/EdgeCases"
-require_relative "build/generated-contracts/NamingCases"
+generated_dir = ENV.fetch("ABI_TYPEGEN_RUBY_OUTPUT", File.join(__dir__, "build/generated-contracts"))
+%w[Token Vault NativeCases EdgeCases NamingCases].each do |name|
+  require File.join(generated_dir, name)
+end
 
 RSpec.describe "abi-typegen Ruby generated bindings" do
   let(:owner) { "0x0000000000000000000000000000000000000001" }
