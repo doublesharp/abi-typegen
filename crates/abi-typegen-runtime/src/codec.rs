@@ -1,6 +1,6 @@
 use alloy_dyn_abi::{DynSolType, DynSolValue, EventExt, FunctionExt, JsonAbiExt, Specifier};
 use alloy_json_abi::JsonAbi;
-use alloy_primitives::{Address, B256, I256, U256};
+use alloy_primitives::{Address, B256, Function, I256, U256};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Value {
@@ -57,6 +57,9 @@ fn convert(ty: &DynSolType, value: &Value, depth: usize) -> Result<DynSolValue> 
             word[..*n].copy_from_slice(x);
             DynSolValue::FixedBytes(word, *n)
         }
+        (DynSolType::Function, Value::Bytes(x)) if x.len() == 24 => {
+            DynSolValue::Function(Function::from_slice(x))
+        }
         (DynSolType::Bytes, Value::Bytes(x)) => DynSolValue::Bytes(x.clone()),
         (DynSolType::String, Value::Bytes(x)) => {
             DynSolValue::String(String::from_utf8(x.clone()).map_err(err)?)
@@ -100,6 +103,42 @@ fn from_sol(value: DynSolValue) -> Value {
         }
     }
 }
+
+// Alloy preserves the full word for narrow integers and fixed bytes. Re-encoding
+// those values therefore preserves invalid widths or padding instead of rejecting them.
+fn validate_decoded(values: &[DynSolValue]) -> Result<()> {
+    for value in values {
+        match value {
+            DynSolValue::Uint(n, bits) => {
+                if n.bit_len() > *bits {
+                    return Err(err("unsigned integer out of range"));
+                }
+            }
+            DynSolValue::Int(n, bits) => {
+                if *bits < 256
+                    && (*n < -(I256::ONE << (*bits - 1))
+                        || *n > (I256::ONE << (*bits - 1)) - I256::ONE)
+                {
+                    return Err(err("signed integer out of range"));
+                }
+            }
+            DynSolValue::FixedBytes(word, size) => {
+                if word[*size..].iter().any(|byte| *byte != 0) {
+                    return Err(err("nonzero fixed bytes padding"));
+                }
+            }
+            DynSolValue::Array(values)
+            | DynSolValue::FixedArray(values)
+            | DynSolValue::Tuple(values) => validate_decoded(values)?,
+            DynSolValue::Bool(_)
+            | DynSolValue::Address(_)
+            | DynSolValue::Function(_)
+            | DynSolValue::Bytes(_)
+            | DynSolValue::String(_) => {}
+        }
+    }
+    Ok(())
+}
 pub(crate) fn encode(abi: &str, signature: &str, args: &[Value]) -> Result<Vec<u8>> {
     let abi = parse(abi)?;
     let function = abi
@@ -124,6 +163,7 @@ pub(crate) fn decode(abi: &str, signature: &str, bytes: &[u8]) -> Result<Value> 
         .find(|f| f.signature() == signature)
         .ok_or_else(|| err("unknown function signature"))?;
     let values = f.abi_decode_output(bytes).map_err(err)?;
+    validate_decoded(&values)?;
     // Reject invalid padding, integer widths, booleans, offsets and trailing data.
     if f.abi_encode_output(&values).map_err(err)? != bytes {
         return Err(err("noncanonical ABI return data"));
@@ -140,6 +180,7 @@ pub(crate) fn decode_error(abi: &str, signature: &str, bytes: &[u8]) -> Result<V
         return Err(err("error selector mismatch"));
     }
     let values = e.abi_decode_input(&bytes[4..]).map_err(err)?;
+    validate_decoded(&values)?;
     if e.abi_encode_input(&values).map_err(err)? != bytes {
         return Err(err("noncanonical ABI error data"));
     }
@@ -159,6 +200,8 @@ pub(crate) fn decode_event(
     let decoded = event
         .decode_log_parts(topics.iter().copied(), bytes)
         .map_err(err)?;
+    validate_decoded(&decoded.indexed)?;
+    validate_decoded(&decoded.body)?;
     let encoded = decoded.encode_log_data();
     if encoded.data.as_ref() != bytes || encoded.topics() != topics {
         return Err(err("noncanonical ABI event data"));
