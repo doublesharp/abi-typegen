@@ -332,7 +332,12 @@ pub fn render_rust_file(ir: &ContractIr, rpc: bool) -> String {
     }
 
     if ir.has_fallback {
-        items.push("        fallback() external;\n".to_string());
+        let mutability = if ir.fallback_is_payable() {
+            " payable"
+        } else {
+            ""
+        };
+        items.push(format!("        fallback() external{mutability};\n"));
     }
     if ir.has_receive {
         items.push("        receive() external payable;\n".to_string());

@@ -19,6 +19,17 @@ pub enum ParseError {
     /// A `bytesN` size was out of range; valid range is 1–32.
     #[error("invalid bytesN size in '{0}': must be in range 1–32")]
     InvalidBytesN(String),
+    /// An explicitly supplied state mutability was not a supported ABI value.
+    #[error("unknown ABI state mutability: '{0}'")]
+    InvalidStateMutability(String),
+    /// A known state mutability was not valid for this kind of ABI item.
+    #[error("invalid state mutability '{state_mutability}' for ABI {item_type}")]
+    InvalidItemMutability {
+        /// ABI item kind, such as `constructor` or `receive`.
+        item_type: String,
+        /// Explicit state mutability from the ABI.
+        state_mutability: String,
+    },
     /// A tuple ABI type had no components.
     #[error("tuple has no components")]
     EmptyTuple,
@@ -230,35 +241,35 @@ fn raw_param_to_event_param(p: &RawParam) -> Result<AbiEventParam> {
     })
 }
 
-fn parse_state_mutability(s: Option<&str>) -> StateMutability {
-    match s {
+fn parse_state_mutability(item_type: &str, s: Option<&str>) -> Result<StateMutability> {
+    let mutability = match s {
         Some("pure") => StateMutability::Pure,
         Some("view") => StateMutability::View,
         Some("payable") => StateMutability::Payable,
-        _ => StateMutability::NonPayable,
+        None if item_type == "receive" => StateMutability::Payable,
+        Some("nonpayable") | None => StateMutability::NonPayable,
+        Some(unknown) => return Err(ParseError::InvalidStateMutability(unknown.to_string())),
+    };
+    let valid = match mutability {
+        StateMutability::Pure | StateMutability::View => item_type == "function",
+        StateMutability::NonPayable => item_type != "receive",
+        StateMutability::Payable => true,
+    };
+    if !valid {
+        return Err(ParseError::InvalidItemMutability {
+            item_type: item_type.to_string(),
+            state_mutability: s
+                .expect("invalid item mutability must be explicit")
+                .to_string(),
+        });
     }
+    Ok(mutability)
 }
 
 // ── NatSpec extraction ──────────────────────────────────────────────────────
 
-fn canonical_type_str(p: &RawParam) -> String {
-    if p.ty == "tuple" || p.ty.starts_with("tuple[") {
-        let inner: Vec<String> = p.components.iter().map(canonical_type_str).collect();
-        let base = format!("({})", inner.join(","));
-        // Safe: we already confirmed p.ty starts with "tuple"
-        let suffix = &p.ty["tuple".len()..];
-        format!("{}{}", base, suffix)
-    } else {
-        p.ty.clone()
-    }
-}
-
-fn function_sig(name: &str, inputs: &[RawParam]) -> String {
-    let params = inputs
-        .iter()
-        .map(canonical_type_str)
-        .collect::<Vec<_>>()
-        .join(",");
+fn function_sig<'a>(name: &str, inputs: impl Iterator<Item = &'a SolType>) -> String {
+    let params = inputs.map(SolType::canonical).collect::<Vec<_>>().join(",");
     format!("{}({})", name, params)
 }
 
@@ -348,13 +359,16 @@ pub fn parse_artifact(name: &str, json: &str) -> Result<ContractIr> {
                     .iter()
                     .map(raw_param_to_abi_param)
                     .collect::<Result<_>>()?;
-                let sig = function_sig(&name, &item.inputs);
+                let sig = function_sig(&name, inputs.iter().map(|input| &input.ty));
                 let natspec = extract_natspec(&sig, &devdoc.methods, &userdoc.methods);
                 functions.push(AbiFunction {
                     name,
                     inputs,
                     outputs,
-                    state_mutability: parse_state_mutability(item.state_mutability.as_deref()),
+                    state_mutability: parse_state_mutability(
+                        &item.ty,
+                        item.state_mutability.as_deref(),
+                    )?,
                     natspec,
                 });
             }
@@ -365,7 +379,7 @@ pub fn parse_artifact(name: &str, json: &str) -> Result<ContractIr> {
                     .iter()
                     .map(raw_param_to_event_param)
                     .collect::<Result<_>>()?;
-                let sig = function_sig(&name, &item.inputs);
+                let sig = function_sig(&name, inputs.iter().map(|input| &input.ty));
                 let natspec = extract_natspec(&sig, &devdoc.events, &userdoc.events);
                 events.push(AbiEvent {
                     name,
@@ -381,7 +395,7 @@ pub fn parse_artifact(name: &str, json: &str) -> Result<ContractIr> {
                     .iter()
                     .map(raw_param_to_abi_param)
                     .collect::<Result<_>>()?;
-                let sig = function_sig(&name, &item.inputs);
+                let sig = function_sig(&name, inputs.iter().map(|input| &input.ty));
                 let natspec = extract_natspec(&sig, &devdoc.errors, &userdoc.errors);
                 errors.push(AbiError {
                     name,
@@ -397,11 +411,20 @@ pub fn parse_artifact(name: &str, json: &str) -> Result<ContractIr> {
                     .collect::<Result<_>>()?;
                 constructor = Some(AbiConstructor {
                     inputs,
-                    state_mutability: parse_state_mutability(item.state_mutability.as_deref()),
+                    state_mutability: parse_state_mutability(
+                        &item.ty,
+                        item.state_mutability.as_deref(),
+                    )?,
                 });
             }
-            "fallback" => has_fallback = true,
-            "receive" => has_receive = true,
+            "fallback" => {
+                parse_state_mutability(&item.ty, item.state_mutability.as_deref())?;
+                has_fallback = true;
+            }
+            "receive" => {
+                parse_state_mutability(&item.ty, item.state_mutability.as_deref())?;
+                has_receive = true;
+            }
             unknown => {
                 tracing::warn!(
                     item_type = unknown,
