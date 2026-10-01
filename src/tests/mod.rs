@@ -1,6 +1,8 @@
 use super::*;
 use std::path::PathBuf;
 
+mod branches;
+
 const TARGET_MATRIX_ARTIFACT_JSON: &str = r#"{
     "abi": [{
         "type": "function",
