@@ -9,7 +9,7 @@ fn fetch_force_rejects_invalid_mutability_before_replacing_an_artifact() {
     std::fs::create_dir_all(destination.parent().expect("parent")).expect("directory");
     std::fs::write(&destination, "old artifact").expect("old artifact");
     for (kind, state) in [
-        ("function", "veiw"),
+        ("function", "invalid"),
         ("fallback", "view"),
         ("receive", "nonpayable"),
     ] {

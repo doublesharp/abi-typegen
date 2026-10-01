@@ -30,7 +30,7 @@ fn artifact(abi: Value) -> String {
 #[test]
 fn explicit_unknown_mutability_is_rejected_instead_of_becoming_nonpayable() {
     for kind in ["function", "constructor", "fallback", "receive"] {
-        for mutability in ["veiw", "", "Payable", "readonly"] {
+        for mutability in ["invalid", "", "Payable", "readonly"] {
             let abi = json!([{"type":kind,"name":"read","inputs":[],"outputs":[],"stateMutability":mutability}]);
             let error = parse_artifact("Token", &artifact(abi)).expect_err("unknown mutability");
             assert!(error.to_string().contains("mutability"), "{error}");
