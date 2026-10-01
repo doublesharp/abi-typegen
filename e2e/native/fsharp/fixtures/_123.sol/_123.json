@@ -1,0 +1,32 @@
+{
+  "contractName": "_123",
+  "abi": [
+    {
+      "type": "event",
+      "name": "Mixed",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "$",
+          "type": "bytes4",
+          "indexed": true
+        },
+        {
+          "name": "_123",
+          "type": "uint8",
+          "indexed": true
+        },
+        {
+          "name": "_",
+          "type": "string",
+          "indexed": true
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false
+        }
+      ]
+    }
+  ]
+}

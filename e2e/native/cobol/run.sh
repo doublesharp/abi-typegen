@@ -18,6 +18,7 @@ build=$(mktemp -d)
 trap 'rm -rf "$build"' EXIT HUP INT TERM
 
 "$TYPEGEN" generate --artifacts e2e/foundry-sample/out --out "$build/generated" --target cobol
+"$TYPEGEN" generate --artifacts "$root/artifacts" --out "$build/generated" --target cobol
 "$TYPEGEN" generate --artifacts e2e/foundry-sample/out --out "$build/plain" --target cobol --no-wrappers
 
 for source in "$build/generated"/*.cobol.c "$build/plain"/*.cobol.c; do

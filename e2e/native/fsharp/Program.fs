@@ -69,6 +69,11 @@ if not (isNull rpcUrl) then
 printfn "F# tuples, integers, constructors, errors and optional live transactions passed"
 let native = Contracts.NativeCases.bind (Web3()) "0x0000000000000000000000000000000000000001"
 let hashTopic = "0x" + String.replicate 64 "a"
+let mixedContract = Contracts.Contract123.bind (Web3()) "0x0000000000000000000000000000000000000001"
+let mixedTopic = "0x" + mixedContract.GetEvent("Mixed").EventABI.Sha3Signature
+let mixedLog = Nethereum.RPC.Eth.DTOs.FilterLog(Topics = [| box mixedTopic; box ("0x" + "aabbccdd" + String.replicate 56 "0"); box ("0x" + word 255I); box hashTopic |], Data = "0x" + word 42I)
+let mixed = Contracts.Contract123.decodeMixedEvent mixedContract mixedLog
+check (mixed.Contract = [|0xaauy; 0xbbuy; 0xccuy; 0xdduy|] && mixed.Contract123 = 255I && mixed.Contract2 = hashTopic && mixed.Amount = 42I) "mixed indexed scalar and reference transport preserves values"
 let indexedLog = Nethereum.RPC.Eth.DTOs.FilterLog(Topics = [| box "0xbe2c441cb63799e5afca59c017722c418d1279daa00c6d3770e4ce7efac17b3e"; box hashTopic; box hashTopic; box hashTopic |], Data = "0x")
 let indexed = Contracts.NativeCases.decodeIndexedReferencesEvent native indexedLog
 check (indexed.Label = hashTopic && indexed.Payload = indexed.Label && indexed.Values = indexed.Label) "indexed dynamic references preserve topic hash"
