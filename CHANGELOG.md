@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-30
+
+Regenerate bindings when upgrading to pick up the fixes below. The Rust parser
+adds `ParseError::InvalidStateMutability` and `ParseError::InvalidItemMutability`;
+consumers that match `ParseError` exhaustively must handle these variants.
+
 ### Fixed
 
 - ABI parsing rejects unknown mutability values and invalid constructor, fallback,
@@ -446,7 +452,9 @@ Initial release.
   propagation, and `as const` ABI exports for viem/wagmi inference.
 - Hardhat plugin and an npm wrapper that downloads platform-specific binaries.
 
-[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/doublesharp/abi-typegen/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/doublesharp/abi-typegen/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/doublesharp/abi-typegen/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/doublesharp/abi-typegen/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/doublesharp/abi-typegen/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/doublesharp/abi-typegen/compare/v0.4.3...v0.5.0
