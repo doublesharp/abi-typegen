@@ -206,6 +206,7 @@ e2e-java: e2e-native-artifacts
 
 e2e-csharp: e2e-native-artifacts
 	cd e2e/native/csharp && rm -rf Generated && $(NATIVE_TYPEGEN) --out ./Generated --target csharp
+	cd e2e/native/csharp && ../../../target/debug/abi-typegen generate --artifacts ./artifacts --out ./Generated --target csharp
 	cd e2e/native/csharp && dotnet run --project Consumer.csproj
 	python3 e2e/native/anvil.py --cwd e2e/native/csharp dotnet run --project Consumer.csproj
 

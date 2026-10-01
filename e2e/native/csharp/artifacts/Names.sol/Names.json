@@ -1,0 +1,184 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "stateMutability": "nonpayable",
+      "inputs": [
+        {
+          "name": "namesConstructorParams",
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "send",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "gas",
+          "type": "uint256"
+        },
+        {
+          "name": "gas2",
+          "type": "uint256"
+        },
+        {
+          "name": "gasPrice",
+          "type": "uint256"
+        },
+        {
+          "name": "maxFeePerGas",
+          "type": "uint256"
+        },
+        {
+          "name": "maxPriorityFeePerGas",
+          "type": "uint256"
+        },
+        {
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "name": "amountToSend",
+          "type": "uint256"
+        },
+        {
+          "name": "fromAddress",
+          "type": "uint256"
+        },
+        {
+          "name": "toString",
+          "type": "uint256"
+        },
+        {
+          "name": "namesSendParams",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "namesSendResult",
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "echo",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "binding",
+          "type": "tuple",
+          "internalType": "struct Names.Binding",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "metadata",
+          "type": "tuple",
+          "internalType": "struct Names.AbiMetadata",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "constructor",
+          "type": "tuple",
+          "internalType": "struct Names.ConstructorParams",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "params",
+          "type": "tuple",
+          "internalType": "struct Names.EchoParams",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "type": "tuple",
+          "internalType": "struct Names.EchoResult",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "dollar",
+      "stateMutability": "view",
+      "inputs": [
+        {
+          "name": "$",
+          "type": "bool"
+        },
+        {
+          "name": "_",
+          "type": "bool"
+        },
+        {
+          "name": "arg0",
+          "type": "bool"
+        },
+        {
+          "name": "$0",
+          "type": "bool"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "event",
+      "name": "Changed",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "namesChangedEvent",
+          "type": "uint256",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "namesDeniedError",
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "Constructor",
+      "stateMutability": "view",
+      "inputs": [],
+      "outputs": []
+    }
+  ]
+}

@@ -12,6 +12,7 @@ static void Check(bool condition, string message)
 }
 
 var offline = new TokenBinding(new Web3("http://127.0.0.1:8545"), "0x0000000000000000000000000000000000000001");
+NamesTest.Run(new Web3("http://127.0.0.1:8545"));
 var approve = new TokenApproveParams { Spender = "0x0000000000000000000000000000000000000002", Amount = 42 };
 var calldata = offline.EncodeApprove(approve);
 Check(calldata.StartsWith("0x095ea7b3", StringComparison.OrdinalIgnoreCase) && calldata.Length == 138, "typed approve calldata");

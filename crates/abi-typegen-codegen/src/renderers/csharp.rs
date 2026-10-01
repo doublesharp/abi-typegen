@@ -15,8 +15,40 @@ fn csharp_property_name(name: &str, index: usize) -> String {
     }
 }
 
-fn csharp_property_names<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
-    let mut used = HashSet::new();
+fn csharp_property_names<'a>(
+    names: impl Iterator<Item = &'a str>,
+    class_name: &str,
+    function_message: bool,
+) -> Vec<String> {
+    // C# forbids a member named after its class, and ABI properties must not
+    // hide Object or FunctionMessage members used by the consuming SDK.
+    let mut used = [
+        class_name,
+        "Equals",
+        "Finalize",
+        "GetHashCode",
+        "GetType",
+        "MemberwiseClone",
+        "ToString",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<HashSet<_>>();
+    if function_message {
+        used.extend(
+            [
+                "AmountToSend",
+                "FromAddress",
+                "Gas",
+                "GasPrice",
+                "MaxFeePerGas",
+                "MaxPriorityFeePerGas",
+                "Nonce",
+            ]
+            .into_iter()
+            .map(str::to_string),
+        );
+    }
     names
         .enumerate()
         .map(|(index, name)| {
@@ -38,6 +70,9 @@ fn function_stems(ir: &ContractIr) -> Vec<String> {
         *raw_counts.entry(function.name.as_str()).or_insert(0usize) += 1;
     }
     let mut used = HashSet::new();
+    if ir.constructor.is_some() {
+        used.insert("Constructor".to_string());
+    }
     ir.functions
         .iter()
         .map(|function| {
@@ -90,6 +125,77 @@ fn item_class_stems<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
         .collect()
 }
 
+fn tuple_class_names(ir: &ContractIr, registry: &TupleRegistry) -> HashMap<String, String> {
+    // TupleRegistry resolves tuple-to-tuple collisions; C# also shares its type
+    // namespace with DTOs, generated helpers, and imported framework types.
+    let mut used = [
+        "ArgumentException",
+        "ArgumentNullException",
+        "Array",
+        "BigInteger",
+        "BlockParameter",
+        "Contract",
+        "EventLog",
+        "Event",
+        "EventAttribute",
+        "Error",
+        "ErrorAttribute",
+        "FilterLog",
+        "Function",
+        "FunctionAttribute",
+        "FunctionCallDecoder",
+        "FunctionMessage",
+        "FunctionOutput",
+        "FunctionOutputAttribute",
+        "HexBigInteger",
+        "IErrorDTO",
+        "IEventDTO",
+        "IFunctionOutputDTO",
+        "List",
+        "NewFilterInput",
+        "Parameter",
+        "ParameterAttribute",
+        "Struct",
+        "StructAttribute",
+        "StringComparison",
+        "Task",
+        "TransactionInput",
+        "Web3",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<HashSet<_>>();
+    used.insert(format!("{}AbiMetadata", ir.name));
+    used.insert(format!("{}Binding", ir.name));
+    if ir.constructor.is_some() {
+        used.insert(format!("{}ConstructorParams", ir.name));
+    }
+    for stem in function_stems(ir) {
+        used.insert(format!("{}{stem}Params", ir.name));
+        used.insert(format!("{}{stem}Result", ir.name));
+    }
+    for stem in item_class_stems(ir.events.iter().map(|event| event.name.as_str())) {
+        used.insert(format!("{}{stem}Event", ir.name));
+    }
+    for stem in item_class_stems(ir.errors.iter().map(|error| error.name.as_str())) {
+        used.insert(format!("{}{stem}Error", ir.name));
+    }
+    registry
+        .defs()
+        .iter()
+        .map(|def| {
+            let base = format!("{}{}", ir.name, def.name);
+            let mut candidate = base.clone();
+            let mut suffix = 2;
+            while !used.insert(candidate.clone()) {
+                candidate = format!("{base}{suffix}");
+                suffix += 1;
+            }
+            (def.name.clone(), candidate)
+        })
+        .collect()
+}
+
 /// Generates `<ContractName>.cs` — a C# source file with typed classes
 /// compatible with Nethereum's `[Parameter]` and `[Event]` attributes.
 pub fn render_csharp_file(ir: &ContractIr) -> String {
@@ -99,6 +205,7 @@ pub fn render_csharp_file(ir: &ContractIr) -> String {
 /// Generates C# ABI metadata and types, optionally with callable Nethereum bindings.
 pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> String {
     let registry = TupleRegistry::new(ir);
+    let tuple_names = tuple_class_names(ir, &registry);
     let mut out = String::new();
 
     // Header
@@ -127,12 +234,14 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
     ));
 
     for def in registry.defs() {
-        let class_name = format!("{}{}", ir.name, def.name);
+        let class_name = &tuple_names[&def.name];
         out.push_str(&format!("\n    /// <summary>ABI tuple {}.</summary>\n    [Struct(\"{}\")]\n    public class {}\n    {{\n", def.name, def.name, class_name));
         let field_names = csharp_property_names(
             def.components
                 .iter()
                 .map(|component| component.name.as_str()),
+            class_name,
+            false,
         );
         for (i, component) in def.components.iter().enumerate() {
             let name = safe_param_name(&component.name, i);
@@ -140,7 +249,7 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
                 &component.ty,
                 component.internal_type.as_deref(),
                 &registry,
-                &ir.name,
+                &tuple_names,
             );
             out.push_str(&format!(
                 "        [Parameter(\"{}\", \"{}\", {})]\n        public {} {} {{ get; set; }}\n",
@@ -156,14 +265,17 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
 
     if let Some(constructor) = &ir.constructor {
         out.push_str(&format!("\n    /// <summary>Constructor arguments for {}.</summary>\n    public class {}ConstructorParams\n    {{\n", ir.name, ir.name));
-        let field_names =
-            csharp_property_names(constructor.inputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            constructor.inputs.iter().map(|param| param.name.as_str()),
+            &format!("{}ConstructorParams", ir.name),
+            false,
+        );
         for (i, param) in constructor.inputs.iter().enumerate() {
             let ty = map_type(
                 &param.ty,
                 param.internal_type.as_deref(),
                 &registry,
-                &ir.name,
+                &tuple_names,
             );
             let name = safe_param_name(&param.name, i);
             out.push_str(&format!(
@@ -211,7 +323,11 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
             "    [Function(\"{}\")]\n    public class {} : FunctionMessage\n    {{\n",
             f.name, class_name
         ));
-        let field_names = csharp_property_names(f.inputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            f.inputs.iter().map(|param| param.name.as_str()),
+            &class_name,
+            true,
+        );
         for (i, param) in f.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
@@ -222,7 +338,7 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
                 &param.ty,
                 param.internal_type.as_deref(),
                 &registry,
-                &ir.name,
+                &tuple_names,
             );
             let sol_type_str = sol_type_to_sol_string(&param.ty);
             let order = i + 1;
@@ -239,14 +355,18 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
 
         let result_name = format!("{}{}Result", ir.name, stem);
         out.push_str(&format!("\n    /// <summary>Outputs of {}.</summary>\n    [FunctionOutput]\n    public class {} : IFunctionOutputDTO\n    {{\n", f.name, result_name));
-        let field_names = csharp_property_names(f.outputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            f.outputs.iter().map(|param| param.name.as_str()),
+            &result_name,
+            false,
+        );
         for (i, param) in f.outputs.iter().enumerate() {
             let name = safe_param_name(&param.name, i);
             let ty = map_type(
                 &param.ty,
                 param.internal_type.as_deref(),
                 &registry,
-                &ir.name,
+                &tuple_names,
             );
             out.push_str(&format!(
                 "        [Parameter(\"{}\", \"{}\", {})]\n        public {} {} {{ get; set; }}\n",
@@ -291,8 +411,11 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
             "    [Event(\"{}\")]\n    public class {} : IEventDTO\n    {{\n",
             event.name, class_name
         ));
-        let field_names =
-            csharp_property_names(event.inputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            event.inputs.iter().map(|param| param.name.as_str()),
+            &class_name,
+            false,
+        );
         for (i, param) in event.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
@@ -306,7 +429,7 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
                     &param.ty,
                     param.internal_type.as_deref(),
                     &registry,
-                    &ir.name,
+                    &tuple_names,
                 )
             };
             let sol_type_str = sol_type_to_sol_string(&param.ty);
@@ -357,8 +480,11 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
             "    [Error(\"{}\")]\n    public class {} : IErrorDTO\n    {{\n",
             error.name, class_name
         ));
-        let field_names =
-            csharp_property_names(error.inputs.iter().map(|param| param.name.as_str()));
+        let field_names = csharp_property_names(
+            error.inputs.iter().map(|param| param.name.as_str()),
+            &class_name,
+            false,
+        );
         for (i, param) in error.inputs.iter().enumerate() {
             if i > 0 {
                 out.push('\n');
@@ -369,7 +495,7 @@ pub fn render_csharp_file_with_wrappers(ir: &ContractIr, wrappers: bool) -> Stri
                 &param.ty,
                 param.internal_type.as_deref(),
                 &registry,
-                &ir.name,
+                &tuple_names,
             );
             let sol_type_str = sol_type_to_sol_string(&param.ty);
             let order = i + 1;
@@ -431,16 +557,14 @@ fn map_type(
     ty: &SolType,
     internal_type: Option<&str>,
     registry: &TupleRegistry,
-    contract: &str,
+    tuple_names: &HashMap<String, String>,
 ) -> String {
     match ty {
-        SolType::Tuple(components) => {
-            format!("{contract}{}", registry.name(components, internal_type))
-        }
+        SolType::Tuple(components) => tuple_names[registry.name(components, internal_type)].clone(),
         SolType::Array(inner) | SolType::FixedArray(inner, _) => {
             format!(
                 "List<{}>",
-                map_type(inner, internal_type, registry, contract)
+                map_type(inner, internal_type, registry, tuple_names)
             )
         }
         SolType::Bool
