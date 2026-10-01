@@ -1,0 +1,146 @@
+{
+  "contractName": "SwiftWrapperNames",
+  "abi": [
+    {
+      "type": "function",
+      "name": "echo",
+      "inputs": [
+        {
+          "name": "client",
+          "type": "tuple",
+          "internalType": "struct Client",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "wrapperError",
+          "type": "tuple",
+          "internalType": "struct WrapperError",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "error",
+          "type": "tuple",
+          "internalType": "struct Error",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "decoder",
+          "type": "tuple",
+          "internalType": "struct ABIDecoder",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "abiValue",
+          "type": "tuple",
+          "internalType": "struct ABI",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "contract",
+          "type": "tuple",
+          "internalType": "struct EthereumContract",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "client",
+          "type": "tuple",
+          "internalType": "struct Client",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "wrapperError",
+          "type": "tuple",
+          "internalType": "struct WrapperError",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "error",
+          "type": "tuple",
+          "internalType": "struct Error",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "decoder",
+          "type": "tuple",
+          "internalType": "struct ABIDecoder",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "abiValue",
+          "type": "tuple",
+          "internalType": "struct ABI",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "name": "contract",
+          "type": "tuple",
+          "internalType": "struct EthereumContract",
+          "components": [
+            {
+              "name": "ok",
+              "type": "bool"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "pure"
+    }
+  ]
+}
