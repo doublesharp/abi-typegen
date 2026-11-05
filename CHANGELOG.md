@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-05
+
+Regenerate bindings when upgrading. Existing selector-order preprocessing guards
+can be removed after the generator has been upgraded to 0.9.0. Source builds
+require Rust 1.99 or newer; prebuilt binaries require no Rust toolchain.
+
 ### Fixed
 
 - Numbered function overload aliases use ascending canonical 4-byte selector

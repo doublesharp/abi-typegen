@@ -1,6 +1,6 @@
 [package]
 name = "abi-typegen-runtime"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2024"
 rust-version = "1.99"
 description = "Shared ABI codec runtime for generated C and C++ contract bindings"

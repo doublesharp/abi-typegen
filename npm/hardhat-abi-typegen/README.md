@@ -9,6 +9,14 @@
 
 Hardhat plugin for [abi-typegen](https://github.com/doublesharp/abi-typegen). Generates typed bindings from Solidity ABI artifacts on every `hardhat compile`. Downloads the pre-built `abi-typegen` binary for your platform automatically.
 
+## Upgrading to 0.9.0
+
+Regenerate bindings after upgrading. Overloaded function aliases follow ascending
+canonical 4-byte selector order, preserving their meanings across Solidity
+compiler ABI reordering. Raw ABI and Hardhat inputs work without compiler method
+identifiers. Downstream overload-order guards can be removed after upgrading.
+Rust source builds require Rust 1.99; prebuilt binaries require no Rust toolchain.
+
 ## Install
 
 ```sh

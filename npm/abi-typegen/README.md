@@ -3,11 +3,19 @@
 </p>
 
 <p align="center"><strong>Fast typed bindings from Solidity ABI artifacts.</strong></p>
-<p align="center">22 targets &middot; 16 languages &middot; Foundry &amp; Hardhat</p>
+<p align="center">28 targets &middot; 21 languages &middot; Foundry &amp; Hardhat</p>
 
 # @0xdoublesharp/abi-typegen
 
 Pre-built binary for [abi-typegen](https://github.com/doublesharp/abi-typegen). Reads compiled Solidity artifacts and generates typed bindings. Generating files requires no native toolchain; compiling the generated output requires the target language and its SDK.
+
+## Upgrading to 0.9.0
+
+Regenerate bindings after upgrading. Overloaded function aliases follow ascending
+canonical 4-byte selector order, preserving their meanings across Solidity
+compiler ABI reordering. Raw ABI and Hardhat inputs work without compiler method
+identifiers. Downstream overload-order guards can be removed after upgrading.
+Rust source builds require Rust 1.99; prebuilt binaries require no Rust toolchain.
 
 ## Install
 

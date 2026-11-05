@@ -30,6 +30,14 @@ you send a transaction.
   <a href="docs/README.md">Docs</a>
 </p>
 
+## Upgrading to 0.9.0
+
+Regenerate bindings after upgrading. Overloaded function aliases follow ascending
+canonical 4-byte selector order, preserving their meanings across Solidity
+compiler ABI reordering. Raw ABI and Hardhat inputs work without compiler method
+identifiers. Downstream overload-order guards can be removed after upgrading.
+Rust source builds require Rust 1.99; prebuilt binaries require no Rust toolchain.
+
 ## Install
 
 Install the generator once. Add your chosen Ethereum SDK to the app that uses its
