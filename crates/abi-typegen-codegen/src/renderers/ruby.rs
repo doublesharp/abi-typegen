@@ -92,10 +92,10 @@ fn render_ruby_file_inner(ir: &ContractIr, wrappers: bool, legacy_stub: bool) ->
     }
 
     out.push_str(&format!("class {contract_name}\n"));
-    if let Some(ref natspec) = ir.natspec {
-        if let Some(ref notice) = natspec.notice {
-            out.push_str(&format!("  # {}\n", notice.replace('\n', " ").trim()));
-        }
+    if let Some(ref natspec) = ir.natspec
+        && let Some(ref notice) = natspec.notice
+    {
+        out.push_str(&format!("  # {}\n", notice.replace('\n', " ").trim()));
     }
     out.push_str(&format!("  ABI = {abi_name}\n"));
 

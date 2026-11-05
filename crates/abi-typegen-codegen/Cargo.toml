@@ -2,7 +2,7 @@
 name = "abi-typegen-codegen"
 version = "0.8.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.99"
 description = "TypeScript code generation for abi-typegen"
 license = "MIT"
 repository = "https://github.com/doublesharp/abi-typegen"

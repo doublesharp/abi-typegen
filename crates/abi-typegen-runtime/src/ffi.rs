@@ -283,7 +283,13 @@ pub unsafe extern "C" fn atg_decode_event(
                 bytes(data, len)?,
             )
         };
-        let topics: Vec<_> = topics.chunks_exact(32).map(B256::from_slice).collect();
+        let topics: Vec<_> = topics
+            .as_chunks::<32>()
+            .0
+            .iter()
+            .copied()
+            .map(B256::from)
+            .collect();
         Ok(AtgResult {
             value: Some(
                 codec::decode_event(abi, signature, &topics, data).map_err(|e| e.to_string())?,

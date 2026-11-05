@@ -261,11 +261,11 @@ fn function_aliases(ir: &ContractIr) -> Vec<(String, String, Vec<usize>)> {
         if key == ("abi_json".to_string(), 0) {
             conflicting.insert(function.name.clone());
         }
-        if let Some(previous) = by_key.insert(key, &function.name) {
-            if previous != function.name {
-                conflicting.insert(previous.to_string());
-                conflicting.insert(function.name.clone());
-            }
+        if let Some(previous) = by_key.insert(key, &function.name)
+            && previous != function.name
+        {
+            conflicting.insert(previous.to_string());
+            conflicting.insert(function.name.clone());
         }
     }
     let mut used = ir

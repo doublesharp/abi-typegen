@@ -8,8 +8,9 @@ or compiler cache is not required. To move disposable output, use the optional
 
 ## Source build
 
-Use a Rust toolchain compatible with `rust-version` in [Cargo.toml](../Cargo.toml).
-The project uses Rust edition 2024.
+The repository pins Rust 1.99.0 in [rust-toolchain.toml](../rust-toolchain.toml).
+Install it with `rustup toolchain install 1.99.0 --component clippy,rustfmt`.
+All workspace crates require Rust 1.99 or newer and use edition 2024.
 
 ```sh
 cargo build --workspace

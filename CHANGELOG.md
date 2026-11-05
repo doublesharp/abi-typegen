@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and Hardhat inputs need no compiler method identifiers; JavaScript and Python
   retain their signature-based aliases.
 
+### Changed
+
+- Rust source builds require Rust 1.99. Local development, CI, coverage, and
+  release workflows use Rust 1.99.0.
+
 ## [0.8.0] - 2026-09-30
 
 Regenerate bindings when upgrading to pick up the fixes below. The Rust parser
