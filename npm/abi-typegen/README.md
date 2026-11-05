@@ -9,7 +9,7 @@
 
 Pre-built binary for [abi-typegen](https://github.com/doublesharp/abi-typegen). Reads compiled Solidity artifacts and generates typed bindings. Generating files requires no native toolchain; compiling the generated output requires the target language and its SDK.
 
-## Upgrading to 0.9.0
+## Upgrading to 0.9.1
 
 Regenerate bindings after upgrading. Overloaded function aliases follow ascending
 canonical 4-byte selector order, preserving their meanings across Solidity

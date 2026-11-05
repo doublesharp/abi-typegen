@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-05
+
+### Security
+
+- Update the CLI's TLS dependencies to rustls 0.23.46, rustls-webpki 0.103.16,
+  and webpki-roots 1.0.11 to resolve current TLS and certificate-trust advisories.
+- Release workflows enforce dependency policy before building or publishing.
+
+### Fixed
+
+- Spelling checks recognize the canonical attestations selector in regression
+  fixtures without changing the tested selector values.
+
 ## [0.9.0] - 2026-11-05
 
 Regenerate bindings when upgrading. Existing selector-order preprocessing guards

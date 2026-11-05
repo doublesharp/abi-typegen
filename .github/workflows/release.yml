@@ -18,6 +18,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.99.0
 
+      - name: Check dependency policy before publication
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          rust-version: "1.99.0"
+          arguments: --all-features
+
       - name: Check tag, manifests, and changelog agree
         run: |
           version="${GITHUB_REF_NAME#v}"

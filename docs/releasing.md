@@ -20,7 +20,9 @@ packages on the intended release version. Update Cargo.lock along with Rust
 manifest changes. Move the relevant Unreleased changelog entries into the release
 section and use that version for the `v<version>` tag.
 
-Run the [development checks](development.md) and the generated-binding checks
+The tag workflow checks dependency advisories, licenses, bans, and sources before
+building archives or publishing packages. Run the
+[development checks](development.md) and the generated-binding checks
 appropriate to the changes before tagging. The workflow's first job fails the
 release, before anything is built, if the tag disagrees with any crate version,
 either npm package version, the Hardhat plugin's dependency range, or a

@@ -17,6 +17,10 @@ extend-exclude = [
   "npm/pnpm-lock.yaml",
 ]
 
+[default]
+# Canonical selector for attestations(bytes32,bytes32), not prose.
+extend-ignore-re = ["\\b92abd17b\\b"]
+
 [default.extend-words]
 # OCaml compiled bytecode object extension.
 cmo = "cmo"

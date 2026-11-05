@@ -9,7 +9,7 @@
 
 Hardhat plugin for [abi-typegen](https://github.com/doublesharp/abi-typegen). Generates typed bindings from Solidity ABI artifacts on every `hardhat compile`. Downloads the pre-built `abi-typegen` binary for your platform automatically.
 
-## Upgrading to 0.9.0
+## Upgrading to 0.9.1
 
 Regenerate bindings after upgrading. Overloaded function aliases follow ascending
 canonical 4-byte selector order, preserving their meanings across Solidity

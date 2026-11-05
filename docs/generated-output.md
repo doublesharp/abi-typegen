@@ -158,7 +158,7 @@ parameter order, and documentation are preserved. Regenerate bindings when
 upgrading to pick up this ordering.
 
 When upgrading from 0.8.x, regenerate all bindings and rebuild their consumers.
-Remove downstream overload-order preprocessing after pinning abi-typegen 0.9.0
+Remove downstream overload-order preprocessing after pinning abi-typegen 0.9.1
 or newer, then generate from the original compiler artifacts. Function aliases,
 tuple collision suffixes, and other collision suffixes are allocated from the
 normalized function order. No Foundry `methodIdentifiers` field is required.
