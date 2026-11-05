@@ -96,7 +96,11 @@ RSpec.describe "abi-typegen Ruby renderer regressions" do
     expect(binding.encode_encode_foo_2).to eq(RubyCoverageContract::ENCODE_FOO_SELECTOR)
     expect(binding.encode_decode_foo_result_2).to eq(RubyCoverageContract::DECODE_FOO_RESULT_SELECTOR)
     expect(binding.encode_class_).to eq(RubyCoverageContract::CLASS_SELECTOR)
-    expect(binding.encode_lookup).to eq(RubyCoverageContract::LOOKUP_1_SELECTOR)
-    expect(binding.encode_lookup_uint256(7)).to eq(RubyCoverageContract::LOOKUP_2_SELECTOR + word.call(7))
+    lookup_selector = Eth::Util.bin_to_prefixed_hex(Eth::Util.keccak256("lookup()"))[0, 10]
+    lookup_uint256_selector = Eth::Util.bin_to_prefixed_hex(Eth::Util.keccak256("lookup(uint256)"))[0, 10]
+    expect(RubyCoverageContract::LOOKUP_1_SELECTOR).to eq(lookup_uint256_selector)
+    expect(RubyCoverageContract::LOOKUP_2_SELECTOR).to eq(lookup_selector)
+    expect(binding.encode_lookup).to eq(lookup_selector)
+    expect(binding.encode_lookup_uint256(7)).to eq(lookup_uint256_selector + word.call(7))
   end
 end
