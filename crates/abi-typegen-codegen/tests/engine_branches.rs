@@ -226,7 +226,7 @@ fn godot_naming_and_payability_keep_generated_methods_distinct() {
 }
 
 #[test]
-fn unreal_exposes_scalar_reads_and_reports_each_unsupported_operation_once() {
+fn unreal_exposes_generic_abi_and_reports_signing_boundary_once() {
     let ir = contract(
         "Sample",
         json!([
@@ -270,11 +270,11 @@ fn unreal_exposes_scalar_reads_and_reports_each_unsupported_operation_once() {
         ]),
     );
     let names = unreal::declared_symbol_names(&ir, true);
-    assert_eq!(names.len(), 9);
-    assert_eq!(
-        unreal::declared_symbol_names(&ir, false),
-        ["USampleUnrealMetadata"]
-    );
+    assert_eq!(names.len(), 24);
+    let primary = unreal::declared_symbol_names(&ir, false);
+    assert!(primary.contains(&"USampleUnrealMetadata".into()));
+    assert!(primary.contains(&"FSampleTuple_Input_Value0".into()));
+    assert!(!primary.iter().any(|name| name.contains("AsyncAction")));
     let full = unreal::render_unreal_artifacts(&ir, true, "HOST_API");
     for expected in [
         "bool bCompleted = true",
@@ -289,38 +289,29 @@ fn unreal_exposes_scalar_reads_and_reports_each_unsupported_operation_once() {
         assert!(full.header.contains(expected), "missing {expected}");
     }
     for expected in [
-        "Params.atg_field = this->Value0",
-        "TryToAddress(Params.atg_owner",
-        "TryToWord(Params.atg_delta",
-        "FTCHARToUTF8 AtgUtf84",
-        "this->Data.Data.Num()",
+        "BuildFSampleValues_Input_Value0(Value0, Error)",
+        "X.TryToAddress(Address, Error)",
+        "X.TryToWord(Word, Error)",
+        "FTCHARToUTF8 Utf8(*X)",
         "bytes4 requires exactly 4 bytes",
-        "Reflected.Value0 = Native.atg_field",
-        "FromAddress(Native.atg_owner)",
-        "FromWord(Native.atg_delta)",
-        "FUTF8ToTCHAR Converted",
-        "Reflected.Data.Data.Append",
-        "Reflected.Tag.Data.Append(Native.atg_tag.bytes, 4)",
+        "ReadFSampleValues_Output_Value0",
+        "FAbiTypegenAddress::FromAddress(Address)",
+        "FAbiTypegenWord256::FromWord(Word)",
+        "FUTF8ToTCHAR Utf8",
+        "X.Data.Append(atg_value_data(V)",
     ] {
         assert!(full.source.contains(expected), "missing {expected}");
     }
-    assert_eq!(
-        full.source
-            .matches("tuples and arrays are native-C-only")
-            .count(),
-        3
-    );
-    assert_eq!(
-        full.source
-            .matches("write signing/submission belongs")
-            .count(),
-        2
-    );
+    for stem in ["NestedInput", "NestedOutput", "Tuple"] {
+        assert!(full.header.contains(&format!("USample{stem}AsyncAction")));
+    }
+    assert!(!full.source.contains("tuples and arrays are native-C-only"));
+    assert_eq!(full.source.matches("signing/submission belongs").count(), 2);
     let plain = unreal::render_unreal_artifacts(&ir, false, "HOST_API");
     assert!(plain.header.contains("#include \"Generated/atg_Sample.h\""));
     assert!(plain.source.contains("UTF8_TO_TCHAR(atg_Sample_abi)"));
     assert!(!plain.header.contains("AsyncAction"));
-    assert!(!plain.source.contains("write signing/submission belongs"));
+    assert!(!plain.source.contains("signing/submission belongs"));
 }
 
 #[test]
@@ -353,9 +344,12 @@ fn unreal_names_handle_empty_numeric_and_case_insensitive_collisions() {
     );
     let full = unreal::render_unreal_artifacts(&ir, true, "HOST_API");
     assert!(full.header.contains("FooBar2AsyncAction"));
-    assert!(full.header.contains("bool BCompleted2;"));
+    assert!(full.header.contains("bool BCompleted2{};"));
     assert!(full.header.contains("bool FooBar2"));
-    assert!(full.source.contains("Params.atg_field2 = this->Atg"));
+    assert!(
+        full.source
+            .contains("BuildFAtg0ReadBoolBoolBoolBool_Input_Atg(Atg, Error)")
+    );
 }
 
 #[test]
@@ -379,8 +373,8 @@ fn unreal_reflected_members_do_not_redeclare_generated_types_or_reflection_metho
     for expected in [
         "bool UTokenReadAsyncAction2;",
         "bool StaticClass2;",
-        "bool FTokenReadResult2;",
-        "bool StaticStruct2;",
+        "bool FTokenReadResult2{};",
+        "bool StaticStruct2{};",
     ] {
         assert!(output.header.contains(expected), "missing {expected}");
     }
@@ -392,6 +386,6 @@ fn unreal_reflected_members_do_not_redeclare_generated_types_or_reflection_metho
     assert!(
         output
             .source
-            .contains("Reflected.FTokenReadResult2 = Native.atg_fTokenReadResult")
+            .contains("ReadFTokenRead_Output_FTokenReadResult2(atg_value_at(Native.Value(), 0), Decoded.FTokenReadResult2, Error)")
     );
 }

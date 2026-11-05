@@ -9,6 +9,37 @@ FString UBooleanUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Boolean_abi)
 TArray<FString> UBooleanUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("flag(bool): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("flag(bool): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFBooleanFlag_Input_Input(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFBooleanFlag_Input_Input(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UBooleanUnrealMetadata::EncodeFlag(FAbiTypegenBytes& Encoded, FString& Error, const bool& Input)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFBooleanFlag_Input_Input(Input, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Boolean_abi, "flag(bool)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UBooleanUnrealMetadata::DecodeFlag(const FAbiTypegenBytes& Data, FBooleanFlagResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Boolean_abi, "flag(bool)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FBooleanFlagResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }

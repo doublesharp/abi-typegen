@@ -9,7 +9,95 @@ FString UNativeNamesUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_NativeNa
 TArray<FString> UNativeNamesUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("annotations((uint256)): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("underscores(bool,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("annotations((uint256)): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("underscores(bool,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFNativeNamesAnnotations_Input_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNativeNamesAnnotations_Input_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNativeNamesAnnotations_Input_Input(const FNativeNamesAnnotations_Input_Input& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFNativeNamesAnnotations_Input_Input_Amount(X.Amount, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFNativeNamesAnnotations_Input_Input(const atg_value* V, FNativeNamesAnnotations_Input_Input& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFNativeNamesAnnotations_Input_Input_Amount(atg_value_at(V, 0), X.Amount, Error)) return false;
+    return true;
+}
+
+bool UNativeNamesUnrealMetadata::EncodeAnnotations(FAbiTypegenBytes& Encoded, FString& Error, const FNativeNamesAnnotations_Input_Input& Input)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNativeNamesAnnotations_Input_Input(Input, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NativeNames_abi, "annotations((uint256))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNativeNamesUnrealMetadata::DecodeAnnotations(const FAbiTypegenBytes& Data, FNativeNamesAnnotationsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NativeNames_abi, "annotations((uint256))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNativeNamesAnnotationsResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNativeNamesUnderscores_Input_Atg(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNativeNamesUnderscores_Input_Atg(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNativeNamesUnderscores_Input_Atg2(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNativeNamesUnderscores_Input_Atg2(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UNativeNamesUnrealMetadata::EncodeUnderscores(FAbiTypegenBytes& Encoded, FString& Error, const bool& Atg, const FAbiTypegenWord256& Atg2)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNativeNamesUnderscores_Input_Atg(Atg, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFNativeNamesUnderscores_Input_Atg2(Atg2, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NativeNames_abi, "underscores(bool,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNativeNamesUnrealMetadata::DecodeUnderscores(const FAbiTypegenBytes& Data, FNativeNamesUnderscoresResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NativeNames_abi, "underscores(bool,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNativeNamesUnderscoresResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }

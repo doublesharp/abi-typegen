@@ -9,34 +9,515 @@ FString URegistryUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Registry_ab
 TArray<FString> URegistryUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("batchLookup(bytes32[]): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getEntry(bytes32): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("register(bytes32,string): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("register(bytes32,string): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
 }
 
-URegistryEncodeAsyncAction* URegistryEncodeAsyncAction::Encode(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenWord256 Value, FAbiTypegenAddress Addr)
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Input_Ids_Item(const FAbiTypegenBytes& X, FString& Error)
 {
-    URegistryEncodeAsyncAction* Action = NewObject<URegistryEncodeAsyncAction>();
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Input_Ids_Item(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Input_Ids(const TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFRegistryBatchLookup_Input_Ids_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Input_Ids(const atg_value* V, TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFRegistryBatchLookup_Input_Ids_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Output_Value0_Item(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Output_Value0_Item(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Output_Value0(const TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFRegistryBatchLookup_Output_Value0_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Output_Value0(const atg_value* V, TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFRegistryBatchLookup_Output_Value0_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Output_Value1_Item(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Output_Value1_Item(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryBatchLookup_Output_Value1(const TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFRegistryBatchLookup_Output_Value1_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFRegistryBatchLookup_Output_Value1(const atg_value* V, TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFRegistryBatchLookup_Output_Value1_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool URegistryUnrealMetadata::EncodeBatchLookup(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenBytes>& Ids)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFRegistryBatchLookup_Input_Ids(Ids, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Registry_abi, "batchLookup(bytes32[])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeBatchLookup(const FAbiTypegenBytes& Data, FRegistryBatchLookupResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Registry_abi, "batchLookup(bytes32[])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryBatchLookupResult Decoded{};
+    if (!ReadFRegistryBatchLookup_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    if (!ReadFRegistryBatchLookup_Output_Value1(atg_value_at(Native.Value(), 1), Decoded.Value1, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryEncode_Input_Value(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFRegistryEncode_Input_Value(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryEncode_Input_Addr(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFRegistryEncode_Input_Addr(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryEncode_Output_Value0(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryEncode_Output_Value0(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool URegistryUnrealMetadata::EncodeEncode(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Value, const FAbiTypegenAddress& Addr)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFRegistryEncode_Input_Value(Value, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFRegistryEncode_Input_Addr(Addr, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Registry_abi, "encode(uint256,address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeEncode(const FAbiTypegenBytes& Data, FRegistryEncodeResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Registry_abi, "encode(uint256,address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryEncodeResult Decoded{};
+    if (!ReadFRegistryEncode_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Input_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Input_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Label(const FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FTCHARToUTF8 Utf8(*X); return atg_value_bytes(reinterpret_cast<const uint8*>(Utf8.Get()), Utf8.Length());
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Label(const atg_value* V, FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded string exceeds Unreal limits"); return false; } FUTF8ToTCHAR Utf8(reinterpret_cast<const ANSICHAR*>(atg_value_data(V)), static_cast<int32>(atg_value_len(V))); X = FString(Utf8.Length(), Utf8.Get()); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Meta_CreatedAt(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Meta_CreatedAt(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Meta_Owner(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Meta_Owner(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Meta_Active(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Meta_Active(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry_Meta(const FRegistryGetEntry_Output_Entry_Meta& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Meta_CreatedAt(X.CreatedAt, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Meta_Owner(X.Owner, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Meta_Active(X.Active, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry_Meta(const atg_value* V, FRegistryGetEntry_Output_Entry_Meta& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFRegistryGetEntry_Output_Entry_Meta_CreatedAt(atg_value_at(V, 0), X.CreatedAt, Error)) return false;
+    if (!ReadFRegistryGetEntry_Output_Entry_Meta_Owner(atg_value_at(V, 1), X.Owner, Error)) return false;
+    if (!ReadFRegistryGetEntry_Output_Entry_Meta_Active(atg_value_at(V, 2), X.Active, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryGetEntry_Output_Entry(const FRegistryGetEntry_Output_Entry& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Id(X.Id, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Label(X.Label, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFRegistryGetEntry_Output_Entry_Meta(X.Meta, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFRegistryGetEntry_Output_Entry(const atg_value* V, FRegistryGetEntry_Output_Entry& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFRegistryGetEntry_Output_Entry_Id(atg_value_at(V, 0), X.Id, Error)) return false;
+    if (!ReadFRegistryGetEntry_Output_Entry_Label(atg_value_at(V, 1), X.Label, Error)) return false;
+    if (!ReadFRegistryGetEntry_Output_Entry_Meta(atg_value_at(V, 2), X.Meta, Error)) return false;
+    return true;
+}
+
+bool URegistryUnrealMetadata::EncodeGetEntry(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Id)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFRegistryGetEntry_Input_Id(Id, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Registry_abi, "getEntry(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeGetEntry(const FAbiTypegenBytes& Data, FRegistryGetEntryResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Registry_abi, "getEntry(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryGetEntryResult Decoded{};
+    if (!ReadFRegistryGetEntry_Output_Entry(atg_value_at(Native.Value(), 0), Decoded.Entry, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryHashLabel_Input_Label(const FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FTCHARToUTF8 Utf8(*X); return atg_value_bytes(reinterpret_cast<const uint8*>(Utf8.Get()), Utf8.Length());
+}
+[[maybe_unused]] static bool ReadFRegistryHashLabel_Input_Label(const atg_value* V, FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded string exceeds Unreal limits"); return false; } FUTF8ToTCHAR Utf8(reinterpret_cast<const ANSICHAR*>(atg_value_data(V)), static_cast<int32>(atg_value_len(V))); X = FString(Utf8.Length(), Utf8.Get()); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryHashLabel_Output_Value0(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryHashLabel_Output_Value0(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool URegistryUnrealMetadata::EncodeHashLabel(FAbiTypegenBytes& Encoded, FString& Error, const FString& Label)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFRegistryHashLabel_Input_Label(Label, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Registry_abi, "hashLabel(string)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeHashLabel(const FAbiTypegenBytes& Data, FRegistryHashLabelResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Registry_abi, "hashLabel(string)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryHashLabelResult Decoded{};
+    if (!ReadFRegistryHashLabel_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryRegister_Input_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryRegister_Input_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryRegister_Input_Label(const FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FTCHARToUTF8 Utf8(*X); return atg_value_bytes(reinterpret_cast<const uint8*>(Utf8.Get()), Utf8.Length());
+}
+[[maybe_unused]] static bool ReadFRegistryRegister_Input_Label(const atg_value* V, FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded string exceeds Unreal limits"); return false; } FUTF8ToTCHAR Utf8(reinterpret_cast<const ANSICHAR*>(atg_value_data(V)), static_cast<int32>(atg_value_len(V))); X = FString(Utf8.Length(), Utf8.Get()); return true;
+}
+
+bool URegistryUnrealMetadata::EncodeRegister(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Id, const FString& Label)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFRegistryRegister_Input_Id(Id, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFRegistryRegister_Input_Label(Label, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Registry_abi, "register(bytes32,string)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeRegister(const FAbiTypegenBytes& Data, FRegistryRegisterResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Registry_abi, "register(bytes32,string)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryRegisterResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryRegisteredEvent_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryRegisteredEvent_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryRegisteredEvent_Owner(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFRegistryRegisteredEvent_Owner(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeRegisteredEvent(const FAbiTypegenBytes& Data, FRegistryRegisteredEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Registry_abi, "Registered(bytes32,address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryRegisteredEvent Decoded{};
+    if (!ReadFRegistryRegisteredEvent_Id(atg_value_at(Native.Value(), 0), Decoded.Id, Error)) return false;
+    if (!ReadFRegistryRegisteredEvent_Owner(atg_value_at(Native.Value(), 1), Decoded.Owner, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+URegistryRegisteredEventWatcher* URegistryRegisteredEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<URegistryRegisteredEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void URegistryRegisteredEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x7d917fcbc9a29a9705ff9936ffa599500e4fd902e4486bae317414fe967b307c"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FRegistryRegisteredEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FRegistryRegisteredEvent Event;
+                if (!URegistryUnrealMetadata::DecodeRegisteredEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void URegistryRegisteredEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void URegistryRegisteredEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFRegistryAlreadyRegisteredError_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryAlreadyRegisteredError_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeAlreadyRegisteredError(const FAbiTypegenBytes& Data, FRegistryAlreadyRegisteredError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Registry_abi, "AlreadyRegistered(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryAlreadyRegisteredError Decoded{};
+    if (!ReadFRegistryAlreadyRegisteredError_Id(atg_value_at(Native.Value(), 0), Decoded.Id, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFRegistryNotFoundError_Id(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFRegistryNotFoundError_Id(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool URegistryUnrealMetadata::DecodeNotFoundError(const FAbiTypegenBytes& Data, FRegistryNotFoundError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Registry_abi, "NotFound(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FRegistryNotFoundError Decoded{};
+    if (!ReadFRegistryNotFoundError_Id(atg_value_at(Native.Value(), 0), Decoded.Id, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+URegistryBatchLookupAsyncAction* URegistryBatchLookupAsyncAction::BatchLookup(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenBytes> Ids)
+{
+    URegistryBatchLookupAsyncAction* Action = NewObject<URegistryBatchLookupAsyncAction>();
     Action->InitializeLifetime(WorldContextObject, RequestOwner);
     Action->RpcUrlValue = RpcUrl;
     Action->ContractAddressValue = ContractAddress;
-    Action->Value = Value;
-    Action->Addr = Addr;
+    Action->Ids = Ids;
     return Action;
 }
 
-void URegistryEncodeAsyncAction::Activate()
+void URegistryBatchLookupAsyncAction::Activate()
 {
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Registry_atg_encode_params Params{};
-    if (!this->Value.TryToWord(Params.atg_value, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    if (!this->Addr.TryToAddress(Params.atg_addr, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_Registry_atg_encode_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!URegistryUnrealMetadata::EncodeBatchLookup(EncodedBytes, Error, this->Ids)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -57,12 +538,102 @@ void URegistryEncodeAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Registry_atg_encode_returns Native{};
-        FAbiTypegenResult Decoded(atg_Registry_atg_encode_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
+        FRegistryBatchLookupResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!URegistryUnrealMetadata::DecodeBatchLookup(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+URegistryEncodeAsyncAction* URegistryEncodeAsyncAction::Encode(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenWord256 Value, FAbiTypegenAddress Addr)
+{
+    URegistryEncodeAsyncAction* Action = NewObject<URegistryEncodeAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->Value = Value;
+    Action->Addr = Addr;
+    return Action;
+}
+
+void URegistryEncodeAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!URegistryUnrealMetadata::EncodeEncode(EncodedBytes, Error, this->Value, this->Addr)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
         FRegistryEncodeResult Reflected{};
-        if (Native.atg_field.len > static_cast<size_t>(MAX_int32)) { OnFailure.Broadcast(TEXT("decoded bytes exceed Unreal array limits")); Finish(); return; }
-        Reflected.Value0.Data.Append(Native.atg_field.data, static_cast<int32>(Native.atg_field.len));
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!URegistryUnrealMetadata::DecodeEncode(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+URegistryGetEntryAsyncAction* URegistryGetEntryAsyncAction::GetEntry(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes Id)
+{
+    URegistryGetEntryAsyncAction* Action = NewObject<URegistryGetEntryAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->Id = Id;
+    return Action;
+}
+
+void URegistryGetEntryAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!URegistryUnrealMetadata::EncodeGetEntry(EncodedBytes, Error, this->Id)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FRegistryGetEntryResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!URegistryUnrealMetadata::DecodeGetEntry(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -83,13 +654,9 @@ void URegistryHashLabelAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Registry_atg_hashLabel_params Params{};
-    FTCHARToUTF8 AtgUtf80(*this->Label);
-    Params.atg_label.data = reinterpret_cast<const uint8*>(AtgUtf80.Get());
-    Params.atg_label.len = static_cast<size_t>(AtgUtf80.Length());
-    FAbiTypegenResult Encoded(atg_Registry_atg_hashLabel_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!URegistryUnrealMetadata::EncodeHashLabel(EncodedBytes, Error, this->Label)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -110,11 +677,9 @@ void URegistryHashLabelAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Registry_atg_hashLabel_returns Native{};
-        FAbiTypegenResult Decoded(atg_Registry_atg_hashLabel_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FRegistryHashLabelResult Reflected{};
-        Reflected.Value0.Data.Append(Native.atg_field.bytes, 32);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!URegistryUnrealMetadata::DecodeHashLabel(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));

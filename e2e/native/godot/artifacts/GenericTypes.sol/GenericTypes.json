@@ -1,0 +1,199 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "inspect",
+      "inputs": [
+        {
+          "name": "items",
+          "type": "tuple[]",
+          "internalType": "struct GenericTypes.Position[]",
+          "components": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "get",
+              "type": "uint256"
+            },
+            {
+              "name": "get2",
+              "type": "uint256"
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "rows",
+          "type": "tuple[][]",
+          "internalType": "struct GenericTypes.Position[][]",
+          "components": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "get",
+              "type": "uint256"
+            },
+            {
+              "name": "get2",
+              "type": "uint256"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "empty",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "Changed",
+      "inputs": [
+        {
+          "name": "item",
+          "type": "tuple",
+          "internalType": "struct GenericTypes.Position",
+          "components": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "get",
+              "type": "uint256"
+            },
+            {
+              "name": "get2",
+              "type": "uint256"
+            }
+          ],
+          "indexed": false
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Denied",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "reservedFields",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "add_user_signal",
+          "type": "bool"
+        },
+        {
+          "name": "can_translate_messages",
+          "type": "bool"
+        },
+        {
+          "name": "cancel_free",
+          "type": "bool"
+        },
+        {
+          "name": "get_incoming_connections",
+          "type": "bool"
+        },
+        {
+          "name": "get_meta_list",
+          "type": "bool"
+        },
+        {
+          "name": "get_method_argument_count",
+          "type": "bool"
+        },
+        {
+          "name": "get_signal_connection_list",
+          "type": "bool"
+        },
+        {
+          "name": "get_translation_domain",
+          "type": "bool"
+        },
+        {
+          "name": "has_connections",
+          "type": "bool"
+        },
+        {
+          "name": "has_user_signal",
+          "type": "bool"
+        },
+        {
+          "name": "is_blocking_signals",
+          "type": "bool"
+        },
+        {
+          "name": "is_queued_for_deletion",
+          "type": "bool"
+        },
+        {
+          "name": "notify_property_list_changed",
+          "type": "bool"
+        },
+        {
+          "name": "property_can_revert",
+          "type": "bool"
+        },
+        {
+          "name": "property_get_revert",
+          "type": "bool"
+        },
+        {
+          "name": "property_list_changed",
+          "type": "bool"
+        },
+        {
+          "name": "remove_meta",
+          "type": "bool"
+        },
+        {
+          "name": "remove_user_signal",
+          "type": "bool"
+        },
+        {
+          "name": "script_changed",
+          "type": "bool"
+        },
+        {
+          "name": "set_block_signals",
+          "type": "bool"
+        },
+        {
+          "name": "set_message_translation",
+          "type": "bool"
+        },
+        {
+          "name": "set_translation_domain",
+          "type": "bool"
+        },
+        {
+          "name": "tr",
+          "type": "bool"
+        },
+        {
+          "name": "tr_n",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    }
+  ]
+}

@@ -5,6 +5,10 @@
 #include "Interfaces/IHttpRequest.h"
 #include "Templates/Function.h"
 
+struct FAbiTypegenUnsignedTransaction;
+struct FAbiTypegenWord256;
+class FJsonObject;
+
 struct ABITYPEGENUNREAL_API FAbiTypegenRpcResponse
 {
     bool bOk = false;
@@ -52,6 +56,15 @@ public:
         const FString& Data,
         FCompletion Completion,
         const FString& Block = TEXT("latest")) const;
+
+    /** Parse canonical JSON-RPC gas quantity without truncating its 256 bits. */
+    static bool ParseGasEstimate(const FString& Quantity, FAbiTypegenWord256& Out, FString& Error);
+    /** Validate transaction fields and preserve full-width value as an RPC quantity. */
+    static bool BuildTransactionObject(const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, TSharedPtr<FJsonObject>& Out, FString& Error);
+    /** Simulate app-owned transaction fields with eth_call; no signing or submission. */
+    TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> SimulateTransaction(UObject* RequestOwner, const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, FCompletion Completion, const FString& Block = TEXT("latest")) const;
+    /** Estimate gas for the same unsigned transaction and sender. Result is an RPC quantity. */
+    TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> EstimateGas(UObject* RequestOwner, const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, FCompletion Completion) const;
 
     const FString& GetUrl() const { return Url; }
 

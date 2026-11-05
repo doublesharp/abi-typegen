@@ -68,6 +68,33 @@ func run(tree: SceneTree) -> Array[String]:
     var before: Dictionary = await _await_request(TokenBinding.call_balance_of(client, token_address, owner))
     t.ok(before, "async balanceOf before write")
 
+    var typed_before: Dictionary = await _await_request(TokenBinding.call_balance_of_typed(client, token_address, owner))
+    if t.ok(typed_before, "typed async balanceOf"):
+        t.equal(typed_before["value"].to_dictionary().values()[0], before.get("value"), "typed async scalar preserves raw value")
+    var mint_data := TokenBinding.encode_mint(owner, large_amount)
+    if not t.ok(mint_data, "encode transaction for simulation"):
+        client.queue_free()
+        return t.failures
+    var mint_transaction := {"to": token_address, "from": owner, "data": "0x" + mint_data["value"].hex_encode(), "value": "0x0"}
+    var simulated: Dictionary = await _await_request(AbiTypegenOperations.simulate(client, mint_transaction))
+    if t.ok(simulated, "simulate mint without submission"):
+        t.equal(simulated["value"], "0x", "simulation returns empty ABI output")
+    var estimated: Dictionary = await _await_request(AbiTypegenOperations.estimate_gas(client, mint_transaction))
+    if t.ok(estimated, "estimate gas"):
+        t.check(AbiTypegenRpcValidation.is_quantity(estimated["value"]), "gas estimate remains exact hex quantity")
+    var after_simulation: Dictionary = await _await_request(TokenBinding.call_balance_of(client, token_address, owner))
+    t.equal(after_simulation.get("value"), before.get("value"), "simulation does not change state")
+    var start_block: Dictionary = await _await_request(client.rpc("eth_blockNumber", []))
+    var start_number := AbiTypegenRpcValidation.quantity(start_block.get("value"))
+    if not t.ok(start_number, "watch start block"):
+        client.queue_free()
+        return t.failures
+    var watched_events: Array = []
+    var watcher_errors: Array = []
+    var watcher = TokenBinding.watch_transfer(client, token_address, start_number["value"], [], 1, 0.02)
+    watcher.event_received.connect(func(value, _log): watched_events.append(value))
+    watcher.failed.connect(func(error): watcher_errors.append(error))
+
     # Injected development signer submits mint. The signer delegates to Anvil's unlocked account.
     var mint_request = TokenBinding.send_mint(
         client, signer, token_address, owner, large_amount, {"gas": "0x493e0"}
@@ -75,7 +102,7 @@ func run(tree: SceneTree) -> Array[String]:
     var mint_sent: Dictionary = await _await_request(mint_request)
     if t.ok(mint_sent, "submit mint transaction"):
         var mint_hash := str(mint_sent["value"])
-        var mint_receipt: Dictionary = await _receipt(tree, client, mint_hash)
+        var mint_receipt: Dictionary = await _await_request(AbiTypegenOperations.wait_for_receipt(client, mint_hash, 1, 0.02, 5.0))
         if t.ok(mint_receipt, "mint receipt"):
             var receipt: Dictionary = mint_receipt["value"]
             t.equal(receipt.get("status"), "0x1", "mint receipt status")
@@ -88,6 +115,17 @@ func run(tree: SceneTree) -> Array[String]:
                         t.equal(decoded["value"]["amount"], large_amount, "mint Transfer amount")
                         break
             t.check(found_transfer, "mint receipt contains decodable Transfer event")
+
+    for _attempt in range(60):
+        if not watched_events.is_empty() or not watcher_errors.is_empty():
+            break
+        await tree.create_timer(0.02).timeout
+    t.check(not watched_events.is_empty(), "generated watcher delivers typed transfer event")
+    if not watched_events.is_empty():
+        t.equal(watched_events[0].amount, large_amount, "watched event retains exact uint256")
+    t.check(watcher_errors.is_empty(), "event watcher has no polling errors")
+    if is_instance_valid(watcher):
+        watcher.cancel()
 
     var balance: Dictionary = await _await_request(TokenBinding.call_balance_of(client, token_address, owner))
     if t.ok(balance, "balanceOf after mint"):

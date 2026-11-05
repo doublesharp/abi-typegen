@@ -9,6 +9,37 @@ FString UUint256UnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Uint256_abi)
 TArray<FString> UUint256UnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("amount(uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("amount(uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFUint256Amount_Input_Input(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFUint256Amount_Input_Input(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UUint256UnrealMetadata::EncodeAmount(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Input)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFUint256Amount_Input_Input(Input, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Uint256_abi, "amount(uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UUint256UnrealMetadata::DecodeAmount(const FAbiTypegenBytes& Data, FUint256AmountResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Uint256_abi, "amount(uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FUint256AmountResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }

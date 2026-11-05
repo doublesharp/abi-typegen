@@ -5,9 +5,34 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_NativeNames.h"
 #include "NativeNamesUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeNamesAnnotations_Input_Input
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeNamesAnnotationsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeNamesUnderscoresResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UNativeNamesUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,4 +43,17 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|NativeNames")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeNames")
+    static bool EncodeAnnotations(FAbiTypegenBytes& Encoded, FString& Error, const FNativeNamesAnnotations_Input_Input& Input);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeNames")
+    static bool DecodeAnnotations(const FAbiTypegenBytes& Data, FNativeNamesAnnotationsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeNames")
+    static bool EncodeUnderscores(FAbiTypegenBytes& Encoded, FString& Error, const bool& Atg, const FAbiTypegenWord256& Atg2);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeNames")
+    static bool DecodeUnderscores(const FAbiTypegenBytes& Data, FNativeNamesUnderscoresResult& Result, FString& Error);
+
 };

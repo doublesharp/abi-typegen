@@ -9,10 +9,347 @@ FString UNamingCasesUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_NamingCa
 TArray<FString> UNamingCasesUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("read(): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("fooBar(bool): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("foo_bar(uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("run(uint256,bool): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("store((uint256,bool)): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("fooBar(bool): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("foo_bar(uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("run(uint256,bool): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("store((uint256,bool)): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesFooBar_Input_Enabled(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesFooBar_Input_Enabled(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesFooBar_Output_Value0(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesFooBar_Output_Value0(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UNamingCasesUnrealMetadata::EncodeFooBar(FAbiTypegenBytes& Encoded, FString& Error, const bool& Enabled)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNamingCasesFooBar_Input_Enabled(Enabled, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NamingCases_abi, "fooBar(bool)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNamingCasesUnrealMetadata::DecodeFooBar(const FAbiTypegenBytes& Data, FNamingCasesFooBarResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NamingCases_abi, "fooBar(bool)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNamingCasesFooBarResult Decoded{};
+    if (!ReadFNamingCasesFooBar_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesFooBar2_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesFooBar2_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesFooBar2_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesFooBar2_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UNamingCasesUnrealMetadata::EncodeFooBar2(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNamingCasesFooBar2_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NamingCases_abi, "foo_bar(uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNamingCasesUnrealMetadata::DecodeFooBar2(const FAbiTypegenBytes& Data, FNamingCasesFooBar2Result& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NamingCases_abi, "foo_bar(uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNamingCasesFooBar2Result Decoded{};
+    if (!ReadFNamingCasesFooBar2_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRead_Output_Item_Class(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRead_Output_Item_Class(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRead_Output_Item_Class2(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRead_Output_Item_Class2(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRead_Output_Item(const FNamingCasesRead_Output_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFNamingCasesRead_Output_Item_Class(X.Class, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFNamingCasesRead_Output_Item_Class2(X.Class2, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFNamingCasesRead_Output_Item(const atg_value* V, FNamingCasesRead_Output_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFNamingCasesRead_Output_Item_Class(atg_value_at(V, 0), X.Class, Error)) return false;
+    if (!ReadFNamingCasesRead_Output_Item_Class2(atg_value_at(V, 1), X.Class2, Error)) return false;
+    return true;
+}
+
+bool UNamingCasesUnrealMetadata::EncodeRead(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_NamingCases_abi, "read()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNamingCasesUnrealMetadata::DecodeRead(const FAbiTypegenBytes& Data, FNamingCasesReadResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NamingCases_abi, "read()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNamingCasesReadResult Decoded{};
+    if (!ReadFNamingCasesRead_Output_Item(atg_value_at(Native.Value(), 0), Decoded.Item, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRun_Input_Class(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRun_Input_Class(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRun_Input_Class2(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRun_Input_Class2(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRun_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRun_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesRun_Output_Value1(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesRun_Output_Value1(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UNamingCasesUnrealMetadata::EncodeRun(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Class, const bool& Class2)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNamingCasesRun_Input_Class(Class, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFNamingCasesRun_Input_Class2(Class2, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NamingCases_abi, "run(uint256,bool)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNamingCasesUnrealMetadata::DecodeRun(const FAbiTypegenBytes& Data, FNamingCasesRunResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NamingCases_abi, "run(uint256,bool)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNamingCasesRunResult Decoded{};
+    if (!ReadFNamingCasesRun_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    if (!ReadFNamingCasesRun_Output_Value1(atg_value_at(Native.Value(), 1), Decoded.Value1, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesStore_Input_Item2_Class(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesStore_Input_Item2_Class(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesStore_Input_Item2_Class2(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesStore_Input_Item2_Class2(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesStore_Input_Item2(const FNamingCasesStore_Input_Item2& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFNamingCasesStore_Input_Item2_Class(X.Class, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFNamingCasesStore_Input_Item2_Class2(X.Class2, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFNamingCasesStore_Input_Item2(const atg_value* V, FNamingCasesStore_Input_Item2& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFNamingCasesStore_Input_Item2_Class(atg_value_at(V, 0), X.Class, Error)) return false;
+    if (!ReadFNamingCasesStore_Input_Item2_Class2(atg_value_at(V, 1), X.Class2, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesStore_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFNamingCasesStore_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFNamingCasesStore_Output_Value1(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFNamingCasesStore_Output_Value1(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UNamingCasesUnrealMetadata::EncodeStore(FAbiTypegenBytes& Encoded, FString& Error, const FNamingCasesStore_Input_Item2& Item2)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFNamingCasesStore_Input_Item2(Item2, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_NamingCases_abi, "store((uint256,bool))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UNamingCasesUnrealMetadata::DecodeStore(const FAbiTypegenBytes& Data, FNamingCasesStoreResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_NamingCases_abi, "store((uint256,bool))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FNamingCasesStoreResult Decoded{};
+    if (!ReadFNamingCasesStore_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    if (!ReadFNamingCasesStore_Output_Value1(atg_value_at(Native.Value(), 1), Decoded.Value1, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UNamingCasesReadAsyncAction* UNamingCasesReadAsyncAction::Read(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress)
+{
+    UNamingCasesReadAsyncAction* Action = NewObject<UNamingCasesReadAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    return Action;
+}
+
+void UNamingCasesReadAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UNamingCasesUnrealMetadata::EncodeRead(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FNamingCasesReadResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UNamingCasesUnrealMetadata::DecodeRead(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
 }

@@ -1,4 +1,5 @@
 #include "AbiTypegenRpc.h"
+#include "AbiTypegenSigner.h"
 
 #include "Async/Async.h"
 #include "Dom/JsonObject.h"
@@ -194,4 +195,63 @@ TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> FAbiTypegenRpcClient::Eth
     Params.Add(MakeShared<FJsonValueObject>(Call));
     Params.Add(MakeShared<FJsonValueString>(Block));
     return Request(RequestOwner, TEXT("eth_call"), Params, MoveTemp(Completion));
+}
+
+bool FAbiTypegenRpcClient::ParseGasEstimate(const FString& Quantity, FAbiTypegenWord256& Out, FString& Error)
+{
+    if (!Quantity.StartsWith(TEXT("0x")) || Quantity.Len() < 3 || Quantity.Len() > 66 || (Quantity.Len() > 3 && Quantity[2] == '0'))
+    { Error = TEXT("invalid gas estimate quantity"); return false; }
+    FAbiTypegenWord256 Word; Word.Hex = TEXT("0x") + FString::ChrN(66 - Quantity.Len(), '0') + Quantity.Mid(2);
+    atg_word Native{};
+    if (!Word.TryToWord(Native, Error)) return false;
+    Out = FAbiTypegenWord256::FromWord(Native); Error.Reset(); return true;
+}
+
+bool FAbiTypegenRpcClient::BuildTransactionObject(const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, TSharedPtr<FJsonObject>& Out, FString& Error)
+{
+    atg_address ToAddress{}, FromAddress{}; atg_word Value{}; TArray<uint8> Data;
+    if (!AbiTypegen::ParseAddress(Transaction.To, ToAddress, Error) || !AbiTypegen::ParseAddress(From, FromAddress, Error) || !Transaction.Data.StartsWith(TEXT("0x")) || !AbiTypegen::HexToBytes(Transaction.Data, Data, Error) || !Transaction.Value.TryToWord(Value, Error))
+    { if (Error.IsEmpty()) Error = TEXT("invalid transaction"); return false; }
+    auto Object = MakeShared<FJsonObject>(); Object->SetStringField(TEXT("to"), AbiTypegen::AddressToHex(ToAddress)); Object->SetStringField(TEXT("from"), AbiTypegen::AddressToHex(FromAddress)); Object->SetStringField(TEXT("data"), AbiTypegen::BytesToHex(Data.GetData(), Data.Num()));
+    FString Hex = FAbiTypegenWord256::FromWord(Value).Hex.Mid(2); int32 First = 0; while (First < Hex.Len() - 1 && Hex[First] == '0') ++First;
+    Object->SetStringField(TEXT("value"), TEXT("0x") + Hex.Mid(First));
+    if (Transaction.GasLimit.IsSet()) Object->SetStringField(TEXT("gas"), FString::Printf(TEXT("0x%llx"), static_cast<unsigned long long>(Transaction.GasLimit.GetValue())));
+    Out = Object; Error.Reset(); return true;
+}
+
+namespace
+{
+    TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> TransactionFailure(UObject* Owner, const FString& Error, FAbiTypegenRpcClient::FCompletion Completion)
+    {
+        auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); TWeakObjectPtr<UObject> WeakOwner(Owner); bool bHasOwner = Owner != nullptr;
+        AsyncTask(ENamedThreads::GameThread, [Request, WeakOwner, bHasOwner, Error, Completion = MoveTemp(Completion)]() mutable
+        {
+            if (Request->IsCanceled() || (bHasOwner && !WeakOwner.IsValid())) return;
+            FAbiTypegenRpcResponse Response; Response.Error = Error; Completion(MoveTemp(Response));
+        }); return Request;
+    }
+}
+TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> FAbiTypegenRpcClient::SimulateTransaction(UObject* RequestOwner, const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, FCompletion Completion, const FString& Block) const
+{
+    TSharedPtr<FJsonObject> Object; FString Error;
+    if (!BuildTransactionObject(Transaction, From, Object, Error)) return TransactionFailure(RequestOwner, Error, MoveTemp(Completion));
+    return Request(RequestOwner, TEXT("eth_call"), { MakeShared<FJsonValueObject>(Object), MakeShared<FJsonValueString>(Block) }, [Completion = MoveTemp(Completion)](FAbiTypegenRpcResponse&& Response) mutable
+    {
+        TArray<uint8> Bytes; FString Error;
+        if (Response.bOk && (!Response.Result || Response.Result->Type != EJson::String || !Response.Result->AsString().StartsWith(TEXT("0x")) || !AbiTypegen::HexToBytes(Response.Result->AsString(), Bytes, Error)))
+        { Response.bOk = false; Response.Error = TEXT("invalid eth_call byte result"); }
+        Completion(MoveTemp(Response));
+    });
+}
+TSharedRef<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> FAbiTypegenRpcClient::EstimateGas(UObject* RequestOwner, const FAbiTypegenUnsignedTransaction& Transaction, const FString& From, FCompletion Completion) const
+{
+    TSharedPtr<FJsonObject> Object; FString Error;
+    if (!BuildTransactionObject(Transaction, From, Object, Error)) return TransactionFailure(RequestOwner, Error, MoveTemp(Completion));
+    return Request(RequestOwner, TEXT("eth_estimateGas"), { MakeShared<FJsonValueObject>(Object) }, [Completion = MoveTemp(Completion)](FAbiTypegenRpcResponse&& Response) mutable
+    {
+        FAbiTypegenWord256 Gas; FString Error;
+        if (Response.bOk && (!Response.Result || Response.Result->Type != EJson::String || !ParseGasEstimate(Response.Result->AsString(), Gas, Error)))
+        { Response.bOk = false; Response.Error = Error.IsEmpty() ? TEXT("invalid gas estimate result") : Error; }
+        Completion(MoveTemp(Response));
+    });
 }

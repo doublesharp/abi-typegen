@@ -9,34 +9,553 @@ FString UIVaultUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_IVault_abi); 
 TArray<FString> UIVaultUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("getBalances(address[]): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getMatrix(): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getPosition(address): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("deposit(uint256,address): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("deposit(uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("deposit(uint256,address): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("deposit(uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
 }
 
-UIVaultPositionsAsyncAction* UIVaultPositionsAsyncAction::Positions(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress Arg0)
+[[maybe_unused]] static atg_value* BuildFIVaultDepositUint256Address_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
 {
-    UIVaultPositionsAsyncAction* Action = NewObject<UIVaultPositionsAsyncAction>();
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultDepositUint256Address_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultDepositUint256Address_Input_Recipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultDepositUint256Address_Input_Recipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UIVaultUnrealMetadata::EncodeDepositUint256Address(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount, const FAbiTypegenAddress& Recipient)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFIVaultDepositUint256Address_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFIVaultDepositUint256Address_Input_Recipient(Recipient, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "deposit(uint256,address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeDepositUint256Address(const FAbiTypegenBytes& Data, FIVaultDepositUint256AddressResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "deposit(uint256,address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultDepositUint256AddressResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultDepositUint256_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultDepositUint256_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UIVaultUnrealMetadata::EncodeDepositUint256(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFIVaultDepositUint256_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "deposit(uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeDepositUint256(const FAbiTypegenBytes& Data, FIVaultDepositUint256Result& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "deposit(uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultDepositUint256Result Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetBalances_Input_Users_Item(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultGetBalances_Input_Users_Item(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetBalances_Input_Users(const TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFIVaultGetBalances_Input_Users_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFIVaultGetBalances_Input_Users(const atg_value* V, TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFIVaultGetBalances_Input_Users_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetBalances_Output_Value0_Item(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultGetBalances_Output_Value0_Item(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetBalances_Output_Value0(const TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFIVaultGetBalances_Output_Value0_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFIVaultGetBalances_Output_Value0(const atg_value* V, TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFIVaultGetBalances_Output_Value0_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UIVaultUnrealMetadata::EncodeGetBalances(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenAddress>& Users)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFIVaultGetBalances_Input_Users(Users, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "getBalances(address[])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeGetBalances(const FAbiTypegenBytes& Data, FIVaultGetBalancesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "getBalances(address[])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultGetBalancesResult Decoded{};
+    if (!ReadFIVaultGetBalances_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetMatrix_Output_Value0_Item(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultGetMatrix_Output_Value0_Item(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetMatrix_Output_Value0(const TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Num() != 3) { Error = TEXT("fixed array requires 3 elements"); return nullptr; }
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFIVaultGetMatrix_Output_Value0_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFIVaultGetMatrix_Output_Value0(const atg_value* V, TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFIVaultGetMatrix_Output_Value0_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UIVaultUnrealMetadata::EncodeGetMatrix(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "getMatrix()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeGetMatrix(const FAbiTypegenBytes& Data, FIVaultGetMatrixResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "getMatrix()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultGetMatrixResult Decoded{};
+    if (!ReadFIVaultGetMatrix_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetPosition_Input_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultGetPosition_Input_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetPosition_Output_Position_Shares(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultGetPosition_Output_Position_Shares(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetPosition_Output_Position_DepositedAt(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultGetPosition_Output_Position_DepositedAt(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetPosition_Output_Position_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultGetPosition_Output_Position_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultGetPosition_Output_Position(const FIVaultGetPosition_Output_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFIVaultGetPosition_Output_Position_Shares(X.Shares, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFIVaultGetPosition_Output_Position_DepositedAt(X.DepositedAt, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFIVaultGetPosition_Output_Position_Token(X.Token, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFIVaultGetPosition_Output_Position(const atg_value* V, FIVaultGetPosition_Output_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFIVaultGetPosition_Output_Position_Shares(atg_value_at(V, 0), X.Shares, Error)) return false;
+    if (!ReadFIVaultGetPosition_Output_Position_DepositedAt(atg_value_at(V, 1), X.DepositedAt, Error)) return false;
+    if (!ReadFIVaultGetPosition_Output_Position_Token(atg_value_at(V, 2), X.Token, Error)) return false;
+    return true;
+}
+
+bool UIVaultUnrealMetadata::EncodeGetPosition(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& User)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFIVaultGetPosition_Input_User(User, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "getPosition(address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeGetPosition(const FAbiTypegenBytes& Data, FIVaultGetPositionResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "getPosition(address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultGetPositionResult Decoded{};
+    if (!ReadFIVaultGetPosition_Output_Position(atg_value_at(Native.Value(), 0), Decoded.Position, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultPositions_Input_Arg0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultPositions_Input_Arg0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultPositions_Output_Shares(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultPositions_Output_Shares(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultPositions_Output_DepositedAt(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultPositions_Output_DepositedAt(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultPositions_Output_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultPositions_Output_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UIVaultUnrealMetadata::EncodePositions(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Arg0)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFIVaultPositions_Input_Arg0(Arg0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_IVault_abi, "positions(address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodePositions(const FAbiTypegenBytes& Data, FIVaultPositionsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_IVault_abi, "positions(address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultPositionsResult Decoded{};
+    if (!ReadFIVaultPositions_Output_Shares(atg_value_at(Native.Value(), 0), Decoded.Shares, Error)) return false;
+    if (!ReadFIVaultPositions_Output_DepositedAt(atg_value_at(Native.Value(), 1), Decoded.DepositedAt, Error)) return false;
+    if (!ReadFIVaultPositions_Output_Token(atg_value_at(Native.Value(), 2), Decoded.Token, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultBatchProcessedEvent_Count(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultBatchProcessedEvent_Count(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeBatchProcessedEvent(const FAbiTypegenBytes& Data, FIVaultBatchProcessedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_IVault_abi, "BatchProcessed(uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultBatchProcessedEvent Decoded{};
+    if (!ReadFIVaultBatchProcessedEvent_Count(atg_value_at(Native.Value(), 0), Decoded.Count, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UIVaultBatchProcessedEventWatcher* UIVaultBatchProcessedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UIVaultBatchProcessedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UIVaultBatchProcessedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xf563fdb95d8ba3f4669716ecc8559d8995059570a1324ffddf9f8094d2896c08"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FIVaultBatchProcessedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FIVaultBatchProcessedEvent Event;
+                if (!UIVaultUnrealMetadata::DecodeBatchProcessedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UIVaultBatchProcessedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UIVaultBatchProcessedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFIVaultDepositedEvent_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFIVaultDepositedEvent_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultDepositedEvent_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultDepositedEvent_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeDepositedEvent(const FAbiTypegenBytes& Data, FIVaultDepositedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_IVault_abi, "Deposited(address,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultDepositedEvent Decoded{};
+    if (!ReadFIVaultDepositedEvent_User(atg_value_at(Native.Value(), 0), Decoded.User, Error)) return false;
+    if (!ReadFIVaultDepositedEvent_Amount(atg_value_at(Native.Value(), 1), Decoded.Amount, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UIVaultDepositedEventWatcher* UIVaultDepositedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UIVaultDepositedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UIVaultDepositedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x2da466a7b24304f47e87fa2e1e5a81b9831ce54fec19055ce277ca2f39ba42c4"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FIVaultDepositedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FIVaultDepositedEvent Event;
+                if (!UIVaultUnrealMetadata::DecodeDepositedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UIVaultDepositedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UIVaultDepositedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFIVaultInsufficientSharesError_Available(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultInsufficientSharesError_Available(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFIVaultInsufficientSharesError_Requested(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFIVaultInsufficientSharesError_Requested(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeInsufficientSharesError(const FAbiTypegenBytes& Data, FIVaultInsufficientSharesError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_IVault_abi, "InsufficientShares(uint256,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultInsufficientSharesError Decoded{};
+    if (!ReadFIVaultInsufficientSharesError_Available(atg_value_at(Native.Value(), 0), Decoded.Available, Error)) return false;
+    if (!ReadFIVaultInsufficientSharesError_Requested(atg_value_at(Native.Value(), 1), Decoded.Requested, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+bool UIVaultUnrealMetadata::DecodeZeroAmountError(const FAbiTypegenBytes& Data, FIVaultZeroAmountError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_IVault_abi, "ZeroAmount()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FIVaultZeroAmountError Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+UIVaultGetBalancesAsyncAction* UIVaultGetBalancesAsyncAction::GetBalances(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenAddress> Users)
+{
+    UIVaultGetBalancesAsyncAction* Action = NewObject<UIVaultGetBalancesAsyncAction>();
     Action->InitializeLifetime(WorldContextObject, RequestOwner);
     Action->RpcUrlValue = RpcUrl;
     Action->ContractAddressValue = ContractAddress;
-    Action->Arg0 = Arg0;
+    Action->Users = Users;
     return Action;
 }
 
-void UIVaultPositionsAsyncAction::Activate()
+void UIVaultGetBalancesAsyncAction::Activate()
 {
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_IVault_atg_positions_params Params{};
-    if (!this->Arg0.TryToAddress(Params.atg_arg0, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_IVault_atg_positions_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UIVaultUnrealMetadata::EncodeGetBalances(EncodedBytes, Error, this->Users)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -57,13 +576,146 @@ void UIVaultPositionsAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_IVault_atg_positions_returns Native{};
-        FAbiTypegenResult Decoded(atg_IVault_atg_positions_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
+        FIVaultGetBalancesResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UIVaultUnrealMetadata::DecodeGetBalances(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UIVaultGetMatrixAsyncAction* UIVaultGetMatrixAsyncAction::GetMatrix(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress)
+{
+    UIVaultGetMatrixAsyncAction* Action = NewObject<UIVaultGetMatrixAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    return Action;
+}
+
+void UIVaultGetMatrixAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UIVaultUnrealMetadata::EncodeGetMatrix(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FIVaultGetMatrixResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UIVaultUnrealMetadata::DecodeGetMatrix(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UIVaultGetPositionAsyncAction* UIVaultGetPositionAsyncAction::GetPosition(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress User)
+{
+    UIVaultGetPositionAsyncAction* Action = NewObject<UIVaultGetPositionAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->User = User;
+    return Action;
+}
+
+void UIVaultGetPositionAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UIVaultUnrealMetadata::EncodeGetPosition(EncodedBytes, Error, this->User)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FIVaultGetPositionResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UIVaultUnrealMetadata::DecodeGetPosition(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UIVaultPositionsAsyncAction* UIVaultPositionsAsyncAction::Positions(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress Arg0)
+{
+    UIVaultPositionsAsyncAction* Action = NewObject<UIVaultPositionsAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->Arg0 = Arg0;
+    return Action;
+}
+
+void UIVaultPositionsAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UIVaultUnrealMetadata::EncodePositions(EncodedBytes, Error, this->Arg0)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
         FIVaultPositionsResult Reflected{};
-        Reflected.Shares = FAbiTypegenWord256::FromWord(Native.atg_shares);
-        Reflected.DepositedAt = FAbiTypegenWord256::FromWord(Native.atg_depositedAt);
-        Reflected.Token = FAbiTypegenAddress::FromAddress(Native.atg_token);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UIVaultUnrealMetadata::DecodePositions(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));

@@ -54,8 +54,8 @@ TypeScript ABI modules or an `index.ts` barrel.
 | `ruby`     | `<Name>.rb`                                            | ABI, SDK-backed wrappers, transaction builders, codecs and named values      |
 | `elixir`   | `<name>.ex`                                            | ABI JSON and optional Ethers.Contract wrappers                               |
 | `shell`    | `<Name>.sh`                                            | Sourceable Bash metadata and optional Foundry cast helpers                   |
-| `godot`    | `<name>.gd`                                            | GDScript ABI metadata and optional GDExtension-backed codec/client wrappers  |
-| `unreal`   | `<Name>Unreal.h/.cpp`, `atg_<Name>.h`                  | Reflected scalar reads plus generated C ABI codecs                           |
+| `godot`    | `<name>.gd`                                            | Named GDScript values and optional codecs, typed reads, and event watchers |
+| `unreal`   | `<Name>Unreal.h/.cpp`, `atg_<Name>.h`                  | Reflected ABI values, typed codecs, async reads, and event watchers |
 | `yaml`     | `<Name>.yaml`                                          | Human-readable functions, events, errors, and parameter types                |
 
 The Solidity target reconstructs tuple structs and emits events, errors,

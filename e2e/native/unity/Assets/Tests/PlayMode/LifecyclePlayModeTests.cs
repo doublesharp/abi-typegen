@@ -4,6 +4,9 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using AbiTypegen.Unity;
+using Nethereum.JsonRpc.Client;
+using Nethereum.JsonRpc.Client.RpcMessages;
+using Nethereum.RPC.Eth.DTOs;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -89,6 +92,42 @@ namespace AbiTypegen.Unity.E2E.Tests
             {
                 if (go != null) UnityEngine.Object.Destroy(go);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator DestroyingOwnerStopsReceiptTrackingAndEventWatching()
+        {
+            var go = new GameObject("abi-typegen-polling-owner");
+            try
+            {
+                var host = go.AddComponent<AbiTypegenRequestHost>();
+                var operations = new AbiTypegenRpcOperations(new PendingRpcClient());
+                var receipt = host.RunAsync(token => operations.WaitForReceiptAsync(
+                    "0x1111111111111111111111111111111111111111111111111111111111111111", cancellationToken: token));
+                var watch = host.RunAsync(token => operations.WatchEventsAsync(new NewFilterInput(),
+                    new AbiTypegenEventCursor(0), log => log.Data,
+                    (batch, batchToken) => Task.CompletedTask, cancellationToken: token));
+                UnityEngine.Object.Destroy(go);
+                yield return WaitForCompletion(Task.WhenAll(receipt, watch));
+                Assert.That(receipt.IsCanceled, Is.True);
+                Assert.That(watch.IsCanceled, Is.True);
+            }
+            finally
+            {
+                if (go != null) UnityEngine.Object.Destroy(go);
+            }
+        }
+
+        private sealed class PendingRpcClient : IClient
+        {
+            public RequestInterceptor OverridingRequestInterceptor { get; set; }
+            public Task<T> SendRequestAsync<T>(string method, string route = null, params object[] paramList) => new TaskCompletionSource<T>().Task;
+            public Task SendRequestAsync(string method, string route = null, params object[] paramList) => throw new NotSupportedException();
+            public T DecodeResult<T>(RpcResponseMessage response) => throw new NotSupportedException();
+            public Task<RpcRequestResponseBatch> SendBatchRequestAsync(RpcRequestResponseBatch batch) => throw new NotSupportedException();
+            public Task<T> SendRequestAsync<T>(RpcRequest request, string route = null) => throw new NotSupportedException();
+            public Task SendRequestAsync(RpcRequest request, string route = null) => throw new NotSupportedException();
+            public Task<RpcResponseMessage> SendAsync(RpcRequestMessage request, string route = null) => throw new NotSupportedException();
         }
 
         private static IEnumerator WaitForCompletion(Task task)

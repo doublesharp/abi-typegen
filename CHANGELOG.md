@@ -14,6 +14,18 @@ Regenerate bindings when upgrading. Existing selector-order preprocessing guards
 can be removed after the generator has been upgraded to 0.9.0. Source builds
 require Rust 1.99 or newer; prebuilt binaries require no Rust toolchain.
 
+### Added
+
+- Godot named tuple, result, event, and custom-error classes with lossless
+  conversions, typed read/decoder helpers, and generated typed event watchers.
+- Shared Godot and Unity operations for transaction simulation, exact gas
+  estimation, confirmed receipt tracking, and bounded HTTP event polling with
+  cancellation, deadlines, canonical-block checks, and explicit reorg errors.
+- Unreal reflected tuple and nested-array types and generated typed codecs for
+  function inputs/results, events, and custom errors, typed Blueprint reads and
+  event watchers, and native C++ simulation, gas estimation, confirmed receipt
+  tracking, and HTTP log polling.
+
 ### Fixed
 
 - Numbered function overload aliases use ascending canonical 4-byte selector
@@ -21,6 +33,8 @@ require Rust 1.99 or newer; prebuilt binaries require no Rust toolchain.
   longer changes alias signatures, parameter types, or call selectors. Raw ABI
   and Hardhat inputs need no compiler method identifiers; JavaScript and Python
   retain their signature-based aliases.
+- Godot produces valid class names for Solidity identifiers containing dollar
+  signs and avoids engine builtin and inherited member collisions in value fields.
 
 ### Changed
 

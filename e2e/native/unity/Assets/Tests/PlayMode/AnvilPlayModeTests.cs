@@ -49,6 +49,42 @@ namespace AbiTypegen.Unity.E2E.Tests
             return AsyncEnumerator.Run(AssertTypedContractRevertAsync());
         }
 
+        [UnityTest, Order(5)]
+        public IEnumerator GenericSimulationGasTrackingAndTypedEventCursorAgainstAnvil()
+        {
+            RequireAnvilEnvironment();
+            return AsyncEnumerator.Run(AssertGenericOperationsAsync());
+        }
+
+        private static async Task AssertGenericOperationsAsync()
+        {
+            var factory = new NethereumUnityRpcFactory();
+            var endpoint = new Uri(RpcUrl);
+            var client = factory.CreateClient(endpoint);
+            var operations = new AbiTypegenRpcOperations(client);
+            var signer = new DevelopmentPrivateKeySigner(endpoint, PrivateKey, BigInteger.Parse(ChainIdText), factory);
+            var binding = new TokenBinding(factory.CreateReadOnlyWeb3(endpoint), ContractAddress);
+            var amount = (BigInteger.One << 190) + 13;
+            var input = AbiTypegenTransaction.Create(ContractAddress, binding.EncodeMint(new TokenMintParams
+            { To = signer.Address, Amount = amount }), signer.Address);
+            Assert.That(await operations.SimulateAsync(input, data => data), Is.EqualTo("0x"));
+            var gas = await operations.EstimateGasAsync(input);
+            Assert.That(gas, Is.GreaterThan(BigInteger.Zero));
+            input.Gas = new Nethereum.Hex.HexTypes.HexBigInteger(gas + 10000);
+            using (var cancelled = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+            {
+                var submitted = await signer.SendTransactionAndWaitForReceiptAsync(input, cancelled.Token);
+                var confirmed = await operations.WaitForReceiptAsync(submitted.TransactionHash, cancellationToken: cancelled.Token);
+                Assert.That(confirmed.BlockHash, Is.EqualTo(submitted.BlockHash));
+                var cursor = new AbiTypegenEventCursor(confirmed.BlockNumber.Value);
+                var events = await operations.PollEventsAsync(binding.FilterTransfer(), cursor,
+                    binding.DecodeTransferEvent, cancellationToken: cancelled.Token);
+                Assert.That(events.Any(log => log.Amount == amount), Is.True);
+                Assert.That(await operations.PollEventsAsync(binding.FilterTransfer(), cursor,
+                    binding.DecodeTransferEvent, cancellationToken: cancelled.Token), Is.Empty);
+            }
+        }
+
         [UnityTest]
         public IEnumerator BackgroundRpcRequestReturnsToUnityThread()
         {

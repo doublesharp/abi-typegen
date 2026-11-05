@@ -9,6 +9,25 @@ FString UOverrideUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Override_ab
 TArray<FString> UOverrideUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("ping(): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("ping(): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+bool UOverrideUnrealMetadata::EncodePing(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Override_abi, "ping()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UOverrideUnrealMetadata::DecodePing(const FAbiTypegenBytes& Data, FOverridePingResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Override_abi, "ping()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FOverridePingResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }

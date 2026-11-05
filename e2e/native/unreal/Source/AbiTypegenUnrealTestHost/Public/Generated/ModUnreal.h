@@ -5,9 +5,18 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Mod.h"
 #include "ModUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FModPingResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UModUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,4 +27,11 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Mod")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Mod")
+    static bool EncodePing(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Mod")
+    static bool DecodePing(const FAbiTypegenBytes& Data, FModPingResult& Result, FString& Error);
+
 };

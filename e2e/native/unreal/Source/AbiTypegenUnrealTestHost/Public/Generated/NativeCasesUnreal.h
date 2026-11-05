@@ -5,9 +5,391 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_NativeCases.h"
 #include "NativeCasesUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPremiumPeriodResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesAggregate_Input_Batch_Calls_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Target{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool AllowFailure{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes CallData{};
+};
+
+/** UHT wrapper for a nested ABI array. */
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesAggregate_Input_Batch_Grid_Rows_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Values;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesAggregate_Input_Batch_Grid
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FNativeCasesAggregate_Input_Batch_Grid_Rows_Item> Rows{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<bool> Flags{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenBytes> Tags{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesAggregate_Input_Batch
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FNativeCasesAggregate_Input_Batch_Calls_Item> Calls{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FNativeCasesAggregate_Input_Batch_Grid Grid{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Fee{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Delta{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesAggregateResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenBytes> Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesBalanceOfResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesGetAmounts_Output_Value0
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Amounts{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesGetAmountsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FNativeCasesGetAmounts_Output_Value0 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesGetMarket_Output_Value0
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes First{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Second{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Price{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesGetMarketResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FNativeCasesGetMarket_Output_Value0 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesManyArgumentsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPositionalResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPremiumPeriod2Result
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesRecordResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesStore_Input_Data
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Payload{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesStoreResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesTokenUriResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FString Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesTransferResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesChangedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Self{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Self2{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesChangedEventReceived, FNativeCasesChangedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesChangedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesChangedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesChangedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesChangedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases ChangedEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesChangedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesIndexedFixedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Pair{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesIndexedFixedEventReceived, FNativeCasesIndexedFixedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesIndexedFixedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesIndexedFixedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesIndexedFixedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesIndexedFixedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases IndexedFixedEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesIndexedFixedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesIndexedReferencesEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Label{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Payload{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Values{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesIndexedReferencesEventReceived, FNativeCasesIndexedReferencesEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesIndexedReferencesEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesIndexedReferencesEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesIndexedReferencesEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesIndexedReferencesEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases IndexedReferencesEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesIndexedReferencesEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesLoggedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Data{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesLoggedEventReceived, FNativeCasesLoggedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesLoggedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesLoggedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesLoggedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesLoggedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases LoggedEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesLoggedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPositionalEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Atg0{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesPositionalEventReceived, FNativeCasesPositionalEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesPositionalEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesPositionalEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesPositionalEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesPositionalEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases PositionalEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesPositionalEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesTransferEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress From{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress To{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesTransferEventReceived, FNativeCasesTransferEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesTransferEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesTransferEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesTransferEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FNativeCasesTransferEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch NativeCases TransferEvent"), Category="abi-typegen|NativeCases")
+    static UNativeCasesTransferEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FNativeCasesFailedError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Index{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Reason{};
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UNativeCasesUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,14 +400,100 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|NativeCases")
     static TArray<FString> GetBlueprintUnsupportedOperations();
-};
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodePremiumPeriod(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodePremiumPeriod(const FAbiTypegenBytes& Data, FNativeCasesPremiumPeriodResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeAggregate(FAbiTypegenBytes& Encoded, FString& Error, const FNativeCasesAggregate_Input_Batch& Batch);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeAggregate(const FAbiTypegenBytes& Data, FNativeCasesAggregateResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeBalanceOf(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Owner);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeBalanceOf(const FAbiTypegenBytes& Data, FNativeCasesBalanceOfResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeGetAmounts(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeGetAmounts(const FAbiTypegenBytes& Data, FNativeCasesGetAmountsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeGetMarket(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeGetMarket(const FAbiTypegenBytes& Data, FNativeCasesGetMarketResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeManyArguments(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& A, const FAbiTypegenWord256& B, const FAbiTypegenWord256& C, const FAbiTypegenWord256& D, const FAbiTypegenWord256& E, const FAbiTypegenWord256& F, const FAbiTypegenWord256& G, const FAbiTypegenWord256& H, const FAbiTypegenWord256& I);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeManyArguments(const FAbiTypegenBytes& Data, FNativeCasesManyArgumentsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodePositional(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Value0, const bool& Atg0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodePositional(const FAbiTypegenBytes& Data, FNativeCasesPositionalResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodePremiumPeriod2(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodePremiumPeriod2(const FAbiTypegenBytes& Data, FNativeCasesPremiumPeriod2Result& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeRecord(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0, const FAbiTypegenAddress& Value1, const FAbiTypegenWord256& Value2);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeRecord(const FAbiTypegenBytes& Data, FNativeCasesRecordResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeStore(FAbiTypegenBytes& Encoded, FString& Error, const FNativeCasesStore_Input_Data& Data, const TArray<FAbiTypegenWord256>& Window);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeStore(const FAbiTypegenBytes& Data, FNativeCasesStoreResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeTokenUri(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Id);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeTokenUri(const FAbiTypegenBytes& Data, FNativeCasesTokenUriResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool EncodeTransfer(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& To2, const FAbiTypegenWord256& Value);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeTransfer(const FAbiTypegenBytes& Data, FNativeCasesTransferResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeChangedEvent(const FAbiTypegenBytes& Data, FNativeCasesChangedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeIndexedFixedEvent(const FAbiTypegenBytes& Data, FNativeCasesIndexedFixedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeIndexedReferencesEvent(const FAbiTypegenBytes& Data, FNativeCasesIndexedReferencesEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeLoggedEvent(const FAbiTypegenBytes& Data, FNativeCasesLoggedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodePositionalEvent(const FAbiTypegenBytes& Data, FNativeCasesPositionalEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeTransferEvent(const FAbiTypegenBytes& Data, FNativeCasesTransferEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|NativeCases")
+    static bool DecodeFailedError(const FAbiTypegenBytes& Data, FNativeCasesFailedError& Result, FString& Error);
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPremiumPeriodResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesPremiumPeriodSuccess, FNativeCasesPremiumPeriodResult, Result);
@@ -47,14 +515,6 @@ public:
 private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FNativeCasesBalanceOfResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesBalanceOfSuccess, FNativeCasesBalanceOfResult, Result);
@@ -79,12 +539,46 @@ private:
     FAbiTypegenAddress Owner;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FNativeCasesPremiumPeriod2Result
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesGetAmountsSuccess, FNativeCasesGetAmountsResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesGetAmountsFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesGetAmountsAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesGetAmountsSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FNativeCasesGetAmountsFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|NativeCases")
+    static UNativeCasesGetAmountsAsyncAction* GetAmounts(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesGetMarketSuccess, FNativeCasesGetMarketResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesGetMarketFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UNativeCasesGetMarketAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FNativeCasesGetMarketSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FNativeCasesGetMarketFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|NativeCases")
+    static UNativeCasesGetMarketAsyncAction* GetMarket(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesPremiumPeriod2Success, FNativeCasesPremiumPeriod2Result, Result);
@@ -106,14 +600,6 @@ public:
 private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FNativeCasesTokenUriResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FString Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNativeCasesTokenUriSuccess, FNativeCasesTokenUriResult, Result);

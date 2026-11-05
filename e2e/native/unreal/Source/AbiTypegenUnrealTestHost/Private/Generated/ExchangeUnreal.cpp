@@ -9,26 +9,3879 @@ FString UExchangeUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Exchange_ab
 TArray<FString> UExchangeUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("getOrder(bytes32): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getOrderFills(bytes32): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getPool(bytes32): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getPoolStates(bytes32[]): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("getUserBalances(address,address[]): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("orders(bytes32): tuples and arrays are native-C-only in the first Unreal pass"),
-        TEXT("addLiquidity(bytes32,uint256,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("batchPlaceOrders((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))[]): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("cancelOrder(bytes32): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("createPool(address,address,uint16): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("deposit(address,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("fillOrder(bytes32,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("pause(): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("placeOrder((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("swap(address,address,uint256,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("swapRoute((address[],uint256[],uint256,uint64)): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("transferOwnership(address): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("unpause(): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("withdraw(address,uint256): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("addLiquidity(bytes32,uint256,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("batchPlaceOrders((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))[]): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("cancelOrder(bytes32): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("createPool(address,address,uint16): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("deposit(address,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("fillOrder(bytes32,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("pause(): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("placeOrder((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("swap(address,address,uint256,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("swapRoute((address[],uint256[],uint256,uint64)): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("transferOwnership(address): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("unpause(): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("withdraw(address,uint256): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeAddLiquidity_Input_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeAddLiquidity_Input_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeAddLiquidity_Input_Amount0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeAddLiquidity_Input_Amount0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeAddLiquidity_Input_Amount1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeAddLiquidity_Input_Amount1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeAddLiquidity(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& PoolId, const FAbiTypegenWord256& Amount0, const FAbiTypegenWord256& Amount1)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeAddLiquidity_Input_PoolId(PoolId, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeAddLiquidity_Input_Amount0(Amount0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeAddLiquidity_Input_Amount1(Amount1, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "addLiquidity(bytes32,uint256,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeAddLiquidity(const FAbiTypegenBytes& Data, FExchangeAddLiquidityResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "addLiquidity(bytes32,uint256,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeAddLiquidityResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBalances_Input_Value0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBalances_Input_Value0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBalances_Input_Value1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBalances_Input_Value1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBalances_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBalances_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeBalances(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0, const FAbiTypegenAddress& Value1)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeBalances_Input_Value0(Value0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeBalances_Input_Value1(Value1, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "balances(address,address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeBalances(const FAbiTypegenBytes& Data, FExchangeBalancesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "balances(address,address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeBalancesResult Decoded{};
+    if (!ReadFExchangeBalances_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Taker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Taker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Nonce(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Nonce(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Salt(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Salt(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_OrderType(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_OrderType(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_MakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_MakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_TakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_TakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_FeeRecipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_FeeRecipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_DiscountEnabled(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_DiscountEnabled(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees(const FExchangeBatchPlaceOrders_Input_OrderList_Item_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_MakerFeeBps(X.MakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_TakerFeeBps(X.TakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_FeeRecipient(X.FeeRecipient, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_DiscountEnabled(X.DiscountEnabled, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees(const atg_value* V, FExchangeBatchPlaceOrders_Input_OrderList_Item_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_MakerFeeBps(atg_value_at(V, 0), X.MakerFeeBps, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_TakerFeeBps(atg_value_at(V, 1), X.TakerFeeBps, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_FeeRecipient(atg_value_at(V, 2), X.FeeRecipient, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees_DiscountEnabled(atg_value_at(V, 3), X.DiscountEnabled, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList_Item(const FExchangeBatchPlaceOrders_Input_OrderList_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Maker(X.Maker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Taker(X.Taker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenIn(X.TokenIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenOut(X.TokenOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountIn(X.AmountIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountOut(X.AmountOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Nonce(X.Nonce, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Deadline(X.Deadline, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Salt(X.Salt, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_OrderType(X.OrderType, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees(X.Fees, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList_Item(const atg_value* V, FExchangeBatchPlaceOrders_Input_OrderList_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Maker(atg_value_at(V, 0), X.Maker, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Taker(atg_value_at(V, 1), X.Taker, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenIn(atg_value_at(V, 2), X.TokenIn, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_TokenOut(atg_value_at(V, 3), X.TokenOut, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountIn(atg_value_at(V, 4), X.AmountIn, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_AmountOut(atg_value_at(V, 5), X.AmountOut, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Nonce(atg_value_at(V, 6), X.Nonce, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Deadline(atg_value_at(V, 7), X.Deadline, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Salt(atg_value_at(V, 8), X.Salt, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_OrderType(atg_value_at(V, 9), X.OrderType, Error)) return false;
+    if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item_Fees(atg_value_at(V, 10), X.Fees, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Input_OrderList(const TArray<FExchangeBatchPlaceOrders_Input_OrderList_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Input_OrderList_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Input_OrderList(const atg_value* V, TArray<FExchangeBatchPlaceOrders_Input_OrderList_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeBatchPlaceOrders_Input_OrderList_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Output_Hashes_Item(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Output_Hashes_Item(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeBatchPlaceOrders_Output_Hashes(const TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeBatchPlaceOrders_Output_Hashes_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeBatchPlaceOrders_Output_Hashes(const atg_value* V, TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeBatchPlaceOrders_Output_Hashes_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeBatchPlaceOrders(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FExchangeBatchPlaceOrders_Input_OrderList_Item>& OrderList)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeBatchPlaceOrders_Input_OrderList(OrderList, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "batchPlaceOrders((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))[])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeBatchPlaceOrders(const FAbiTypegenBytes& Data, FExchangeBatchPlaceOrdersResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "batchPlaceOrders((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool))[])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeBatchPlaceOrdersResult Decoded{};
+    if (!ReadFExchangeBatchPlaceOrders_Output_Hashes(atg_value_at(Native.Value(), 0), Decoded.Hashes, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeCancelOrder_Input_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeCancelOrder_Input_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeCancelOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeCancelOrder_Input_OrderHash(OrderHash, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "cancelOrder(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeCancelOrder(const FAbiTypegenBytes& Data, FExchangeCancelOrderResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "cancelOrder(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeCancelOrderResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeCreatePool_Input_Token0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeCreatePool_Input_Token0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeCreatePool_Input_Token1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeCreatePool_Input_Token1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeCreatePool_Input_FeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeCreatePool_Input_FeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeCreatePool_Output_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeCreatePool_Output_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeCreatePool(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token0, const FAbiTypegenAddress& Token1, const FAbiTypegenWord256& FeeBps)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeCreatePool_Input_Token0(Token0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeCreatePool_Input_Token1(Token1, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeCreatePool_Input_FeeBps(FeeBps, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "createPool(address,address,uint16)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeCreatePool(const FAbiTypegenBytes& Data, FExchangeCreatePoolResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "createPool(address,address,uint16)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeCreatePoolResult Decoded{};
+    if (!ReadFExchangeCreatePool_Output_PoolId(atg_value_at(Native.Value(), 0), Decoded.PoolId, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeDeposit_Input_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeDeposit_Input_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeDeposit_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeDeposit_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeDeposit(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token, const FAbiTypegenWord256& Amount)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeDeposit_Input_Token(Token, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeDeposit_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "deposit(address,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeDeposit(const FAbiTypegenBytes& Data, FExchangeDepositResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "deposit(address,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeDepositResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFillOrder_Input_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeFillOrder_Input_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFillOrder_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFillOrder_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeFillOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash, const FAbiTypegenWord256& Amount)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeFillOrder_Input_OrderHash(OrderHash, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeFillOrder_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "fillOrder(bytes32,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeFillOrder(const FAbiTypegenBytes& Data, FExchangeFillOrderResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "fillOrder(bytes32,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeFillOrderResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Input_Value0(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Input_Value0(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Input_Value1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Input_Value1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Output_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Output_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Output_AmountFilled(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Output_AmountFilled(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Output_AmountRemaining(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Output_AmountRemaining(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Output_Timestamp(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Output_Timestamp(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFills_Output_Filler(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeFills_Output_Filler(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeFills(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0, const FAbiTypegenWord256& Value1)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeFills_Input_Value0(Value0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeFills_Input_Value1(Value1, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "fills(bytes32,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeFills(const FAbiTypegenBytes& Data, FExchangeFillsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "fills(bytes32,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeFillsResult Decoded{};
+    if (!ReadFExchangeFills_Output_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    if (!ReadFExchangeFills_Output_AmountFilled(atg_value_at(Native.Value(), 1), Decoded.AmountFilled, Error)) return false;
+    if (!ReadFExchangeFills_Output_AmountRemaining(atg_value_at(Native.Value(), 2), Decoded.AmountRemaining, Error)) return false;
+    if (!ReadFExchangeFills_Output_Timestamp(atg_value_at(Native.Value(), 3), Decoded.Timestamp, Error)) return false;
+    if (!ReadFExchangeFills_Output_Filler(atg_value_at(Native.Value(), 4), Decoded.Filler, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Input_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Input_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Taker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Taker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Nonce(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Nonce(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Salt(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Salt(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_OrderType(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_OrderType(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Fees_MakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Fees_MakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Fees_TakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Fees_TakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Fees_FeeRecipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Fees_FeeRecipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Fees_DiscountEnabled(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Fees_DiscountEnabled(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0_Fees(const FExchangeGetOrder_Output_Value0_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Fees_MakerFeeBps(X.MakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Fees_TakerFeeBps(X.TakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Fees_FeeRecipient(X.FeeRecipient, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Fees_DiscountEnabled(X.DiscountEnabled, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0_Fees(const atg_value* V, FExchangeGetOrder_Output_Value0_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeGetOrder_Output_Value0_Fees_MakerFeeBps(atg_value_at(V, 0), X.MakerFeeBps, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Fees_TakerFeeBps(atg_value_at(V, 1), X.TakerFeeBps, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Fees_FeeRecipient(atg_value_at(V, 2), X.FeeRecipient, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Fees_DiscountEnabled(atg_value_at(V, 3), X.DiscountEnabled, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrder_Output_Value0(const FExchangeGetOrder_Output_Value0& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Maker(X.Maker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Taker(X.Taker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_TokenIn(X.TokenIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_TokenOut(X.TokenOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_AmountIn(X.AmountIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_AmountOut(X.AmountOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Nonce(X.Nonce, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Deadline(X.Deadline, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Salt(X.Salt, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_OrderType(X.OrderType, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrder_Output_Value0_Fees(X.Fees, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrder_Output_Value0(const atg_value* V, FExchangeGetOrder_Output_Value0& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeGetOrder_Output_Value0_Maker(atg_value_at(V, 0), X.Maker, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Taker(atg_value_at(V, 1), X.Taker, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_TokenIn(atg_value_at(V, 2), X.TokenIn, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_TokenOut(atg_value_at(V, 3), X.TokenOut, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_AmountIn(atg_value_at(V, 4), X.AmountIn, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_AmountOut(atg_value_at(V, 5), X.AmountOut, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Nonce(atg_value_at(V, 6), X.Nonce, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Deadline(atg_value_at(V, 7), X.Deadline, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Salt(atg_value_at(V, 8), X.Salt, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_OrderType(atg_value_at(V, 9), X.OrderType, Error)) return false;
+    if (!ReadFExchangeGetOrder_Output_Value0_Fees(atg_value_at(V, 10), X.Fees, Error)) return false;
+    return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeGetOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeGetOrder_Input_OrderHash(OrderHash, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "getOrder(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeGetOrder(const FAbiTypegenBytes& Data, FExchangeGetOrderResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "getOrder(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeGetOrderResult Decoded{};
+    if (!ReadFExchangeGetOrder_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Input_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Input_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item_AmountFilled(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item_AmountFilled(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item_AmountRemaining(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item_AmountRemaining(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item_Timestamp(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item_Timestamp(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item_Filler(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item_Filler(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0_Item(const FExchangeGetOrderFills_Output_Value0_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item_OrderHash(X.OrderHash, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item_AmountFilled(X.AmountFilled, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item_AmountRemaining(X.AmountRemaining, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item_Timestamp(X.Timestamp, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item_Filler(X.Filler, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0_Item(const atg_value* V, FExchangeGetOrderFills_Output_Value0_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeGetOrderFills_Output_Value0_Item_OrderHash(atg_value_at(V, 0), X.OrderHash, Error)) return false;
+    if (!ReadFExchangeGetOrderFills_Output_Value0_Item_AmountFilled(atg_value_at(V, 1), X.AmountFilled, Error)) return false;
+    if (!ReadFExchangeGetOrderFills_Output_Value0_Item_AmountRemaining(atg_value_at(V, 2), X.AmountRemaining, Error)) return false;
+    if (!ReadFExchangeGetOrderFills_Output_Value0_Item_Timestamp(atg_value_at(V, 3), X.Timestamp, Error)) return false;
+    if (!ReadFExchangeGetOrderFills_Output_Value0_Item_Filler(atg_value_at(V, 4), X.Filler, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetOrderFills_Output_Value0(const TArray<FExchangeGetOrderFills_Output_Value0_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeGetOrderFills_Output_Value0_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetOrderFills_Output_Value0(const atg_value* V, TArray<FExchangeGetOrderFills_Output_Value0_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeGetOrderFills_Output_Value0_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeGetOrderFills(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeGetOrderFills_Input_OrderHash(OrderHash, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "getOrderFills(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeGetOrderFills(const FAbiTypegenBytes& Data, FExchangeGetOrderFillsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "getOrderFills(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeGetOrderFillsResult Decoded{};
+    if (!ReadFExchangeGetOrderFills_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Input_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Input_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_Token0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_Token0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_Token1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_Token1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_Reserve0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_Reserve0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_Reserve1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_Reserve1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_LastUpdate(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_LastUpdate(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_FeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_FeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0_Active(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0_Active(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPool_Output_Value0(const FExchangeGetPool_Output_Value0& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_Token0(X.Token0, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_Token1(X.Token1, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_Reserve0(X.Reserve0, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_Reserve1(X.Reserve1, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_LastUpdate(X.LastUpdate, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_FeeBps(X.FeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPool_Output_Value0_Active(X.Active, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetPool_Output_Value0(const atg_value* V, FExchangeGetPool_Output_Value0& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeGetPool_Output_Value0_Token0(atg_value_at(V, 0), X.Token0, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_Token1(atg_value_at(V, 1), X.Token1, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_Reserve0(atg_value_at(V, 2), X.Reserve0, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_Reserve1(atg_value_at(V, 3), X.Reserve1, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_LastUpdate(atg_value_at(V, 4), X.LastUpdate, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_FeeBps(atg_value_at(V, 5), X.FeeBps, Error)) return false;
+    if (!ReadFExchangeGetPool_Output_Value0_Active(atg_value_at(V, 6), X.Active, Error)) return false;
+    return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeGetPool(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& PoolId)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeGetPool_Input_PoolId(PoolId, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "getPool(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeGetPool(const FAbiTypegenBytes& Data, FExchangeGetPoolResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "getPool(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeGetPoolResult Decoded{};
+    if (!ReadFExchangeGetPool_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Input_PoolIds_Item(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Input_PoolIds_Item(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Input_PoolIds(const TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Input_PoolIds_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Input_PoolIds(const atg_value* V, TArray<FAbiTypegenBytes>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeGetPoolStates_Input_PoolIds_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_Token0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_Token0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_Token1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_Token1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_Reserve0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_Reserve0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_Reserve1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_Reserve1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_LastUpdate(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_LastUpdate(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_FeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_FeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item_Active(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item_Active(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates_Item(const FExchangeGetPoolStates_Output_PoolStates_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_Token0(X.Token0, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_Token1(X.Token1, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_Reserve0(X.Reserve0, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_Reserve1(X.Reserve1, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_LastUpdate(X.LastUpdate, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_FeeBps(X.FeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item_Active(X.Active, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates_Item(const atg_value* V, FExchangeGetPoolStates_Output_PoolStates_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_Token0(atg_value_at(V, 0), X.Token0, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_Token1(atg_value_at(V, 1), X.Token1, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_Reserve0(atg_value_at(V, 2), X.Reserve0, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_Reserve1(atg_value_at(V, 3), X.Reserve1, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_LastUpdate(atg_value_at(V, 4), X.LastUpdate, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_FeeBps(atg_value_at(V, 5), X.FeeBps, Error)) return false;
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item_Active(atg_value_at(V, 6), X.Active, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetPoolStates_Output_PoolStates(const TArray<FExchangeGetPoolStates_Output_PoolStates_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeGetPoolStates_Output_PoolStates_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetPoolStates_Output_PoolStates(const atg_value* V, TArray<FExchangeGetPoolStates_Output_PoolStates_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeGetPoolStates_Output_PoolStates_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeGetPoolStates(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenBytes>& PoolIds)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeGetPoolStates_Input_PoolIds(PoolIds, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "getPoolStates(bytes32[])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeGetPoolStates(const FAbiTypegenBytes& Data, FExchangeGetPoolStatesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "getPoolStates(bytes32[])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeGetPoolStatesResult Decoded{};
+    if (!ReadFExchangeGetPoolStates_Output_PoolStates(atg_value_at(Native.Value(), 0), Decoded.PoolStates, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetUserBalances_Input_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetUserBalances_Input_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetUserBalances_Input_Tokens_Item(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeGetUserBalances_Input_Tokens_Item(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetUserBalances_Input_Tokens(const TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeGetUserBalances_Input_Tokens_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetUserBalances_Input_Tokens(const atg_value* V, TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeGetUserBalances_Input_Tokens_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetUserBalances_Output_Amounts_Item(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeGetUserBalances_Output_Amounts_Item(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeGetUserBalances_Output_Amounts(const TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeGetUserBalances_Output_Amounts_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeGetUserBalances_Output_Amounts(const atg_value* V, TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeGetUserBalances_Output_Amounts_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeGetUserBalances(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& User, const TArray<FAbiTypegenAddress>& Tokens)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeGetUserBalances_Input_User(User, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeGetUserBalances_Input_Tokens(Tokens, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "getUserBalances(address,address[])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeGetUserBalances(const FAbiTypegenBytes& Data, FExchangeGetUserBalancesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "getUserBalances(address,address[])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeGetUserBalancesResult Decoded{};
+    if (!ReadFExchangeGetUserBalances_Output_Amounts(atg_value_at(Native.Value(), 0), Decoded.Amounts, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeNonces_Input_Value0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeNonces_Input_Value0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeNonces_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeNonces_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeNonces(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeNonces_Input_Value0(Value0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "nonces(address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeNonces(const FAbiTypegenBytes& Data, FExchangeNoncesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "nonces(address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeNoncesResult Decoded{};
+    if (!ReadFExchangeNonces_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Input_Value0(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Input_Value0(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Taker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Taker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Nonce(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Nonce(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Salt(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Salt(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_OrderType(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_OrderType(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Fees_MakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Fees_MakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Fees_TakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Fees_TakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Fees_FeeRecipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Fees_FeeRecipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Fees_DiscountEnabled(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Fees_DiscountEnabled(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrders_Output_Fees(const FExchangeOrders_Output_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeOrders_Output_Fees_MakerFeeBps(X.MakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeOrders_Output_Fees_TakerFeeBps(X.TakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeOrders_Output_Fees_FeeRecipient(X.FeeRecipient, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeOrders_Output_Fees_DiscountEnabled(X.DiscountEnabled, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeOrders_Output_Fees(const atg_value* V, FExchangeOrders_Output_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeOrders_Output_Fees_MakerFeeBps(atg_value_at(V, 0), X.MakerFeeBps, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Fees_TakerFeeBps(atg_value_at(V, 1), X.TakerFeeBps, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Fees_FeeRecipient(atg_value_at(V, 2), X.FeeRecipient, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Fees_DiscountEnabled(atg_value_at(V, 3), X.DiscountEnabled, Error)) return false;
+    return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeOrders(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeOrders_Input_Value0(Value0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "orders(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrders(const FAbiTypegenBytes& Data, FExchangeOrdersResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "orders(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrdersResult Decoded{};
+    if (!ReadFExchangeOrders_Output_Maker(atg_value_at(Native.Value(), 0), Decoded.Maker, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Taker(atg_value_at(Native.Value(), 1), Decoded.Taker, Error)) return false;
+    if (!ReadFExchangeOrders_Output_TokenIn(atg_value_at(Native.Value(), 2), Decoded.TokenIn, Error)) return false;
+    if (!ReadFExchangeOrders_Output_TokenOut(atg_value_at(Native.Value(), 3), Decoded.TokenOut, Error)) return false;
+    if (!ReadFExchangeOrders_Output_AmountIn(atg_value_at(Native.Value(), 4), Decoded.AmountIn, Error)) return false;
+    if (!ReadFExchangeOrders_Output_AmountOut(atg_value_at(Native.Value(), 5), Decoded.AmountOut, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Nonce(atg_value_at(Native.Value(), 6), Decoded.Nonce, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Deadline(atg_value_at(Native.Value(), 7), Decoded.Deadline, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Salt(atg_value_at(Native.Value(), 8), Decoded.Salt, Error)) return false;
+    if (!ReadFExchangeOrders_Output_OrderType(atg_value_at(Native.Value(), 9), Decoded.OrderType, Error)) return false;
+    if (!ReadFExchangeOrders_Output_Fees(atg_value_at(Native.Value(), 10), Decoded.Fees, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOwner_Output_Value0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOwner_Output_Value0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeOwner(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "owner()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOwner(const FAbiTypegenBytes& Data, FExchangeOwnerResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "owner()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOwnerResult Decoded{};
+    if (!ReadFExchangeOwner_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodePause(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "pause()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePause(const FAbiTypegenBytes& Data, FExchangePauseResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "pause()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePauseResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePaused_Output_Value0(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangePaused_Output_Value0(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodePaused(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "paused()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePaused(const FAbiTypegenBytes& Data, FExchangePausedResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "paused()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePausedResult Decoded{};
+    if (!ReadFExchangePaused_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Taker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Taker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Nonce(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Nonce(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Salt(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Salt(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_OrderType(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_OrderType(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Fees_MakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Fees_MakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Fees_TakerFeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Fees_TakerFeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Fees_FeeRecipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Fees_FeeRecipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Fees_DiscountEnabled(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Fees_DiscountEnabled(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order_Fees(const FExchangePlaceOrder_Input_Order_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Fees_MakerFeeBps(X.MakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Fees_TakerFeeBps(X.TakerFeeBps, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Fees_FeeRecipient(X.FeeRecipient, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Fees_DiscountEnabled(X.DiscountEnabled, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order_Fees(const atg_value* V, FExchangePlaceOrder_Input_Order_Fees& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangePlaceOrder_Input_Order_Fees_MakerFeeBps(atg_value_at(V, 0), X.MakerFeeBps, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Fees_TakerFeeBps(atg_value_at(V, 1), X.TakerFeeBps, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Fees_FeeRecipient(atg_value_at(V, 2), X.FeeRecipient, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Fees_DiscountEnabled(atg_value_at(V, 3), X.DiscountEnabled, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Input_Order(const FExchangePlaceOrder_Input_Order& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Maker(X.Maker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Taker(X.Taker, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_TokenIn(X.TokenIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_TokenOut(X.TokenOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_AmountIn(X.AmountIn, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_AmountOut(X.AmountOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Nonce(X.Nonce, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Deadline(X.Deadline, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Salt(X.Salt, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_OrderType(X.OrderType, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangePlaceOrder_Input_Order_Fees(X.Fees, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Input_Order(const atg_value* V, FExchangePlaceOrder_Input_Order& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangePlaceOrder_Input_Order_Maker(atg_value_at(V, 0), X.Maker, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Taker(atg_value_at(V, 1), X.Taker, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_TokenIn(atg_value_at(V, 2), X.TokenIn, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_TokenOut(atg_value_at(V, 3), X.TokenOut, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_AmountIn(atg_value_at(V, 4), X.AmountIn, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_AmountOut(atg_value_at(V, 5), X.AmountOut, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Nonce(atg_value_at(V, 6), X.Nonce, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Deadline(atg_value_at(V, 7), X.Deadline, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Salt(atg_value_at(V, 8), X.Salt, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_OrderType(atg_value_at(V, 9), X.OrderType, Error)) return false;
+    if (!ReadFExchangePlaceOrder_Input_Order_Fees(atg_value_at(V, 10), X.Fees, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePlaceOrder_Output_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePlaceOrder_Output_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodePlaceOrder(FAbiTypegenBytes& Encoded, FString& Error, const FExchangePlaceOrder_Input_Order& Order)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangePlaceOrder_Input_Order(Order, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "placeOrder((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool)))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePlaceOrder(const FAbiTypegenBytes& Data, FExchangePlaceOrderResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "placeOrder((address,address,address,address,uint256,uint256,uint256,uint64,bytes32,uint8,(uint16,uint16,address,bool)))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePlaceOrderResult Decoded{};
+    if (!ReadFExchangePlaceOrder_Output_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Input_Value0(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePools_Input_Value0(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_Token0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_Token0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_Token1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_Token1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_Reserve0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_Reserve0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_Reserve1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_Reserve1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_LastUpdate(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_LastUpdate(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_FeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_FeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePools_Output_Active(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFExchangePools_Output_Active(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+bool UExchangeUnrealMetadata::EncodePools(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangePools_Input_Value0(Value0, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "pools(bytes32)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePools(const FAbiTypegenBytes& Data, FExchangePoolsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "pools(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePoolsResult Decoded{};
+    if (!ReadFExchangePools_Output_Token0(atg_value_at(Native.Value(), 0), Decoded.Token0, Error)) return false;
+    if (!ReadFExchangePools_Output_Token1(atg_value_at(Native.Value(), 1), Decoded.Token1, Error)) return false;
+    if (!ReadFExchangePools_Output_Reserve0(atg_value_at(Native.Value(), 2), Decoded.Reserve0, Error)) return false;
+    if (!ReadFExchangePools_Output_Reserve1(atg_value_at(Native.Value(), 3), Decoded.Reserve1, Error)) return false;
+    if (!ReadFExchangePools_Output_LastUpdate(atg_value_at(Native.Value(), 4), Decoded.LastUpdate, Error)) return false;
+    if (!ReadFExchangePools_Output_FeeBps(atg_value_at(Native.Value(), 5), Decoded.FeeBps, Error)) return false;
+    if (!ReadFExchangePools_Output_Active(atg_value_at(Native.Value(), 6), Decoded.Active, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeQuote_Input_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeQuote_Input_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeQuote_Input_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeQuote_Input_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeQuote_Input_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeQuote_Input_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeQuote_Output_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeQuote_Output_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeQuote_Output_Fee(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeQuote_Output_Fee(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeQuote(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& TokenIn, const FAbiTypegenAddress& TokenOut, const FAbiTypegenWord256& AmountIn)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeQuote_Input_TokenIn(TokenIn, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeQuote_Input_TokenOut(TokenOut, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeQuote_Input_AmountIn(AmountIn, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "quote(address,address,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeQuote(const FAbiTypegenBytes& Data, FExchangeQuoteResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "quote(address,address,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeQuoteResult Decoded{};
+    if (!ReadFExchangeQuote_Output_AmountOut(atg_value_at(Native.Value(), 0), Decoded.AmountOut, Error)) return false;
+    if (!ReadFExchangeQuote_Output_Fee(atg_value_at(Native.Value(), 1), Decoded.Fee, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwap_Input_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwap_Input_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwap_Input_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwap_Input_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwap_Input_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwap_Input_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwap_Input_MinOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwap_Input_MinOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwap_Output_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwap_Output_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeSwap(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& TokenIn, const FAbiTypegenAddress& TokenOut, const FAbiTypegenWord256& AmountIn, const FAbiTypegenWord256& MinOut)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeSwap_Input_TokenIn(TokenIn, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeSwap_Input_TokenOut(TokenOut, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeSwap_Input_AmountIn(AmountIn, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeSwap_Input_MinOut(MinOut, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "swap(address,address,uint256,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeSwap(const FAbiTypegenBytes& Data, FExchangeSwapResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "swap(address,address,uint256,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeSwapResult Decoded{};
+    if (!ReadFExchangeSwap_Output_AmountOut(atg_value_at(Native.Value(), 0), Decoded.AmountOut, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_Path_Item(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_Path_Item(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_Path(const TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_Path_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_Path(const atg_value* V, TArray<FAbiTypegenAddress>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeSwapRoute_Input_Route_Path_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_Amounts_Item(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_Amounts_Item(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_Amounts(const TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_Amounts_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_Amounts(const atg_value* V, TArray<FAbiTypegenWord256>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFExchangeSwapRoute_Input_Route_Amounts_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_MinOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_MinOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Input_Route(const FExchangeSwapRoute_Input_Route& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_Path(X.Path, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_Amounts(X.Amounts, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_MinOut(X.MinOut, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    { FAbiTypegenValue Child(BuildFExchangeSwapRoute_Input_Route_Deadline(X.Deadline, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Input_Route(const atg_value* V, FExchangeSwapRoute_Input_Route& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFExchangeSwapRoute_Input_Route_Path(atg_value_at(V, 0), X.Path, Error)) return false;
+    if (!ReadFExchangeSwapRoute_Input_Route_Amounts(atg_value_at(V, 1), X.Amounts, Error)) return false;
+    if (!ReadFExchangeSwapRoute_Input_Route_MinOut(atg_value_at(V, 2), X.MinOut, Error)) return false;
+    if (!ReadFExchangeSwapRoute_Input_Route_Deadline(atg_value_at(V, 3), X.Deadline, Error)) return false;
+    return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapRoute_Output_FinalAmount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapRoute_Output_FinalAmount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeSwapRoute(FAbiTypegenBytes& Encoded, FString& Error, const FExchangeSwapRoute_Input_Route& Route)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeSwapRoute_Input_Route(Route, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "swapRoute((address[],uint256[],uint256,uint64))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeSwapRoute(const FAbiTypegenBytes& Data, FExchangeSwapRouteResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "swapRoute((address[],uint256[],uint256,uint64))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeSwapRouteResult Decoded{};
+    if (!ReadFExchangeSwapRoute_Output_FinalAmount(atg_value_at(Native.Value(), 0), Decoded.FinalAmount, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeTotalFees_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeTotalFees_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeTotalFees(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "totalFees()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeTotalFees(const FAbiTypegenBytes& Data, FExchangeTotalFeesResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "totalFees()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeTotalFeesResult Decoded{};
+    if (!ReadFExchangeTotalFees_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeTotalVolume_Output_Value0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeTotalVolume_Output_Value0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeTotalVolume(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "totalVolume()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeTotalVolume(const FAbiTypegenBytes& Data, FExchangeTotalVolumeResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "totalVolume()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeTotalVolumeResult Decoded{};
+    if (!ReadFExchangeTotalVolume_Output_Value0(atg_value_at(Native.Value(), 0), Decoded.Value0, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeTransferOwnership_Input_NewOwner(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeTransferOwnership_Input_NewOwner(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeTransferOwnership(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& NewOwner)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeTransferOwnership_Input_NewOwner(NewOwner, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "transferOwnership(address)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeTransferOwnership(const FAbiTypegenBytes& Data, FExchangeTransferOwnershipResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "transferOwnership(address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeTransferOwnershipResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeUnpause(FAbiTypegenBytes& Encoded, FString& Error)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "unpause()", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeUnpause(const FAbiTypegenBytes& Data, FExchangeUnpauseResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "unpause()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeUnpauseResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeWithdraw_Input_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeWithdraw_Input_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeWithdraw_Input_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeWithdraw_Input_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::EncodeWithdraw(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token, const FAbiTypegenWord256& Amount)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFExchangeWithdraw_Input_Token(Token, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    { FAbiTypegenValue Item(BuildFExchangeWithdraw_Input_Amount(Amount, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Exchange_abi, "withdraw(address,uint256)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeWithdraw(const FAbiTypegenBytes& Data, FExchangeWithdrawResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Exchange_abi, "withdraw(address,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeWithdrawResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeDepositEvent_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeDepositEvent_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeDepositEvent_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeDepositEvent_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeDepositEvent_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeDepositEvent_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeDepositEvent(const FAbiTypegenBytes& Data, FExchangeDepositEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "Deposit(address,address,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeDepositEvent Decoded{};
+    if (!ReadFExchangeDepositEvent_User(atg_value_at(Native.Value(), 0), Decoded.User, Error)) return false;
+    if (!ReadFExchangeDepositEvent_Token(atg_value_at(Native.Value(), 1), Decoded.Token, Error)) return false;
+    if (!ReadFExchangeDepositEvent_Amount(atg_value_at(Native.Value(), 2), Decoded.Amount, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeDepositEventWatcher* UExchangeDepositEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeDepositEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeDepositEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x5548c837ab068cf56a2c2479df0882a4922fd203edb7517321831d95078c5f62"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeDepositEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeDepositEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeDepositEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeDepositEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeDepositEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeFeeCollectedEvent_Recipient(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeFeeCollectedEvent_Recipient(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFeeCollectedEvent_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeFeeCollectedEvent_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeFeeCollectedEvent_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeFeeCollectedEvent_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeFeeCollectedEvent(const FAbiTypegenBytes& Data, FExchangeFeeCollectedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "FeeCollected(address,address,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeFeeCollectedEvent Decoded{};
+    if (!ReadFExchangeFeeCollectedEvent_Recipient(atg_value_at(Native.Value(), 0), Decoded.Recipient, Error)) return false;
+    if (!ReadFExchangeFeeCollectedEvent_Token(atg_value_at(Native.Value(), 1), Decoded.Token, Error)) return false;
+    if (!ReadFExchangeFeeCollectedEvent_Amount(atg_value_at(Native.Value(), 2), Decoded.Amount, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeFeeCollectedEventWatcher* UExchangeFeeCollectedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeFeeCollectedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeFeeCollectedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xf228de527fc1b9843baac03b9a04565473a263375950e63435d4138464386f46"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeFeeCollectedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeFeeCollectedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeFeeCollectedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeFeeCollectedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeFeeCollectedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderCancelledEvent_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrderCancelledEvent_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderCancelledEvent_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderCancelledEvent_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrderCancelledEvent(const FAbiTypegenBytes& Data, FExchangeOrderCancelledEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "OrderCancelled(bytes32,address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrderCancelledEvent Decoded{};
+    if (!ReadFExchangeOrderCancelledEvent_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    if (!ReadFExchangeOrderCancelledEvent_Maker(atg_value_at(Native.Value(), 1), Decoded.Maker, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeOrderCancelledEventWatcher* UExchangeOrderCancelledEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeOrderCancelledEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeOrderCancelledEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xa6eb7cdc219e1518ced964e9a34e61d68a94e4f1569db3e84256ba981ba52753"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeOrderCancelledEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeOrderCancelledEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeOrderCancelledEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeOrderCancelledEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeOrderCancelledEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderFilledEvent_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrderFilledEvent_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderFilledEvent_Filler(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderFilledEvent_Filler(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderFilledEvent_AmountFilled(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderFilledEvent_AmountFilled(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrderFilledEvent(const FAbiTypegenBytes& Data, FExchangeOrderFilledEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "OrderFilled(bytes32,address,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrderFilledEvent Decoded{};
+    if (!ReadFExchangeOrderFilledEvent_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    if (!ReadFExchangeOrderFilledEvent_Filler(atg_value_at(Native.Value(), 1), Decoded.Filler, Error)) return false;
+    if (!ReadFExchangeOrderFilledEvent_AmountFilled(atg_value_at(Native.Value(), 2), Decoded.AmountFilled, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeOrderFilledEventWatcher* UExchangeOrderFilledEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeOrderFilledEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeOrderFilledEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x091df57229697c69000d4036c8c123d47d4b61cbb946bdbeaa454f31a560a044"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeOrderFilledEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeOrderFilledEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeOrderFilledEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeOrderFilledEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeOrderFilledEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderPlacedEvent_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrderPlacedEvent_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderPlacedEvent_Maker(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderPlacedEvent_Maker(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderPlacedEvent_OrderType(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderPlacedEvent_OrderType(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrderPlacedEvent(const FAbiTypegenBytes& Data, FExchangeOrderPlacedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "OrderPlaced(bytes32,address,uint8)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrderPlacedEvent Decoded{};
+    if (!ReadFExchangeOrderPlacedEvent_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    if (!ReadFExchangeOrderPlacedEvent_Maker(atg_value_at(Native.Value(), 1), Decoded.Maker, Error)) return false;
+    if (!ReadFExchangeOrderPlacedEvent_OrderType(atg_value_at(Native.Value(), 2), Decoded.OrderType, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeOrderPlacedEventWatcher* UExchangeOrderPlacedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeOrderPlacedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeOrderPlacedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xd704154a6d16d9422f2fbde507e9a146ffeea55e7b0273d6b4f3e5428ef1d93b"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeOrderPlacedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeOrderPlacedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeOrderPlacedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeOrderPlacedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeOrderPlacedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeOwnershipTransferredEvent_From(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOwnershipTransferredEvent_From(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOwnershipTransferredEvent_To(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeOwnershipTransferredEvent_To(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOwnershipTransferredEvent(const FAbiTypegenBytes& Data, FExchangeOwnershipTransferredEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "OwnershipTransferred(address,address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOwnershipTransferredEvent Decoded{};
+    if (!ReadFExchangeOwnershipTransferredEvent_From(atg_value_at(Native.Value(), 0), Decoded.From, Error)) return false;
+    if (!ReadFExchangeOwnershipTransferredEvent_To(atg_value_at(Native.Value(), 1), Decoded.To, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeOwnershipTransferredEventWatcher* UExchangeOwnershipTransferredEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeOwnershipTransferredEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeOwnershipTransferredEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeOwnershipTransferredEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeOwnershipTransferredEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeOwnershipTransferredEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeOwnershipTransferredEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeOwnershipTransferredEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangePausedEvent_By(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePausedEvent_By(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePausedEvent(const FAbiTypegenBytes& Data, FExchangePausedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "Paused(address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePausedEvent Decoded{};
+    if (!ReadFExchangePausedEvent_By(atg_value_at(Native.Value(), 0), Decoded.By, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangePausedEventWatcher* UExchangePausedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangePausedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangePausedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangePausedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangePausedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodePausedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangePausedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangePausedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolCreatedEvent_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePoolCreatedEvent_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolCreatedEvent_Token0(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePoolCreatedEvent_Token0(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolCreatedEvent_Token1(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangePoolCreatedEvent_Token1(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolCreatedEvent_FeeBps(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePoolCreatedEvent_FeeBps(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePoolCreatedEvent(const FAbiTypegenBytes& Data, FExchangePoolCreatedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "PoolCreated(bytes32,address,address,uint16)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePoolCreatedEvent Decoded{};
+    if (!ReadFExchangePoolCreatedEvent_PoolId(atg_value_at(Native.Value(), 0), Decoded.PoolId, Error)) return false;
+    if (!ReadFExchangePoolCreatedEvent_Token0(atg_value_at(Native.Value(), 1), Decoded.Token0, Error)) return false;
+    if (!ReadFExchangePoolCreatedEvent_Token1(atg_value_at(Native.Value(), 2), Decoded.Token1, Error)) return false;
+    if (!ReadFExchangePoolCreatedEvent_FeeBps(atg_value_at(Native.Value(), 3), Decoded.FeeBps, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangePoolCreatedEventWatcher* UExchangePoolCreatedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangePoolCreatedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangePoolCreatedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x00825ef31506eaf91e77d8c13e050332e52e7e1a6a8910ec862c34c2a7d0e772"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangePoolCreatedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangePoolCreatedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodePoolCreatedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangePoolCreatedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangePoolCreatedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolUpdatedEvent_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePoolUpdatedEvent_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolUpdatedEvent_Reserve0(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePoolUpdatedEvent_Reserve0(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolUpdatedEvent_Reserve1(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangePoolUpdatedEvent_Reserve1(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePoolUpdatedEvent(const FAbiTypegenBytes& Data, FExchangePoolUpdatedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "PoolUpdated(bytes32,uint256,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePoolUpdatedEvent Decoded{};
+    if (!ReadFExchangePoolUpdatedEvent_PoolId(atg_value_at(Native.Value(), 0), Decoded.PoolId, Error)) return false;
+    if (!ReadFExchangePoolUpdatedEvent_Reserve0(atg_value_at(Native.Value(), 1), Decoded.Reserve0, Error)) return false;
+    if (!ReadFExchangePoolUpdatedEvent_Reserve1(atg_value_at(Native.Value(), 2), Decoded.Reserve1, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangePoolUpdatedEventWatcher* UExchangePoolUpdatedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangePoolUpdatedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangePoolUpdatedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x173f2fb88eff180029b782d20ee4e33035596e2ce77a437fa227ce4a6babc35a"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangePoolUpdatedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangePoolUpdatedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodePoolUpdatedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangePoolUpdatedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangePoolUpdatedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapEvent_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapEvent_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapEvent_TokenIn(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapEvent_TokenIn(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapEvent_TokenOut(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapEvent_TokenOut(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapEvent_AmountIn(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapEvent_AmountIn(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSwapEvent_AmountOut(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSwapEvent_AmountOut(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeSwapEvent(const FAbiTypegenBytes& Data, FExchangeSwapEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "Swap(address,address,address,uint256,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeSwapEvent Decoded{};
+    if (!ReadFExchangeSwapEvent_User(atg_value_at(Native.Value(), 0), Decoded.User, Error)) return false;
+    if (!ReadFExchangeSwapEvent_TokenIn(atg_value_at(Native.Value(), 1), Decoded.TokenIn, Error)) return false;
+    if (!ReadFExchangeSwapEvent_TokenOut(atg_value_at(Native.Value(), 2), Decoded.TokenOut, Error)) return false;
+    if (!ReadFExchangeSwapEvent_AmountIn(atg_value_at(Native.Value(), 3), Decoded.AmountIn, Error)) return false;
+    if (!ReadFExchangeSwapEvent_AmountOut(atg_value_at(Native.Value(), 4), Decoded.AmountOut, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeSwapEventWatcher* UExchangeSwapEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeSwapEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeSwapEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xcd3829a3813dc3cdd188fd3d01dcf3268c16be2fdd2dd21d0665418816e46062"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeSwapEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeSwapEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeSwapEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeSwapEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeSwapEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeUnpausedEvent_By(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeUnpausedEvent_By(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeUnpausedEvent(const FAbiTypegenBytes& Data, FExchangeUnpausedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "Unpaused(address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeUnpausedEvent Decoded{};
+    if (!ReadFExchangeUnpausedEvent_By(atg_value_at(Native.Value(), 0), Decoded.By, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeUnpausedEventWatcher* UExchangeUnpausedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeUnpausedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeUnpausedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeUnpausedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeUnpausedEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeUnpausedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeUnpausedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeUnpausedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+[[maybe_unused]] static atg_value* BuildFExchangeWithdrawalEvent_User(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeWithdrawalEvent_User(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeWithdrawalEvent_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeWithdrawalEvent_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeWithdrawalEvent_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeWithdrawalEvent_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeWithdrawalEvent(const FAbiTypegenBytes& Data, FExchangeWithdrawalEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_Exchange_abi, "Withdrawal(address,address,uint256)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeWithdrawalEvent Decoded{};
+    if (!ReadFExchangeWithdrawalEvent_User(atg_value_at(Native.Value(), 0), Decoded.User, Error)) return false;
+    if (!ReadFExchangeWithdrawalEvent_Token(atg_value_at(Native.Value(), 1), Decoded.Token, Error)) return false;
+    if (!ReadFExchangeWithdrawalEvent_Amount(atg_value_at(Native.Value(), 2), Decoded.Amount, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UExchangeWithdrawalEventWatcher* UExchangeWithdrawalEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UExchangeWithdrawalEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UExchangeWithdrawalEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0x2717ead6b9200dd235aad468c9809ea400fe33ac69b5bfaa6d3e90fc922b6398"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FExchangeWithdrawalEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FExchangeWithdrawalEvent Event;
+                if (!UExchangeUnrealMetadata::DecodeWithdrawalEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UExchangeWithdrawalEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UExchangeWithdrawalEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }
+
+bool UExchangeUnrealMetadata::DecodeContractPausedError(const FAbiTypegenBytes& Data, FExchangeContractPausedError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "ContractPaused()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeContractPausedError Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeInsufficientBalanceError_Token(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeInsufficientBalanceError_Token(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeInsufficientBalanceError_Available(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeInsufficientBalanceError_Available(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeInsufficientBalanceError_Required(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeInsufficientBalanceError_Required(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeInsufficientBalanceError(const FAbiTypegenBytes& Data, FExchangeInsufficientBalanceError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "InsufficientBalance(address,uint256,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeInsufficientBalanceError Decoded{};
+    if (!ReadFExchangeInsufficientBalanceError_Token(atg_value_at(Native.Value(), 0), Decoded.Token, Error)) return false;
+    if (!ReadFExchangeInsufficientBalanceError_Available(atg_value_at(Native.Value(), 1), Decoded.Available, Error)) return false;
+    if (!ReadFExchangeInsufficientBalanceError_Required(atg_value_at(Native.Value(), 2), Decoded.Required, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeInvalidOrderError_Reason(const FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FTCHARToUTF8 Utf8(*X); return atg_value_bytes(reinterpret_cast<const uint8*>(Utf8.Get()), Utf8.Length());
+}
+[[maybe_unused]] static bool ReadFExchangeInvalidOrderError_Reason(const atg_value* V, FString& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded string exceeds Unreal limits"); return false; } FUTF8ToTCHAR Utf8(reinterpret_cast<const ANSICHAR*>(atg_value_data(V)), static_cast<int32>(atg_value_len(V))); X = FString(Utf8.Length(), Utf8.Get()); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeInvalidOrderError(const FAbiTypegenBytes& Data, FExchangeInvalidOrderError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "InvalidOrder(string)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeInvalidOrderError Decoded{};
+    if (!ReadFExchangeInvalidOrderError_Reason(atg_value_at(Native.Value(), 0), Decoded.Reason, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeInvalidRouteError_PathLength(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeInvalidRouteError_PathLength(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeInvalidRouteError(const FAbiTypegenBytes& Data, FExchangeInvalidRouteError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "InvalidRoute(uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeInvalidRouteError Decoded{};
+    if (!ReadFExchangeInvalidRouteError_PathLength(atg_value_at(Native.Value(), 0), Decoded.PathLength, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderAlreadyFilledError_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrderAlreadyFilledError_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrderAlreadyFilledError(const FAbiTypegenBytes& Data, FExchangeOrderAlreadyFilledError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "OrderAlreadyFilled(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrderAlreadyFilledError Decoded{};
+    if (!ReadFExchangeOrderAlreadyFilledError_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderExpiredError_OrderHash(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangeOrderExpiredError_OrderHash(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeOrderExpiredError_Deadline(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeOrderExpiredError_Deadline(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeOrderExpiredError(const FAbiTypegenBytes& Data, FExchangeOrderExpiredError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "OrderExpired(bytes32,uint64)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeOrderExpiredError Decoded{};
+    if (!ReadFExchangeOrderExpiredError_OrderHash(atg_value_at(Native.Value(), 0), Decoded.OrderHash, Error)) return false;
+    if (!ReadFExchangeOrderExpiredError_Deadline(atg_value_at(Native.Value(), 1), Decoded.Deadline, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolInactiveError_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePoolInactiveError_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePoolInactiveError(const FAbiTypegenBytes& Data, FExchangePoolInactiveError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "PoolInactive(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePoolInactiveError Decoded{};
+    if (!ReadFExchangePoolInactiveError_PoolId(atg_value_at(Native.Value(), 0), Decoded.PoolId, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangePoolNotFoundError_PoolId(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFExchangePoolNotFoundError_PoolId(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodePoolNotFoundError(const FAbiTypegenBytes& Data, FExchangePoolNotFoundError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "PoolNotFound(bytes32)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangePoolNotFoundError Decoded{};
+    if (!ReadFExchangePoolNotFoundError_PoolId(atg_value_at(Native.Value(), 0), Decoded.PoolId, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSlippageExceededError_Expected(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSlippageExceededError_Expected(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeSlippageExceededError_Actual(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFExchangeSlippageExceededError_Actual(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeSlippageExceededError(const FAbiTypegenBytes& Data, FExchangeSlippageExceededError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "SlippageExceeded(uint256,uint256)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeSlippageExceededError Decoded{};
+    if (!ReadFExchangeSlippageExceededError_Expected(atg_value_at(Native.Value(), 0), Decoded.Expected, Error)) return false;
+    if (!ReadFExchangeSlippageExceededError_Actual(atg_value_at(Native.Value(), 1), Decoded.Actual, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFExchangeUnauthorizedError_Caller(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFExchangeUnauthorizedError_Caller(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeUnauthorizedError(const FAbiTypegenBytes& Data, FExchangeUnauthorizedError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "Unauthorized(address)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeUnauthorizedError Decoded{};
+    if (!ReadFExchangeUnauthorizedError_Caller(atg_value_at(Native.Value(), 0), Decoded.Caller, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+bool UExchangeUnrealMetadata::DecodeZeroAmountError(const FAbiTypegenBytes& Data, FExchangeZeroAmountError& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode_error(atg_Exchange_abi, "ZeroAmount()", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FExchangeZeroAmountError Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }
 
 UExchangeBalancesAsyncAction* UExchangeBalancesAsyncAction::Balances(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress Value0, FAbiTypegenAddress Value1)
@@ -47,12 +3900,9 @@ void UExchangeBalancesAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_balances_params Params{};
-    if (!this->Value0.TryToAddress(Params.atg_field, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    if (!this->Value1.TryToAddress(Params.atg_field2, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_Exchange_atg_balances_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeBalances(EncodedBytes, Error, this->Value0, this->Value1)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -73,11 +3923,9 @@ void UExchangeBalancesAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_balances_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_balances_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeBalancesResult Reflected{};
-        Reflected.Value0 = FAbiTypegenWord256::FromWord(Native.atg_field);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeBalances(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -99,13 +3947,9 @@ void UExchangeFillsAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_fills_params Params{};
-    if (this->Value0.Data.Num() != 32) { OnFailure.Broadcast(TEXT("bytes32 requires exactly 32 bytes")); Finish(); return; }
-    FMemory::Memcpy(Params.atg_field.bytes, this->Value0.Data.GetData(), 32);
-    if (!this->Value1.TryToWord(Params.atg_field2, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_Exchange_atg_fills_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeFills(EncodedBytes, Error, this->Value0, this->Value1)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -126,15 +3970,240 @@ void UExchangeFillsAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_fills_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_fills_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeFillsResult Reflected{};
-        Reflected.OrderHash.Data.Append(Native.atg_orderHash.bytes, 32);
-        Reflected.AmountFilled = FAbiTypegenWord256::FromWord(Native.atg_amountFilled);
-        Reflected.AmountRemaining = FAbiTypegenWord256::FromWord(Native.atg_amountRemaining);
-        Reflected.Timestamp = FAbiTypegenWord256::FromWord(Native.atg_timestamp);
-        Reflected.Filler = FAbiTypegenAddress::FromAddress(Native.atg_filler);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeFills(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeGetOrderAsyncAction* UExchangeGetOrderAsyncAction::GetOrder(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes OrderHash)
+{
+    UExchangeGetOrderAsyncAction* Action = NewObject<UExchangeGetOrderAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->OrderHash = OrderHash;
+    return Action;
+}
+
+void UExchangeGetOrderAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeGetOrder(EncodedBytes, Error, this->OrderHash)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeGetOrderResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeGetOrder(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeGetOrderFillsAsyncAction* UExchangeGetOrderFillsAsyncAction::GetOrderFills(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes OrderHash)
+{
+    UExchangeGetOrderFillsAsyncAction* Action = NewObject<UExchangeGetOrderFillsAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->OrderHash = OrderHash;
+    return Action;
+}
+
+void UExchangeGetOrderFillsAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeGetOrderFills(EncodedBytes, Error, this->OrderHash)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeGetOrderFillsResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeGetOrderFills(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeGetPoolAsyncAction* UExchangeGetPoolAsyncAction::GetPool(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes PoolId)
+{
+    UExchangeGetPoolAsyncAction* Action = NewObject<UExchangeGetPoolAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->PoolId = PoolId;
+    return Action;
+}
+
+void UExchangeGetPoolAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeGetPool(EncodedBytes, Error, this->PoolId)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeGetPoolResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeGetPool(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeGetPoolStatesAsyncAction* UExchangeGetPoolStatesAsyncAction::GetPoolStates(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenBytes> PoolIds)
+{
+    UExchangeGetPoolStatesAsyncAction* Action = NewObject<UExchangeGetPoolStatesAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->PoolIds = PoolIds;
+    return Action;
+}
+
+void UExchangeGetPoolStatesAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeGetPoolStates(EncodedBytes, Error, this->PoolIds)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeGetPoolStatesResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeGetPoolStates(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeGetUserBalancesAsyncAction* UExchangeGetUserBalancesAsyncAction::GetUserBalances(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress User, TArray<FAbiTypegenAddress> Tokens)
+{
+    UExchangeGetUserBalancesAsyncAction* Action = NewObject<UExchangeGetUserBalancesAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->User = User;
+    Action->Tokens = Tokens;
+    return Action;
+}
+
+void UExchangeGetUserBalancesAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeGetUserBalances(EncodedBytes, Error, this->User, this->Tokens)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeGetUserBalancesResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeGetUserBalances(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -155,11 +4224,9 @@ void UExchangeNoncesAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_nonces_params Params{};
-    if (!this->Value0.TryToAddress(Params.atg_field, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_Exchange_atg_nonces_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeNonces(EncodedBytes, Error, this->Value0)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -180,11 +4247,55 @@ void UExchangeNoncesAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_nonces_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_nonces_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeNoncesResult Reflected{};
-        Reflected.Value0 = FAbiTypegenWord256::FromWord(Native.atg_field);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeNonces(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
+        OnSuccess.Broadcast(Reflected);
+        Finish();
+    }));
+}
+
+UExchangeOrdersAsyncAction* UExchangeOrdersAsyncAction::Orders(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes Value0)
+{
+    UExchangeOrdersAsyncAction* Action = NewObject<UExchangeOrdersAsyncAction>();
+    Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl;
+    Action->ContractAddressValue = ContractAddress;
+    Action->Value0 = Value0;
+    return Action;
+}
+
+void UExchangeOrdersAsyncAction::Activate()
+{
+    FString Error;
+    atg_address ContractAddress{};
+    if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeOrders(EncodedBytes, Error, this->Value0)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
+    const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
+    const FString To = AbiTypegen::AddressToHex(ContractAddress);
+    FAbiTypegenRpcClient Rpc(RpcUrlValue);
+    TrackRequest(Rpc.EthCall(this, To, DataHex, [this](FAbiTypegenRpcResponse&& Response)
+    {
+        if (!IsRequestOwnerAlive()) { Finish(); return; }
+        if (!Response.bOk || !Response.Result.IsValid() || Response.Result->Type != EJson::String)
+        {
+            OnFailure.Broadcast(Response.Error.IsEmpty() ? TEXT("eth_call failed") : Response.Error);
+            Finish();
+            return;
+        }
+        TArray<uint8> Raw;
+        FString DecodeError;
+        if (!AbiTypegen::HexToBytes(Response.Result->AsString(), Raw, DecodeError))
+        {
+            OnFailure.Broadcast(DecodeError);
+            Finish();
+            return;
+        }
+        FExchangeOrdersResult Reflected{};
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeOrders(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -204,10 +4315,9 @@ void UExchangeOwnerAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_owner_params Params{};
-    FAbiTypegenResult Encoded(atg_Exchange_atg_owner_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeOwner(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -228,11 +4338,9 @@ void UExchangeOwnerAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_owner_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_owner_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeOwnerResult Reflected{};
-        Reflected.Value0 = FAbiTypegenAddress::FromAddress(Native.atg_field);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeOwner(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -252,10 +4360,9 @@ void UExchangePausedAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_paused_params Params{};
-    FAbiTypegenResult Encoded(atg_Exchange_atg_paused_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodePaused(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -276,11 +4383,9 @@ void UExchangePausedAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_paused_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_paused_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangePausedResult Reflected{};
-        Reflected.Value0 = Native.atg_field;
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodePaused(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -301,12 +4406,9 @@ void UExchangePoolsAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_pools_params Params{};
-    if (this->Value0.Data.Num() != 32) { OnFailure.Broadcast(TEXT("bytes32 requires exactly 32 bytes")); Finish(); return; }
-    FMemory::Memcpy(Params.atg_field.bytes, this->Value0.Data.GetData(), 32);
-    FAbiTypegenResult Encoded(atg_Exchange_atg_pools_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodePools(EncodedBytes, Error, this->Value0)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -327,17 +4429,9 @@ void UExchangePoolsAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_pools_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_pools_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangePoolsResult Reflected{};
-        Reflected.Token0 = FAbiTypegenAddress::FromAddress(Native.atg_token0);
-        Reflected.Token1 = FAbiTypegenAddress::FromAddress(Native.atg_token1);
-        Reflected.Reserve0 = FAbiTypegenWord256::FromWord(Native.atg_reserve0);
-        Reflected.Reserve1 = FAbiTypegenWord256::FromWord(Native.atg_reserve1);
-        Reflected.LastUpdate = FAbiTypegenWord256::FromWord(Native.atg_lastUpdate);
-        Reflected.FeeBps = FAbiTypegenWord256::FromWord(Native.atg_feeBps);
-        Reflected.Active = Native.atg_active;
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodePools(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -360,13 +4454,9 @@ void UExchangeQuoteAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_quote_params Params{};
-    if (!this->TokenIn.TryToAddress(Params.atg_tokenIn, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    if (!this->TokenOut.TryToAddress(Params.atg_tokenOut, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    if (!this->AmountIn.TryToWord(Params.atg_amountIn, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    FAbiTypegenResult Encoded(atg_Exchange_atg_quote_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeQuote(EncodedBytes, Error, this->TokenIn, this->TokenOut, this->AmountIn)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -387,12 +4477,9 @@ void UExchangeQuoteAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_quote_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_quote_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeQuoteResult Reflected{};
-        Reflected.AmountOut = FAbiTypegenWord256::FromWord(Native.atg_amountOut);
-        Reflected.Fee = FAbiTypegenWord256::FromWord(Native.atg_fee);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeQuote(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -412,10 +4499,9 @@ void UExchangeTotalFeesAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_totalFees_params Params{};
-    FAbiTypegenResult Encoded(atg_Exchange_atg_totalFees_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeTotalFees(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -436,11 +4522,9 @@ void UExchangeTotalFeesAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_totalFees_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_totalFees_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeTotalFeesResult Reflected{};
-        Reflected.Value0 = FAbiTypegenWord256::FromWord(Native.atg_field);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeTotalFees(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));
@@ -460,10 +4544,9 @@ void UExchangeTotalVolumeAsyncAction::Activate()
     FString Error;
     atg_address ContractAddress{};
     if (!ContractAddressValue.TryToAddress(ContractAddress, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
-    atg_Exchange_atg_totalVolume_params Params{};
-    FAbiTypegenResult Encoded(atg_Exchange_atg_totalVolume_encode(&Params));
-    if (!Encoded.IsOk()) { OnFailure.Broadcast(Encoded.Error()); Finish(); return; }
-    const TArray<uint8> CallData = Encoded.CopyBytes();
+    FAbiTypegenBytes EncodedBytes;
+    if (!UExchangeUnrealMetadata::EncodeTotalVolume(EncodedBytes, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    const TArray<uint8> CallData = EncodedBytes.Data;
     const FString DataHex = AbiTypegen::BytesToHex(CallData.GetData(), CallData.Num(), true);
     const FString To = AbiTypegen::AddressToHex(ContractAddress);
     FAbiTypegenRpcClient Rpc(RpcUrlValue);
@@ -484,11 +4567,9 @@ void UExchangeTotalVolumeAsyncAction::Activate()
             Finish();
             return;
         }
-        atg_Exchange_atg_totalVolume_returns Native{};
-        FAbiTypegenResult Decoded(atg_Exchange_atg_totalVolume_decode(Raw.GetData(), static_cast<size_t>(Raw.Num()), &Native));
-        if (!Decoded.IsOk()) { OnFailure.Broadcast(Decoded.Error()); Finish(); return; }
         FExchangeTotalVolumeResult Reflected{};
-        Reflected.Value0 = FAbiTypegenWord256::FromWord(Native.atg_field);
+        FAbiTypegenBytes ReturnBytes; ReturnBytes.Data = Raw;
+        if (!UExchangeUnrealMetadata::DecodeTotalVolume(ReturnBytes, Reflected, DecodeError)) { OnFailure.Broadcast(DecodeError); Finish(); return; }
         OnSuccess.Broadcast(Reflected);
         Finish();
     }));

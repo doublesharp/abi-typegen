@@ -305,6 +305,7 @@ TYPEGEN_BIN = $(CARGO_TARGET_DIR)/debug/abi-typegen
 e2e-godot-generate: e2e-native-artifacts ## Generate Godot bindings and metadata-only fixture
 	rm -rf e2e/native/godot/test_project/generated
 	$(TYPEGEN_BIN) generate --artifacts e2e/foundry-sample/out --out e2e/native/godot/test_project/generated --target godot
+	$(TYPEGEN_BIN) generate --artifacts e2e/native/godot/artifacts --out e2e/native/godot/test_project/generated --target godot --contracts GenericTypes
 	$(TYPEGEN_BIN) generate --artifacts e2e/native/godot/artifacts --out e2e/native/godot/test_project/generated --target godot --contracts CodecCases
 	$(TYPEGEN_BIN) generate --artifacts e2e/native/godot/artifacts --out e2e/native/godot/test_project/generated --target godot --no-wrappers --contracts MetadataOnlyToken
 
@@ -315,6 +316,7 @@ e2e-godot: e2e-godot-generate ## Build Godot GDExtension and run headless codec,
 	python3 e2e/native/godot/run.py import --godot "$(GODOT_BIN)"
 	python3 e2e/native/godot/run.py suite --suite codec --godot "$(GODOT_BIN)"
 	python3 e2e/native/godot/run.py suite --suite packaging --godot "$(GODOT_BIN)"
+	python3 e2e/native/godot/run.py suite --suite operations --godot "$(GODOT_BIN)"
 	python3 -m unittest e2e.native.godot.test_runner
 	python3 e2e/native/anvil.py --cwd e2e/native/godot/test_project python3 ../run.py suite --suite anvil --godot "$(GODOT_BIN)"
 

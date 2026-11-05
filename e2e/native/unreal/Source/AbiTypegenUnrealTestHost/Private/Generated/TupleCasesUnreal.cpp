@@ -9,9 +9,317 @@ FString UTupleCasesUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_TupleCase
 TArray<FString> UTupleCasesUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("deposit((address)): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("deposit((uint256)): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("setMatrix(uint256[][]): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
-        TEXT("setRows(bool[2][]): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("deposit((address)): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("deposit((uint256)): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("setMatrix(uint256[][]): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
+        TEXT("setRows(bool[2][]): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
 }
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesDepositTupleAddressEndTuple_Input_Position_Account(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFTupleCasesDepositTupleAddressEndTuple_Input_Position_Account(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesDepositTupleAddressEndTuple_Input_Position(const FTupleCasesDepositTupleAddressEndTuple_Input_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFTupleCasesDepositTupleAddressEndTuple_Input_Position_Account(X.Account, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesDepositTupleAddressEndTuple_Input_Position(const atg_value* V, FTupleCasesDepositTupleAddressEndTuple_Input_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFTupleCasesDepositTupleAddressEndTuple_Input_Position_Account(atg_value_at(V, 0), X.Account, Error)) return false;
+    return true;
+}
+
+bool UTupleCasesUnrealMetadata::EncodeDepositTupleAddressEndTuple(FAbiTypegenBytes& Encoded, FString& Error, const FTupleCasesDepositTupleAddressEndTuple_Input_Position& Position)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFTupleCasesDepositTupleAddressEndTuple_Input_Position(Position, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_TupleCases_abi, "deposit((address))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UTupleCasesUnrealMetadata::DecodeDepositTupleAddressEndTuple(const FAbiTypegenBytes& Data, FTupleCasesDepositTupleAddressEndTupleResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_TupleCases_abi, "deposit((address))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FTupleCasesDepositTupleAddressEndTupleResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesDepositTupleUint256EndTuple_Input_Position_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFTupleCasesDepositTupleUint256EndTuple_Input_Position_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesDepositTupleUint256EndTuple_Input_Position(const FTupleCasesDepositTupleUint256EndTuple_Input_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    { FAbiTypegenValue Child(BuildFTupleCasesDepositTupleUint256EndTuple_Input_Position_Amount(X.Amount, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; }
+    return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesDepositTupleUint256EndTuple_Input_Position(const atg_value* V, FTupleCasesDepositTupleUint256EndTuple_Input_Position& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (!ReadFTupleCasesDepositTupleUint256EndTuple_Input_Position_Amount(atg_value_at(V, 0), X.Amount, Error)) return false;
+    return true;
+}
+
+bool UTupleCasesUnrealMetadata::EncodeDepositTupleUint256EndTuple(FAbiTypegenBytes& Encoded, FString& Error, const FTupleCasesDepositTupleUint256EndTuple_Input_Position& Position)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFTupleCasesDepositTupleUint256EndTuple_Input_Position(Position, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_TupleCases_abi, "deposit((uint256))", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UTupleCasesUnrealMetadata::DecodeDepositTupleUint256EndTuple(const FAbiTypegenBytes& Data, FTupleCasesDepositTupleUint256EndTupleResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_TupleCases_abi, "deposit((uint256))", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FTupleCasesDepositTupleUint256EndTupleResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetMatrix_Input_Matrix_Item_Item(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetMatrix_Input_Matrix_Item_Item(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetMatrix_Input_Matrix_Item(const FTupleCasesSetMatrix_Input_Matrix_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X.Values) { FAbiTypegenValue Child(BuildFTupleCasesSetMatrix_Input_Matrix_Item_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetMatrix_Input_Matrix_Item(const atg_value* V, FTupleCasesSetMatrix_Input_Matrix_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.Values.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Values.Num(); ++I) if (!ReadFTupleCasesSetMatrix_Input_Matrix_Item_Item(atg_value_at(V, I), X.Values[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetMatrix_Input_Matrix(const TArray<FTupleCasesSetMatrix_Input_Matrix_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFTupleCasesSetMatrix_Input_Matrix_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetMatrix_Input_Matrix(const atg_value* V, TArray<FTupleCasesSetMatrix_Input_Matrix_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFTupleCasesSetMatrix_Input_Matrix_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UTupleCasesUnrealMetadata::EncodeSetMatrix(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FTupleCasesSetMatrix_Input_Matrix_Item>& Matrix)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFTupleCasesSetMatrix_Input_Matrix(Matrix, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_TupleCases_abi, "setMatrix(uint256[][])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UTupleCasesUnrealMetadata::DecodeSetMatrix(const FAbiTypegenBytes& Data, FTupleCasesSetMatrixResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_TupleCases_abi, "setMatrix(uint256[][])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FTupleCasesSetMatrixResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetRows_Input_Rows_Item_Item(const bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bool(X);
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetRows_Input_Rows_Item_Item(const atg_value* V, bool& X, FString& Error)
+{
+    (void)X; (void)Error;
+    X = atg_value_get_bool(V) != 0; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetRows_Input_Rows_Item(const FTupleCasesSetRows_Input_Rows_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Values.Num() != 2) { Error = TEXT("fixed array requires 2 elements"); return nullptr; }
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X.Values) { FAbiTypegenValue Child(BuildFTupleCasesSetRows_Input_Rows_Item_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetRows_Input_Rows_Item(const atg_value* V, FTupleCasesSetRows_Input_Rows_Item& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.Values.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Values.Num(); ++I) if (!ReadFTupleCasesSetRows_Input_Rows_Item_Item(atg_value_at(V, I), X.Values[I], Error)) return false; return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesSetRows_Input_Rows(const TArray<FTupleCasesSetRows_Input_Rows_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    FAbiTypegenValue Seq(atg_value_seq()); if (!Seq.Get()) return nullptr;
+    for (const auto& Item : X) { FAbiTypegenValue Child(BuildFTupleCasesSetRows_Input_Rows_Item(Item, Error)); if (!Child.Get() || atg_value_push(Seq.Get(), Child.Get())) return nullptr; } return Seq.Release();
+}
+[[maybe_unused]] static bool ReadFTupleCasesSetRows_Input_Rows(const atg_value* V, TArray<FTupleCasesSetRows_Input_Rows_Item>& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded array exceeds Unreal limits"); return false; } X.SetNum(static_cast<int32>(atg_value_len(V)));
+    for (int32 I = 0; I < X.Num(); ++I) if (!ReadFTupleCasesSetRows_Input_Rows_Item(atg_value_at(V, I), X[I], Error)) return false; return true;
+}
+
+bool UTupleCasesUnrealMetadata::EncodeSetRows(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FTupleCasesSetRows_Input_Rows_Item>& Rows)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFTupleCasesSetRows_Input_Rows(Rows, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_TupleCases_abi, "setRows(bool[2][])", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UTupleCasesUnrealMetadata::DecodeSetRows(const FAbiTypegenBytes& Data, FTupleCasesSetRowsResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_TupleCases_abi, "setRows(bool[2][])", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FTupleCasesSetRowsResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesMovedEvent_Amount(const FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; if (!X.TryToWord(Word, Error)) return nullptr; return atg_value_word(Word.bytes);
+}
+[[maybe_unused]] static bool ReadFTupleCasesMovedEvent_Amount(const atg_value* V, FAbiTypegenWord256& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_word Word{}; FMemory::Memcpy(Word.bytes, atg_value_data(V), 32); X = FAbiTypegenWord256::FromWord(Word); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesMovedEvent_From(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFTupleCasesMovedEvent_From(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesMovedEvent_Memo(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (X.Data.Num() != 32) { Error = TEXT("bytes32 requires exactly 32 bytes"); return nullptr; }
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFTupleCasesMovedEvent_Memo(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+[[maybe_unused]] static atg_value* BuildFTupleCasesMovedEvent_To(const FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; if (!X.TryToAddress(Address, Error)) return nullptr; uint8 Word[32]{}; FMemory::Memcpy(Word + 12, Address.bytes, 20); return atg_value_word(Word);
+}
+[[maybe_unused]] static bool ReadFTupleCasesMovedEvent_To(const atg_value* V, FAbiTypegenAddress& X, FString& Error)
+{
+    (void)X; (void)Error;
+    atg_address Address{}; FMemory::Memcpy(Address.bytes, atg_value_data(V) + 12, 20); X = FAbiTypegenAddress::FromAddress(Address); return true;
+}
+
+bool UTupleCasesUnrealMetadata::DecodeMovedEvent(const FAbiTypegenBytes& Data, FTupleCasesMovedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics)
+{
+    Error.Reset();
+    TArray<uint8> TopicBytes; for (const auto& Topic : Topics) { atg_word Word{}; if (!Topic.TryToWord(Word, Error)) return false; TopicBytes.Append(Word.bytes, 32); }
+    FAbiTypegenResult Native(atg_decode_event(atg_TupleCases_abi, "Moved(uint256,address,bytes32,address)", TopicBytes.GetData(), Topics.Num(), Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FTupleCasesMovedEvent Decoded{};
+    if (!ReadFTupleCasesMovedEvent_Amount(atg_value_at(Native.Value(), 0), Decoded.Amount, Error)) return false;
+    if (!ReadFTupleCasesMovedEvent_From(atg_value_at(Native.Value(), 1), Decoded.From, Error)) return false;
+    if (!ReadFTupleCasesMovedEvent_Memo(atg_value_at(Native.Value(), 2), Decoded.Memo, Error)) return false;
+    if (!ReadFTupleCasesMovedEvent_To(atg_value_at(Native.Value(), 3), Decoded.To, Error)) return false;
+    Result = MoveTemp(Decoded); return true;
+}
+
+UTupleCasesMovedEventWatcher* UTupleCasesMovedEventWatcher::Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations, int32 BlocksPerRange, float PollIntervalSeconds, float TimeoutSeconds)
+{
+    auto* Action = NewObject<UTupleCasesMovedEventWatcher>(); Action->InitializeLifetime(WorldContextObject, RequestOwner);
+    Action->RpcUrlValue = RpcUrl; Action->ContractAddressValue = ContractAddress; Action->StartBlockValue = StartBlock;
+    Action->Options.Confirmations = Confirmations > 0 ? static_cast<uint64>(Confirmations) : 0;
+    Action->Options.BlocksPerRange = BlocksPerRange > 0 ? static_cast<uint64>(BlocksPerRange) : 0;
+    Action->Options.IntervalSeconds = PollIntervalSeconds; Action->Options.TimeoutSeconds = TimeoutSeconds; return Action;
+}
+void UTupleCasesMovedEventWatcher::Activate()
+{
+    if (StartBlockValue < 0) { OnFailure.Broadcast(TEXT("start block must be nonnegative")); Finish(); return; }
+    FString Error; atg_address Address{};
+    if (!ContractAddressValue.TryToAddress(Address, Error)) { OnFailure.Broadcast(Error); Finish(); return; }
+    TArray<FString> Topics;
+    Topics.Add(TEXT("0xa50453d963a618fc820367762e5204dc1e87e9a45c7a47b598902f1335d1b595"));
+    auto RpcTransport = FAbiTypegenPollSession::HttpTransport(RpcUrlValue, this);
+    FAbiTypegenPollSession::FTransport Transport = [this, RpcTransport = MoveTemp(RpcTransport)](const FString& Method, const TArray<TSharedPtr<FJsonValue>>& Params, FAbiTypegenRpcClient::FCompletion Completion) mutable
+    {
+        if (!IsRequestOwnerAlive())
+        {
+            auto Request = MakeShared<FAbiTypegenRpcRequest, ESPMode::ThreadSafe>(); FAbiTypegenRpcResponse Response;
+            Response.Error = TEXT("request owner destroyed"); Completion(MoveTemp(Response)); return Request;
+        }
+        return RpcTransport(Method, Params, MoveTemp(Completion));
+    };
+    Session = FAbiTypegenPollSession::WatchLogs(MoveTemp(Transport), AbiTypegen::AddressToHex(Address), Topics, static_cast<uint64>(StartBlockValue), Options,
+        [this](const TArray<FAbiTypegenLog>& Logs, FString& DecodeError)
+        {
+            if (!IsRequestOwnerAlive()) { Cancel(); return false; }
+            TArray<FTupleCasesMovedEvent> Events;
+            for (const auto& Log : Logs)
+            {
+                FTupleCasesMovedEvent Event;
+                if (!UTupleCasesUnrealMetadata::DecodeMovedEvent(Log.Data, Event, DecodeError, Log.Topics)) return false;
+                Events.Add(MoveTemp(Event));
+            }
+            for (const auto& Event : Events) { if (!Session || Session->IsFinished() || !IsRequestOwnerAlive()) { Cancel(); return false; } OnEvent.Broadcast(Event); }
+            return true;
+        },
+        [this](const FString& Failure) { if (IsRequestOwnerAlive()) OnFailure.Broadcast(Failure); Finish(); });
+}
+void UTupleCasesMovedEventWatcher::Cancel() { if (Session) Session->Cancel(); Session.Reset(); Super::Cancel(); }
+void UTupleCasesMovedEventWatcher::BeginDestroy() { if (Session) Session->Cancel(); Session.Reset(); Super::BeginDestroy(); }

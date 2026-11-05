@@ -386,9 +386,19 @@ supply a wallet or manage transaction receipts for the application.
 Unity uses the existing `csharp` target. The adapter package at
 `integrations/unity/com.doublesharp.abi-typegen.unity` adds Unity HTTP transport,
 an application signer interface, and cancellation tied to GameObject lifetime.
+The C# generator already emits named tuple, result, event, and custom-error DTOs.
+`AbiTypegenRpcOperations` adds simulation with a typed decoder delegate, exact
+`BigInteger` gas estimates, confirmed receipt waits, and typed event polling.
+An explicit event cursor advances only after the complete range validates and
+decodes; continuous watches also wait for the application's batch handler to
+acknowledge delivery. Cancellation tokens can be linked to
+`AbiTypegenRequestHost.DestroyedToken`. Event history changes stop the watch so
+the application can reconcile its state before restarting.
 See the [Unity adapter package](../integrations/unity/com.doublesharp.abi-typegen.unity/README.md)
 for setup.
-Supported configurations include Unity 6000.6.3f1 on macOS with Mono and IL2CPP.
+The adapter targets Unity 6000.6.3f1 on macOS. The
+[consumer suite](../e2e/native/unity/README.md) checks Editor, Mono, and IL2CPP
+behavior separately; standalone .NET tests do not establish Unity compatibility.
 Linux, Android, iOS, and WebGL compatibility is not yet verified.
 
 ## Godot
@@ -401,24 +411,67 @@ platforms and export templates are not yet supported. Build the extension
 with Godot 4.7.2, SCons 4.10.0, and the pinned godot-cpp dependency in
 [`integrations/godot/extension`](../integrations/godot/extension/).
 
-Use `--no-wrappers` to emit ABI metadata without generated codec/client calls.
-The GDExtension is not needed to load that metadata-only output. Write wrappers
-accept an application-provided signer.
-No local signer, deployment wrapper, event subscriptions, or fallback/receive
-wrappers are bundled. Constructor encoding is available. uint256 values use
-exact 32-byte `PackedByteArray` words.
+The generator emits named `RefCounted` classes for tuples, function results,
+events, and custom errors. Nested tuple arrays retain named elements. Each class
+has `from_dictionary` and `to_dictionary` conversions; result payloads also have
+`from_abi_value` to handle the existing codec's scalar and empty-result shapes.
+Existing codecs retain their raw return representations and accept generated
+named tuple inputs. `decode_*_result_typed`, `call_*_typed`,
+`decode_*_event_typed`, and `decode_*_error_typed` provide additive typed APIs.
+Property names avoid inherited engine members and preserve their original
+codec dictionary keys during conversion.
+
+For wrapper output, copy [`integrations/godot/addon`](../integrations/godot/addon/)
+to `res://addons/abi_typegen/` alongside the native extension. The shared addon
+provides simulation, exact hexadecimal gas estimates, confirmed receipt waits,
+and HTTP event polling. Generated `watch_*` helpers connect a contract's filter
+and typed decoder to the shared watcher. Configure the starting block,
+confirmation depth, polling interval, and receipt deadline explicitly. Requests
+and watches expose completion/error/cancellation signals; receipt and event
+blocks are checked against canonical block hashes. A changed delivered-history
+checkpoint stops the watcher with a reorg error. Reconciliation and restart
+belong to the application.
+
+Use `--no-wrappers` to retain ABI metadata and named value classes without
+codec/client calls. Neither the GDExtension nor the addon is needed to load that
+output. Write wrappers accept an application-provided signer. No local signer,
+deployment wrapper, WebSocket subscription, or fallback/receive wrappers are
+bundled. Constructor encoding is available. uint256 values use exact 32-byte
+`PackedByteArray` words. Block and log counters in the polling addon are limited
+to nonnegative signed 64-bit integers.
 
 ## Unreal
 
 The `unreal` target emits a plugin-facing C++ API and generated C ABI codecs.
 The plugin uses C ABI v1, linking the Rust runtime statically on macOS and through
-a DLL on Windows. Blueprint nodes cover asynchronous scalar `pure` and `view` reads;
-the native generated codec API covers the full supported ABI values. Generated
+a DLL on Windows. Generated Blueprint types include named tuple, result,
+event, and custom-error structs. Nested arrays use reflected wrapper structs
+because Unreal reflection does not support nested containers directly.
+Generated encode/decode helpers preserve exact 256-bit words and indexed
+reference-type topic hashes. Async `pure` and `view` read nodes use these typed
+codecs; the native generated C API remains available. Generated
 reads use `eth_call` with `to` and `data` at `latest`, without a `from` value, so
 views that depend on `msg.sender` use the provider's default caller. Applications
 that need another caller can use the generated calldata with their own RPC flow.
 The plugin uses the application's provider and signer; it does not include a
 wallet or local key store.
+
+`FAbiTypegenRpcClient::SimulateTransaction` and `EstimateGas` operate on validated
+unsigned transaction fields and an explicit sender. `FAbiTypegenPollSession`
+tracks receipts and confirmed HTTP log ranges using configurable polling,
+deadline, confirmation, and range settings. Retain its handle and cancel it when
+no longer needed. Receipt results expose execution status explicitly; submission
+and key storage stay behind the application signer boundary. Generated
+`U<Contract><Event>Watcher` Blueprint actions deliver named event structs through
+`OnEvent`, with failure and cancellation tied to the action's lifetime.
+Watchers start at an explicit inclusive block cursor. Failed RPC, decoding, or
+canonical-block checks do not consume a range; a changed checkpoint reports an
+error requiring application reconciliation. Native topic filters match exact
+positional hashes. Polling uses HTTP rather than WebSocket subscriptions, and
+confirmation depth is not a chain-finality guarantee.
+
+`--no-wrappers` retains ABI metadata, native C value types, and reflected value
+structs while omitting reflected callable codec/read/watcher helpers.
 
 The [Unreal plugin](../integrations/unreal/Plugins/AbiTypegen/) targets Unreal
 Engine 5.8.3 on macOS arm64. Windows build rules are provided, but Windows

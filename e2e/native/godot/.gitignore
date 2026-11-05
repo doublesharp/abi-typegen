@@ -3,3 +3,4 @@ test_project/generated/
 test_project/bin/macos/
 test_project/bin/linux/
 test_project/**/*.gd.uid
+test_project/addons/abi_typegen/

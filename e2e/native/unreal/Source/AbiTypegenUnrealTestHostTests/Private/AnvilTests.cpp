@@ -5,6 +5,8 @@
 #include "AbiTypegenTypes.h"
 #include "AnvilDevelopmentSigner.h"
 #include "BlueprintReadProbe.h"
+#include "BlueprintEventProbe.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/TokenUnreal.h"
 #include "Generated/atg_Token.h"
 
@@ -55,8 +57,7 @@ namespace
 
         virtual ~FAnvilReadWriteCommand()
         {
-            if (Request.IsValid()) Request->Cancel();
-            if (Owner && Owner->IsRooted()) Owner->RemoveFromRoot();
+            Cleanup();
         }
 
         virtual bool Update() override
@@ -83,6 +84,13 @@ namespace
                 case 9: return PollReceipt(10);
                 case 10: StartAllowanceRead(); return false;
                 case 11: if (!ConsumeCallback()) return false; return HandleAllowance();
+                case 12:
+                    if (EventProbe && !EventProbe->Error.IsEmpty()) { Fail(EventProbe->Error); return false; }
+                    if (!EventProbe || !EventProbe->bReceived) return false;
+                    Test->TestEqual(TEXT("cancel during first event suppresses second event in range"), EventProbe->ReceivedCount, 1);
+                    Test->TestEqual(TEXT("Blueprint watcher decoded lossless mint amount"), EventProbe->Event.Amount.Hex, LargeAmount().Hex);
+                    Test->TestEqual(TEXT("Blueprint watcher indexed destination"), EventProbe->Event.To.Hex, From);
+                    Stage = 13; return false;
                 default: Cleanup(); return true;
             }
         }
@@ -130,7 +138,19 @@ namespace
             Tx.Value = U64(0);
             Tx.GasLimit = 300000;
             bCallback = false;
-            Request = Signer->SubmitAsync(Owner, *Rpc, Tx, [this](FAbiTypegenRpcResponse&& R) { Last = MoveTemp(R); bCallback = true; });
+            Request = Rpc->SimulateTransaction(Owner, Tx, From, [this, Tx](FAbiTypegenRpcResponse&& Simulation)
+            {
+                if (!Simulation.bOk) { Fail(Simulation.Error); return; }
+                Test->TestEqual(TEXT("simulation returned empty result"), Simulation.Result->AsString(), TEXT("0x"));
+                Request = Rpc->EstimateGas(Owner, Tx, From, [this, Tx](FAbiTypegenRpcResponse&& Estimate)
+                {
+                    if (!Estimate.bOk) { Fail(Estimate.Error); return; }
+                    FAbiTypegenWord256 Gas; FString Error;
+                    if (!FAbiTypegenRpcClient::ParseGasEstimate(Estimate.Result->AsString(), Gas, Error)) { Fail(Error); return; }
+                    Test->TestTrue(TEXT("estimated gas is nonzero"), Gas.Hex != U64(0).Hex);
+                    Request = Signer->SubmitAsync(Owner, *Rpc, Tx, [this](FAbiTypegenRpcResponse&& R) { Last = MoveTemp(R); bCallback = true; });
+                });
+            });
             Stage = 3;
         }
 
@@ -144,12 +164,41 @@ namespace
             }
             TxHash = Hash;
             NextPollAt = 0.0;
-            Stage = NextReceiptStage;
+            Stage = NextReceiptStage; bQualifiedReceipt = false;
+            FAbiTypegenPollOptions Options; Options.IntervalSeconds = 0.05;
+            ReceiptSession = FAbiTypegenPollSession::WaitReceipt(FAbiTypegenPollSession::HttpTransport(RpcUrl, Owner), TxHash, Options, [this, NextReceiptStage](const FAbiTypegenReceipt& Value, const FString& Error)
+            {
+                if (!Error.IsEmpty() || !Value.bSucceeded) { Fail(Error.IsEmpty() ? TEXT("mined transaction reverted") : Error); return; }
+                if (NextReceiptStage == 4) { SubmitSecondEvent(Value.BlockNumber); }
+                else bQualifiedReceipt = true;
+            });
             return false;
+        }
+
+        void SubmitSecondEvent(uint64 StartBlock)
+        {
+            FAbiTypegenAddress To; To.Hex = From; FAbiTypegenBytes Data; FString Error;
+            if (!UTokenUnrealMetadata::EncodeMint(Data, Error, To, U64(0))) { Fail(Error); return; }
+            FAbiTypegenUnsignedTransaction Tx; Tx.To = ContractHex; Tx.Data = AbiTypegen::BytesToHex(Data.Data.GetData(), Data.Data.Num()); Tx.GasLimit = 300000;
+            Request = Signer->SubmitAsync(Owner, *Rpc, Tx, [this, StartBlock](FAbiTypegenRpcResponse&& Response)
+            {
+                FString Hash; if (!JsonString(Response, Hash)) { Fail(Response.Error); return; }
+                FAbiTypegenPollOptions Options; Options.IntervalSeconds = 0.05;
+                ReceiptSession = FAbiTypegenPollSession::WaitReceipt(FAbiTypegenPollSession::HttpTransport(RpcUrl, Owner), Hash, Options, [this, StartBlock](const FAbiTypegenReceipt& Receipt, const FString& Error)
+                {
+                    if (!Error.IsEmpty() || !Receipt.bSucceeded) { Fail(Error.IsEmpty() ? TEXT("second mint reverted") : Error); return; }
+                    EventProbe = NewObject<UAbiTypegenBlueprintEventProbe>(GetTransientPackage()); EventProbe->AddToRoot();
+                    FAbiTypegenAddress Contract; Contract.Hex = ContractHex;
+                    EventWatcher = UTokenTransferEventWatcher::Watch(Owner, Owner, RpcUrl, Contract, static_cast<int64>(StartBlock), 1, 100, 0.05f, 30.0f);
+                    EventWatcher->AddToRoot(); EventProbe->CancelTarget = EventWatcher;
+                    EventWatcher->OnEvent.AddDynamic(EventProbe, &UAbiTypegenBlueprintEventProbe::Received); EventWatcher->OnFailure.AddDynamic(EventProbe, &UAbiTypegenBlueprintEventProbe::Failed); EventWatcher->Activate(); bQualifiedReceipt = true;
+                });
+            });
         }
 
         bool PollReceipt(int32 NextStage)
         {
+            if (!bQualifiedReceipt) return false;
             const double Now = FPlatformTime::Seconds();
             if (bWaitingReceipt)
             {
@@ -343,6 +392,9 @@ namespace
 
         void Cleanup()
         {
+            if (ReceiptSession) ReceiptSession->Cancel(); ReceiptSession.Reset();
+            if (EventWatcher) { EventWatcher->Cancel(); if (EventWatcher->IsRooted()) EventWatcher->RemoveFromRoot(); } EventWatcher = nullptr;
+            if (EventProbe && EventProbe->IsRooted()) EventProbe->RemoveFromRoot(); EventProbe = nullptr;
             if (Request.IsValid()) Request->Cancel();
             Request.Reset();
             if (Owner && Owner->IsRooted()) Owner->RemoveFromRoot();
@@ -359,6 +411,10 @@ namespace
         TUniquePtr<FAnvilUnlockedDevelopmentSigner> Signer;
         TSharedPtr<FAbiTypegenRpcRequest, ESPMode::ThreadSafe> Request;
         FAbiTypegenRpcResponse Last;
+        TSharedPtr<FAbiTypegenPollSession> ReceiptSession;
+        UAbiTypegenBlueprintEventProbe* EventProbe = nullptr;
+        UTokenTransferEventWatcher* EventWatcher = nullptr;
+        bool bQualifiedReceipt = false;
         int32 Stage = 0;
         bool bCallback = false;
         bool bWaitingReceipt = false;

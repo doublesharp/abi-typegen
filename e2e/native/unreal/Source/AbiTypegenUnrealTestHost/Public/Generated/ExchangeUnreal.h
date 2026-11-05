@@ -5,9 +5,996 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Exchange.h"
 #include "ExchangeUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeAddLiquidityResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeBalancesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeBatchPlaceOrders_Input_OrderList_Item_Fees
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 MakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 TakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress FeeRecipient{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool DiscountEnabled{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeBatchPlaceOrders_Input_OrderList_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Taker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Nonce{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Salt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 OrderType{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangeBatchPlaceOrders_Input_OrderList_Item_Fees Fees{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeBatchPlaceOrdersResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenBytes> Hashes{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeCancelOrderResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeCreatePoolResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes PoolId{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeDepositResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeFillOrderResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeFillsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountFilled{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountRemaining{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Timestamp{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Filler{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetOrder_Output_Value0_Fees
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 MakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 TakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress FeeRecipient{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool DiscountEnabled{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetOrder_Output_Value0
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Taker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Nonce{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Salt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 OrderType{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangeGetOrder_Output_Value0_Fees Fees{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetOrderResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangeGetOrder_Output_Value0 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetOrderFills_Output_Value0_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountFilled{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountRemaining{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Timestamp{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Filler{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetOrderFillsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FExchangeGetOrderFills_Output_Value0_Item> Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetPool_Output_Value0
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 LastUpdate{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 FeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Active{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetPoolResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangeGetPool_Output_Value0 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetPoolStates_Output_PoolStates_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 LastUpdate{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 FeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Active{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetPoolStatesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FExchangeGetPoolStates_Output_PoolStates_Item> PoolStates{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeGetUserBalancesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Amounts{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeNoncesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrders_Output_Fees
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 MakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 TakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress FeeRecipient{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool DiscountEnabled{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrdersResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Taker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Nonce{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Salt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 OrderType{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangeOrders_Output_Fees Fees{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOwnerResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePauseResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePausedResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePlaceOrder_Input_Order_Fees
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 MakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 TakerFeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress FeeRecipient{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool DiscountEnabled{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePlaceOrder_Input_Order
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Taker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Nonce{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Salt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 OrderType{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FExchangePlaceOrder_Input_Order_Fees Fees{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePlaceOrderResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePoolsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 LastUpdate{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 FeeBps{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Active{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeQuoteResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Fee{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeSwapResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeSwapRoute_Input_Route
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenAddress> Path{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Amounts{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 MinOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeSwapRouteResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 FinalAmount{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeTotalFeesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeTotalVolumeResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeTransferOwnershipResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeUnpauseResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeWithdrawResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeDepositEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress User{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeDepositEventReceived, FExchangeDepositEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeDepositEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeDepositEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeDepositEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeDepositEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange DepositEvent"), Category="abi-typegen|Exchange")
+    static UExchangeDepositEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeFeeCollectedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Recipient{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeFeeCollectedEventReceived, FExchangeFeeCollectedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeFeeCollectedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeFeeCollectedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeFeeCollectedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeFeeCollectedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange FeeCollectedEvent"), Category="abi-typegen|Exchange")
+    static UExchangeFeeCollectedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrderCancelledEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderCancelledEventReceived, FExchangeOrderCancelledEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderCancelledEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeOrderCancelledEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeOrderCancelledEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeOrderCancelledEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange OrderCancelledEvent"), Category="abi-typegen|Exchange")
+    static UExchangeOrderCancelledEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrderFilledEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Filler{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountFilled{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderFilledEventReceived, FExchangeOrderFilledEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderFilledEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeOrderFilledEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeOrderFilledEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeOrderFilledEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange OrderFilledEvent"), Category="abi-typegen|Exchange")
+    static UExchangeOrderFilledEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrderPlacedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Maker{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 OrderType{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderPlacedEventReceived, FExchangeOrderPlacedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrderPlacedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeOrderPlacedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeOrderPlacedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeOrderPlacedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange OrderPlacedEvent"), Category="abi-typegen|Exchange")
+    static UExchangeOrderPlacedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOwnershipTransferredEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress From{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress To{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOwnershipTransferredEventReceived, FExchangeOwnershipTransferredEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOwnershipTransferredEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeOwnershipTransferredEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeOwnershipTransferredEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeOwnershipTransferredEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange OwnershipTransferredEvent"), Category="abi-typegen|Exchange")
+    static UExchangeOwnershipTransferredEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePausedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress By{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePausedEventReceived, FExchangePausedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePausedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangePausedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangePausedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangePausedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange PausedEvent"), Category="abi-typegen|Exchange")
+    static UExchangePausedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePoolCreatedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes PoolId{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token1{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 FeeBps{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePoolCreatedEventReceived, FExchangePoolCreatedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePoolCreatedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangePoolCreatedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangePoolCreatedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangePoolCreatedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange PoolCreatedEvent"), Category="abi-typegen|Exchange")
+    static UExchangePoolCreatedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePoolUpdatedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes PoolId{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Reserve1{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePoolUpdatedEventReceived, FExchangePoolUpdatedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePoolUpdatedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangePoolUpdatedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangePoolUpdatedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangePoolUpdatedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange PoolUpdatedEvent"), Category="abi-typegen|Exchange")
+    static UExchangePoolUpdatedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeSwapEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress User{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress TokenOut{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountIn{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 AmountOut{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeSwapEventReceived, FExchangeSwapEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeSwapEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeSwapEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeSwapEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeSwapEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange SwapEvent"), Category="abi-typegen|Exchange")
+    static UExchangeSwapEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeUnpausedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress By{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeUnpausedEventReceived, FExchangeUnpausedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeUnpausedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeUnpausedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeUnpausedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeUnpausedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange UnpausedEvent"), Category="abi-typegen|Exchange")
+    static UExchangeUnpausedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeWithdrawalEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress User{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeWithdrawalEventReceived, FExchangeWithdrawalEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeWithdrawalEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeWithdrawalEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeWithdrawalEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FExchangeWithdrawalEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Exchange WithdrawalEvent"), Category="abi-typegen|Exchange")
+    static UExchangeWithdrawalEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeContractPausedError
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeInsufficientBalanceError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Available{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Required{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeInvalidOrderError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FString Reason{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeInvalidRouteError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 PathLength{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrderAlreadyFilledError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeOrderExpiredError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes OrderHash{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Deadline{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePoolInactiveError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes PoolId{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangePoolNotFoundError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes PoolId{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeSlippageExceededError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Expected{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Actual{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeUnauthorizedError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Caller{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FExchangeZeroAmountError
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UExchangeUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,14 +1005,244 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Exchange")
     static TArray<FString> GetBlueprintUnsupportedOperations();
-};
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeAddLiquidity(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& PoolId, const FAbiTypegenWord256& Amount0, const FAbiTypegenWord256& Amount1);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeAddLiquidity(const FAbiTypegenBytes& Data, FExchangeAddLiquidityResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeBalances(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0, const FAbiTypegenAddress& Value1);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeBalances(const FAbiTypegenBytes& Data, FExchangeBalancesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeBatchPlaceOrders(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FExchangeBatchPlaceOrders_Input_OrderList_Item>& OrderList);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeBatchPlaceOrders(const FAbiTypegenBytes& Data, FExchangeBatchPlaceOrdersResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeCancelOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeCancelOrder(const FAbiTypegenBytes& Data, FExchangeCancelOrderResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeCreatePool(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token0, const FAbiTypegenAddress& Token1, const FAbiTypegenWord256& FeeBps);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeCreatePool(const FAbiTypegenBytes& Data, FExchangeCreatePoolResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeDeposit(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeDeposit(const FAbiTypegenBytes& Data, FExchangeDepositResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeFillOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeFillOrder(const FAbiTypegenBytes& Data, FExchangeFillOrderResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeFills(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0, const FAbiTypegenWord256& Value1);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeFills(const FAbiTypegenBytes& Data, FExchangeFillsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeGetOrder(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeGetOrder(const FAbiTypegenBytes& Data, FExchangeGetOrderResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeGetOrderFills(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& OrderHash);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeGetOrderFills(const FAbiTypegenBytes& Data, FExchangeGetOrderFillsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeGetPool(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& PoolId);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeGetPool(const FAbiTypegenBytes& Data, FExchangeGetPoolResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeGetPoolStates(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenBytes>& PoolIds);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeGetPoolStates(const FAbiTypegenBytes& Data, FExchangeGetPoolStatesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeGetUserBalances(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& User, const TArray<FAbiTypegenAddress>& Tokens);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeGetUserBalances(const FAbiTypegenBytes& Data, FExchangeGetUserBalancesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeNonces(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeNonces(const FAbiTypegenBytes& Data, FExchangeNoncesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeOrders(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrders(const FAbiTypegenBytes& Data, FExchangeOrdersResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeOwner(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOwner(const FAbiTypegenBytes& Data, FExchangeOwnerResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodePause(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePause(const FAbiTypegenBytes& Data, FExchangePauseResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodePaused(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePaused(const FAbiTypegenBytes& Data, FExchangePausedResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodePlaceOrder(FAbiTypegenBytes& Encoded, FString& Error, const FExchangePlaceOrder_Input_Order& Order);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePlaceOrder(const FAbiTypegenBytes& Data, FExchangePlaceOrderResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodePools(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Value0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePools(const FAbiTypegenBytes& Data, FExchangePoolsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeQuote(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& TokenIn, const FAbiTypegenAddress& TokenOut, const FAbiTypegenWord256& AmountIn);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeQuote(const FAbiTypegenBytes& Data, FExchangeQuoteResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeSwap(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& TokenIn, const FAbiTypegenAddress& TokenOut, const FAbiTypegenWord256& AmountIn, const FAbiTypegenWord256& MinOut);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeSwap(const FAbiTypegenBytes& Data, FExchangeSwapResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeSwapRoute(FAbiTypegenBytes& Encoded, FString& Error, const FExchangeSwapRoute_Input_Route& Route);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeSwapRoute(const FAbiTypegenBytes& Data, FExchangeSwapRouteResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeTotalFees(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeTotalFees(const FAbiTypegenBytes& Data, FExchangeTotalFeesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeTotalVolume(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeTotalVolume(const FAbiTypegenBytes& Data, FExchangeTotalVolumeResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeTransferOwnership(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& NewOwner);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeTransferOwnership(const FAbiTypegenBytes& Data, FExchangeTransferOwnershipResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeUnpause(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeUnpause(const FAbiTypegenBytes& Data, FExchangeUnpauseResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool EncodeWithdraw(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Token, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeWithdraw(const FAbiTypegenBytes& Data, FExchangeWithdrawResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeDepositEvent(const FAbiTypegenBytes& Data, FExchangeDepositEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeFeeCollectedEvent(const FAbiTypegenBytes& Data, FExchangeFeeCollectedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrderCancelledEvent(const FAbiTypegenBytes& Data, FExchangeOrderCancelledEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrderFilledEvent(const FAbiTypegenBytes& Data, FExchangeOrderFilledEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrderPlacedEvent(const FAbiTypegenBytes& Data, FExchangeOrderPlacedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOwnershipTransferredEvent(const FAbiTypegenBytes& Data, FExchangeOwnershipTransferredEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePausedEvent(const FAbiTypegenBytes& Data, FExchangePausedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePoolCreatedEvent(const FAbiTypegenBytes& Data, FExchangePoolCreatedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePoolUpdatedEvent(const FAbiTypegenBytes& Data, FExchangePoolUpdatedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeSwapEvent(const FAbiTypegenBytes& Data, FExchangeSwapEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeUnpausedEvent(const FAbiTypegenBytes& Data, FExchangeUnpausedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeWithdrawalEvent(const FAbiTypegenBytes& Data, FExchangeWithdrawalEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeContractPausedError(const FAbiTypegenBytes& Data, FExchangeContractPausedError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeInsufficientBalanceError(const FAbiTypegenBytes& Data, FExchangeInsufficientBalanceError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeInvalidOrderError(const FAbiTypegenBytes& Data, FExchangeInvalidOrderError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeInvalidRouteError(const FAbiTypegenBytes& Data, FExchangeInvalidRouteError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrderAlreadyFilledError(const FAbiTypegenBytes& Data, FExchangeOrderAlreadyFilledError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeOrderExpiredError(const FAbiTypegenBytes& Data, FExchangeOrderExpiredError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePoolInactiveError(const FAbiTypegenBytes& Data, FExchangePoolInactiveError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodePoolNotFoundError(const FAbiTypegenBytes& Data, FExchangePoolNotFoundError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeSlippageExceededError(const FAbiTypegenBytes& Data, FExchangeSlippageExceededError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeUnauthorizedError(const FAbiTypegenBytes& Data, FExchangeUnauthorizedError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Exchange")
+    static bool DecodeZeroAmountError(const FAbiTypegenBytes& Data, FExchangeZeroAmountError& Result, FString& Error);
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeBalancesResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeBalancesSuccess, FExchangeBalancesResult, Result);
@@ -51,22 +1268,6 @@ private:
     FAbiTypegenAddress Value1;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeFillsResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenBytes OrderHash;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 AmountFilled;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 AmountRemaining;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Timestamp;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenAddress Filler;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeFillsSuccess, FExchangeFillsResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeFillsFailure, FString, Error);
 
@@ -90,12 +1291,115 @@ private:
     FAbiTypegenWord256 Value1;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeNoncesResult
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetOrderSuccess, FExchangeGetOrderResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetOrderFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeGetOrderAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeGetOrderSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeGetOrderFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeGetOrderAsyncAction* GetOrder(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes OrderHash);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenBytes OrderHash;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetOrderFillsSuccess, FExchangeGetOrderFillsResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetOrderFillsFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeGetOrderFillsAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeGetOrderFillsSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeGetOrderFillsFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeGetOrderFillsAsyncAction* GetOrderFills(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes OrderHash);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenBytes OrderHash;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetPoolSuccess, FExchangeGetPoolResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetPoolFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeGetPoolAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeGetPoolSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeGetPoolFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeGetPoolAsyncAction* GetPool(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes PoolId);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenBytes PoolId;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetPoolStatesSuccess, FExchangeGetPoolStatesResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetPoolStatesFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeGetPoolStatesAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeGetPoolStatesSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeGetPoolStatesFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeGetPoolStatesAsyncAction* GetPoolStates(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenBytes> PoolIds);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    TArray<FAbiTypegenBytes> PoolIds;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetUserBalancesSuccess, FExchangeGetUserBalancesResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeGetUserBalancesFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeGetUserBalancesAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeGetUserBalancesSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeGetUserBalancesFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeGetUserBalancesAsyncAction* GetUserBalances(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress User, TArray<FAbiTypegenAddress> Tokens);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenAddress User;
+    TArray<FAbiTypegenAddress> Tokens;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeNoncesSuccess, FExchangeNoncesResult, Result);
@@ -120,12 +1424,26 @@ private:
     FAbiTypegenAddress Value0;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeOwnerResult
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrdersSuccess, FExchangeOrdersResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOrdersFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UExchangeOrdersAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenAddress Value0;
+public:
+    UPROPERTY(BlueprintAssignable) FExchangeOrdersSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FExchangeOrdersFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Exchange")
+    static UExchangeOrdersAsyncAction* Orders(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes Value0);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenBytes Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeOwnerSuccess, FExchangeOwnerResult, Result);
@@ -149,14 +1467,6 @@ private:
     FAbiTypegenAddress ContractAddressValue;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangePausedResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    bool Value0;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePausedSuccess, FExchangePausedResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePausedFailure, FString, Error);
 
@@ -176,26 +1486,6 @@ public:
 private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangePoolsResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenAddress Token0;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenAddress Token1;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Reserve0;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Reserve1;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 LastUpdate;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 FeeBps;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    bool Active;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangePoolsSuccess, FExchangePoolsResult, Result);
@@ -218,16 +1508,6 @@ private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
     FAbiTypegenBytes Value0;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeQuoteResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 AmountOut;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Fee;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeQuoteSuccess, FExchangeQuoteResult, Result);
@@ -254,14 +1534,6 @@ private:
     FAbiTypegenWord256 AmountIn;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeTotalFeesResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeTotalFeesSuccess, FExchangeTotalFeesResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeTotalFeesFailure, FString, Error);
 
@@ -281,14 +1553,6 @@ public:
 private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FExchangeTotalVolumeResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FExchangeTotalVolumeSuccess, FExchangeTotalVolumeResult, Result);

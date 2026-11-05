@@ -5,9 +5,74 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_INamingCases.h"
 #include "INamingCasesUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesFooBarResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesFooBar2Result
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesRead_Output_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Class{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Class2{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesReadResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FINamingCasesRead_Output_Item Item{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesRunResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value1{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesStore_Input_Item2
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Class{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Class2{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FINamingCasesStoreResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value1{};
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UINamingCasesUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,4 +83,56 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|INamingCases")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool EncodeFooBar(FAbiTypegenBytes& Encoded, FString& Error, const bool& Enabled);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool DecodeFooBar(const FAbiTypegenBytes& Data, FINamingCasesFooBarResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool EncodeFooBar2(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool DecodeFooBar2(const FAbiTypegenBytes& Data, FINamingCasesFooBar2Result& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool EncodeRead(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool DecodeRead(const FAbiTypegenBytes& Data, FINamingCasesReadResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool EncodeRun(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Class, const bool& Class2);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool DecodeRun(const FAbiTypegenBytes& Data, FINamingCasesRunResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool EncodeStore(FAbiTypegenBytes& Encoded, FString& Error, const FINamingCasesStore_Input_Item2& Item2);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|INamingCases")
+    static bool DecodeStore(const FAbiTypegenBytes& Data, FINamingCasesStoreResult& Result, FString& Error);
+
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FINamingCasesReadSuccess, FINamingCasesReadResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FINamingCasesReadFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UINamingCasesReadAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FINamingCasesReadSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FINamingCasesReadFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|INamingCases")
+    static UINamingCasesReadAsyncAction* Read(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
 };

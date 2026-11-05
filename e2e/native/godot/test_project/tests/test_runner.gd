@@ -2,6 +2,7 @@ extends SceneTree
 
 const CodecTests = preload("res://tests/codec_tests.gd")
 const AnvilTests = preload("res://tests/anvil_tests.gd")
+const OperationsTests = preload("res://tests/test_operations.gd")
 const PackagingTests = preload("res://tests/packaging_tests.gd")
 
 func _initialize() -> void:
@@ -36,7 +37,10 @@ func _run() -> void:
         var anvil_failures: Array[String] = await AnvilTests.new().run(self)
         failure_count += _print_failures("anvil", anvil_failures)
 
-    if not (suite in ["all", "codec", "packaging", "anvil"]):
+    if suite in ["all", "operations"]:
+        failure_count += _print_failures("operations", await OperationsTests.new().run(self))
+
+    if not (suite in ["all", "codec", "packaging", "anvil", "operations"]):
         printerr("Unknown suite: ", suite)
         quit(2)
         return
