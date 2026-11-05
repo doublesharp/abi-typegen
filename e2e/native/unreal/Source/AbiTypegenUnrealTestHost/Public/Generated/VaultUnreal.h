@@ -5,9 +5,156 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Vault.h"
 #include "VaultUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultDepositUint256AddressResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultDepositUint256Result
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultGetBalancesResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultGetMatrixResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultGetPosition_Output_Position
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Shares{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 DepositedAt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultGetPositionResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FVaultGetPosition_Output_Position Position{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultPositionsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Shares{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 DepositedAt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Token{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultBatchProcessedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Count{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultBatchProcessedEventReceived, FVaultBatchProcessedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultBatchProcessedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UVaultBatchProcessedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FVaultBatchProcessedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FVaultBatchProcessedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Vault BatchProcessedEvent"), Category="abi-typegen|Vault")
+    static UVaultBatchProcessedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultDepositedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress User{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultDepositedEventReceived, FVaultDepositedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultDepositedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UVaultDepositedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FVaultDepositedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FVaultDepositedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Vault DepositedEvent"), Category="abi-typegen|Vault")
+    static UVaultDepositedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultInsufficientSharesError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Available{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Requested{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FVaultZeroAmountError
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UVaultUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,18 +165,120 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Vault")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodeDepositUint256Address(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount, const FAbiTypegenAddress& Recipient);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeDepositUint256Address(const FAbiTypegenBytes& Data, FVaultDepositUint256AddressResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodeDepositUint256(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeDepositUint256(const FAbiTypegenBytes& Data, FVaultDepositUint256Result& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodeGetBalances(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenAddress>& Users);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeGetBalances(const FAbiTypegenBytes& Data, FVaultGetBalancesResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodeGetMatrix(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeGetMatrix(const FAbiTypegenBytes& Data, FVaultGetMatrixResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodeGetPosition(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& User);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeGetPosition(const FAbiTypegenBytes& Data, FVaultGetPositionResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool EncodePositions(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodePositions(const FAbiTypegenBytes& Data, FVaultPositionsResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeBatchProcessedEvent(const FAbiTypegenBytes& Data, FVaultBatchProcessedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeDepositedEvent(const FAbiTypegenBytes& Data, FVaultDepositedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeInsufficientSharesError(const FAbiTypegenBytes& Data, FVaultInsufficientSharesError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Vault")
+    static bool DecodeZeroAmountError(const FAbiTypegenBytes& Data, FVaultZeroAmountError& Result, FString& Error);
+
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FVaultPositionsResult
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetBalancesSuccess, FVaultGetBalancesResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetBalancesFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UVaultGetBalancesAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Shares;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 DepositedAt;
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenAddress Token;
+public:
+    UPROPERTY(BlueprintAssignable) FVaultGetBalancesSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FVaultGetBalancesFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Vault")
+    static UVaultGetBalancesAsyncAction* GetBalances(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenAddress> Users);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    TArray<FAbiTypegenAddress> Users;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetMatrixSuccess, FVaultGetMatrixResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetMatrixFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UVaultGetMatrixAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FVaultGetMatrixSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FVaultGetMatrixFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Vault")
+    static UVaultGetMatrixAsyncAction* GetMatrix(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetPositionSuccess, FVaultGetPositionResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultGetPositionFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UVaultGetPositionAsyncAction : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FVaultGetPositionSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FVaultGetPositionFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Vault")
+    static UVaultGetPositionAsyncAction* GetPosition(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenAddress User);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenAddress User;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVaultPositionsSuccess, FVaultPositionsResult, Result);

@@ -29,7 +29,9 @@ python3 e2e/native/unity/run.py editmode
 python3 e2e/native/anvil.py python3 e2e/native/unity/run.py playmode
 ```
 
-EditMode checks metadata and codecs. PlayMode checks signed local transactions,
+EditMode checks metadata, codecs, simulation, gas estimation, receipt confirmations,
+timeouts, cancellation, reorg detection, event cursor validation and a local HTTP
+JSON-RPC server. PlayMode checks signed local transactions,
 reads, events, errors, cancellation, and request lifetime. The runner requires
 fresh XML results, passing cases, and the expected test classes. Missing RPC
 configuration or skipped cases fail the check.
@@ -59,9 +61,11 @@ Editor is missing.
 
 ## Limits
 
-Unity 6000.6.3f1 on Apple Silicon macOS passes EditMode and PlayMode tests,
-including signed Anvil requests, plus standalone Mono and IL2CPP codec checks.
-Player checks cover exact uint256 values, named tuples, and custom errors.
+The fixture targets Unity 6000.6.3f1 on Apple Silicon macOS. Editor checks
+exercise codecs, asynchronous operations, and signed Anvil requests; standalone
+Mono and IL2CPP checks exercise exact uint256 values, named tuples, and custom
+errors. Run the current suites when changing the adapter. An activated Editor is
+required; a licensing failure does not count as an Editor or player test pass.
 Linux CI, Android, iOS, and WebGL remain unqualified.
 Cancellation stops waiting for a result; it does not promise to abort an HTTP
 request already dispatched by Nethereum. The private-key signer exists only in

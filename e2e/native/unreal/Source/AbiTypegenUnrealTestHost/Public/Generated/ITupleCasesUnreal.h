@@ -5,9 +5,113 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_ITupleCases.h"
 #include "ITupleCasesUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesDepositTupleAddressEndTuple_Input_Position
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Account{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesDepositTupleAddressEndTupleResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesDepositTupleUint256EndTuple_Input_Position
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesDepositTupleUint256EndTupleResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+/** UHT wrapper for a nested ABI array. */
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesSetMatrix_Input_Matrix_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenWord256> Values;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesSetMatrixResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+/** UHT wrapper for a nested ABI array. */
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesSetRows_Input_Rows_Item
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<bool> Values;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesSetRowsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FITupleCasesMovedEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress From{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Memo{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress To{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FITupleCasesMovedEventReceived, FITupleCasesMovedEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FITupleCasesMovedEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UITupleCasesMovedEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FITupleCasesMovedEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FITupleCasesMovedEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch ITupleCases MovedEvent"), Category="abi-typegen|ITupleCases")
+    static UITupleCasesMovedEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UITupleCasesUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,4 +122,32 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|ITupleCases")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool EncodeDepositTupleAddressEndTuple(FAbiTypegenBytes& Encoded, FString& Error, const FITupleCasesDepositTupleAddressEndTuple_Input_Position& Position);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool DecodeDepositTupleAddressEndTuple(const FAbiTypegenBytes& Data, FITupleCasesDepositTupleAddressEndTupleResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool EncodeDepositTupleUint256EndTuple(FAbiTypegenBytes& Encoded, FString& Error, const FITupleCasesDepositTupleUint256EndTuple_Input_Position& Position);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool DecodeDepositTupleUint256EndTuple(const FAbiTypegenBytes& Data, FITupleCasesDepositTupleUint256EndTupleResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool EncodeSetMatrix(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FITupleCasesSetMatrix_Input_Matrix_Item>& Matrix);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool DecodeSetMatrix(const FAbiTypegenBytes& Data, FITupleCasesSetMatrixResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool EncodeSetRows(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FITupleCasesSetRows_Input_Rows_Item>& Rows);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool DecodeSetRows(const FAbiTypegenBytes& Data, FITupleCasesSetRowsResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|ITupleCases")
+    static bool DecodeMovedEvent(const FAbiTypegenBytes& Data, FITupleCasesMovedEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+
 };

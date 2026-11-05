@@ -5,9 +5,172 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Token.h"
 #include "TokenUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenAllowanceResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenApproveResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenBalanceOfResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenDecimalsResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenMintResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenNameResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FString Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenSymbolResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FString Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenTotalSupplyResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenTransferResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Success{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenApprovalEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Owner{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Spender{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenApprovalEventReceived, FTokenApprovalEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenApprovalEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UTokenApprovalEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FTokenApprovalEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FTokenApprovalEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Token ApprovalEvent"), Category="abi-typegen|Token")
+    static UTokenApprovalEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenTransferEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress From{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress To{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Amount{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenTransferEventReceived, FTokenTransferEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenTransferEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API UTokenTransferEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FTokenTransferEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FTokenTransferEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Token TransferEvent"), Category="abi-typegen|Token")
+    static UTokenTransferEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenInsufficientBalanceError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Account{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Available{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 Required{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FTokenInvalidRecipientError
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UTokenUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,14 +181,73 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Token")
     static TArray<FString> GetBlueprintUnsupportedOperations();
-};
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeAllowance(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0, const FAbiTypegenAddress& Value1);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeAllowance(const FAbiTypegenBytes& Data, FTokenAllowanceResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeApprove(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Spender, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeApprove(const FAbiTypegenBytes& Data, FTokenApproveResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeBalanceOf(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& Value0);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeBalanceOf(const FAbiTypegenBytes& Data, FTokenBalanceOfResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeDecimals(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeDecimals(const FAbiTypegenBytes& Data, FTokenDecimalsResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeMint(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& To2, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeMint(const FAbiTypegenBytes& Data, FTokenMintResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeName(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeName(const FAbiTypegenBytes& Data, FTokenNameResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeSymbol(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeSymbol(const FAbiTypegenBytes& Data, FTokenSymbolResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeTotalSupply(FAbiTypegenBytes& Encoded, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeTotalSupply(const FAbiTypegenBytes& Data, FTokenTotalSupplyResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool EncodeTransfer(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenAddress& To2, const FAbiTypegenWord256& Amount);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeTransfer(const FAbiTypegenBytes& Data, FTokenTransferResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeApprovalEvent(const FAbiTypegenBytes& Data, FTokenApprovalEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeTransferEvent(const FAbiTypegenBytes& Data, FTokenTransferEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeInsufficientBalanceError(const FAbiTypegenBytes& Data, FTokenInsufficientBalanceError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Token")
+    static bool DecodeInvalidRecipientError(const FAbiTypegenBytes& Data, FTokenInvalidRecipientError& Result, FString& Error);
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenAllowanceResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenAllowanceSuccess, FTokenAllowanceResult, Result);
@@ -51,14 +273,6 @@ private:
     FAbiTypegenAddress Value1;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenBalanceOfResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenBalanceOfSuccess, FTokenBalanceOfResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenBalanceOfFailure, FString, Error);
 
@@ -79,14 +293,6 @@ private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
     FAbiTypegenAddress Value0;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenDecimalsResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenDecimalsSuccess, FTokenDecimalsResult, Result);
@@ -110,14 +316,6 @@ private:
     FAbiTypegenAddress ContractAddressValue;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenNameResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FString Value0;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenNameSuccess, FTokenNameResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenNameFailure, FString, Error);
 
@@ -139,14 +337,6 @@ private:
     FAbiTypegenAddress ContractAddressValue;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenSymbolResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FString Value0;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenSymbolSuccess, FTokenSymbolResult, Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenSymbolFailure, FString, Error);
 
@@ -166,14 +356,6 @@ public:
 private:
     FString RpcUrlValue;
     FAbiTypegenAddress ContractAddressValue;
-};
-
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FTokenTotalSupplyResult
-{
-    GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenWord256 Value0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTokenTotalSupplySuccess, FTokenTotalSupplyResult, Result);

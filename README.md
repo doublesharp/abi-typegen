@@ -170,9 +170,9 @@ with an adapter package.
 
 | Language | Target   | Runtime or SDK                                                                                                                 | What you get                                                           |
 | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| C#       | `csharp` | [Unity](https://docs.unity3d.com/Manual/index.html) + [Unity adapter](integrations/unity/com.doublesharp.abi-typegen.unity/)      | C# bindings with Unity HTTP transport and object lifecycle support      |
-| GDScript | `godot`  | [Godot](https://docs.godotengine.org/en/stable/)                                                                                  | GDScript bindings and a native extension for codecs and asynchronous RPC |
-| C++      | `unreal` | [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/)                                                     | C++ codecs and Blueprint nodes for asynchronous scalar reads            |
+| C#       | `csharp` | [Unity](https://docs.unity3d.com/Manual/index.html) + [Unity adapter](integrations/unity/com.doublesharp.abi-typegen.unity/)      | Typed C# bindings, simulation, receipts, and event polling      |
+| GDScript | `godot`  | [Godot](https://docs.godotengine.org/en/stable/)                                                                                  | Typed GDScript values, async calls, receipts, and event polling |
+| C++      | `unreal` | [Unreal Engine](https://dev.epicgames.com/documentation/en-us/unreal-engine/)                                                     | Typed C++/Blueprint codecs, async reads, and event watchers            |
 
 See [engine packages](integrations/README.md) for setup and
 [native bindings](docs/native-bindings.md) for supported features and platforms.

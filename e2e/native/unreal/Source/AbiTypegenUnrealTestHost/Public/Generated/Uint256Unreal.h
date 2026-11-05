@@ -5,9 +5,18 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Uint256.h"
 #include "Uint256Unreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FUint256AmountResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API UUint256UnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,4 +27,11 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Uint256")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Uint256")
+    static bool EncodeAmount(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Input);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Uint256")
+    static bool DecodeAmount(const FAbiTypegenBytes& Data, FUint256AmountResult& Result, FString& Error);
+
 };

@@ -74,3 +74,17 @@ namespace AbiTypegen
     ABITYPEGENUNREAL_API bool ParseAddress(const FString& Hex, atg_address& Out, FString& OutError);
     ABITYPEGENUNREAL_API FString AddressToHex(const atg_address& Address);
 }
+
+/** Owns one ABI value tree while a generated codec builds its arguments. */
+class FAbiTypegenValue final
+{
+public:
+    explicit FAbiTypegenValue(atg_value* In) : Ptr(In) {}
+    ~FAbiTypegenValue() { atg_value_free(Ptr); }
+    FAbiTypegenValue(const FAbiTypegenValue&) = delete;
+    FAbiTypegenValue& operator=(const FAbiTypegenValue&) = delete;
+    atg_value* Get() const { return Ptr; }
+    atg_value* Release() { atg_value* Value = Ptr; Ptr = nullptr; return Value; }
+private:
+    atg_value* Ptr;
+};

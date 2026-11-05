@@ -1,6 +1,7 @@
 extends RefCounted
 
 const CodecCases = preload("res://generated/codec_cases.gd")
+const GenericTypes = preload("res://generated/generic_types.gd")
 const TokenBinding = preload("res://generated/token.gd")
 const TestUtil = preload("res://tests/test_util.gd")
 
@@ -36,6 +37,38 @@ func run() -> Array[String]:
     var decoded_large := TokenBinding.decode_balance_of_result(big)
     if t.ok(decoded_large, "decode uint256 above 2^128"):
         t.equal(decoded_large["value"], big, "large uint256 result remains exact")
+
+    var typed_balance := TokenBinding.decode_balance_of_result_typed(big)
+    if t.ok(typed_balance, "typed scalar result"):
+        t.equal(typed_balance["value"].to_dictionary().values()[0], big, "typed scalar retains full integer")
+    var typed_tuple := CodecCases.decode_read_tuple_result_typed(_append(big, one))
+    if t.ok(typed_tuple, "typed tuple result"):
+        t.equal(typed_tuple["value"].to_dictionary().values()[0], {"value": big, "flag": true}, "typed tuple converts back to existing value")
+
+    var position := GenericTypes.AtgPosition.new()
+    position.owner = owner
+    position.get3 = big
+    position.get2 = one
+    t.equal(position.to_dictionary(), {"owner": owner, "get": big, "get2": one}, "inherited members do not shadow ABI fields")
+    var rows := GenericTypes.AtgInspectResult.from_abi_value([[position.to_dictionary()]])
+    t.check(rows.rows[0][0] is GenericTypes.AtgPosition, "nested tuple arrays become named values")
+    t.equal(rows.rows[0][0].get3, big, "nested typed integer stays exact")
+    t.equal(rows.to_dictionary()["rows"], [[position.to_dictionary()]], "nested named values round trip")
+    t.ok(GenericTypes.encode_inspect([position]), "named tuple accepted as input")
+    t.ok(GenericTypes.decode_empty_result_typed(PackedByteArray()), "empty result has a named value")
+    var typed_event := GenericTypes.AtgChangedEvent.from_abi_value(position.to_dictionary())
+    t.check(typed_event.item is GenericTypes.AtgPosition, "single tuple event payload becomes named field")
+    var denied := GenericTypes.decode_denied_error_typed(_append(GenericTypes.DENIED_ERROR_SELECTOR.substr(2).hex_decode(), _word(owner.substr(2).lpad(64, "0"))))
+    if t.ok(denied, "typed single field custom error"):
+        t.equal(denied["value"].owner, owner, "custom error named field decoded")
+
+    var inherited_data := PackedByteArray()
+    for _index in range(GenericTypes.RESERVED_FIELDS_OUTPUT_TYPES.size()):
+        inherited_data.append_array(one)
+    var inherited_decoded := GenericTypes.decode_reserved_fields_result_typed(inherited_data)
+    if t.ok(inherited_decoded, "all inherited Object methods and signals become valid typed fields"):
+        for value in inherited_decoded["value"].to_dictionary().values():
+            t.equal(value, true, "inherited member field preserves ABI value")
 
     # Overloaded functions keep separate generated names/signatures and encode distinct selectors.
     var overloaded_a := CodecCases.encode_safe_transfer_from_1(owner, other, one)

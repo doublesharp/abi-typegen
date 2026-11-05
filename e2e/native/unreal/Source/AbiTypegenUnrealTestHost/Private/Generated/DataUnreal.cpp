@@ -9,6 +9,37 @@ FString UDataUnrealMetadata::GetAbi() { return UTF8_TO_TCHAR(atg_Data_abi); }
 TArray<FString> UDataUnrealMetadata::GetBlueprintUnsupportedOperations()
 {
     return {
-        TEXT("bytesValue(bytes): write signing/submission belongs to IAbiTypegenSigner and is not exposed as a generated Blueprint node"),
+        TEXT("bytesValue(bytes): signing/submission belongs to IAbiTypegenSigner; use the generated encode helper"),
     };
+}
+
+[[maybe_unused]] static atg_value* BuildFDataBytesValue_Input_Input(const FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    return atg_value_bytes(X.Data.GetData(), X.Data.Num());
+}
+[[maybe_unused]] static bool ReadFDataBytesValue_Input_Input(const atg_value* V, FAbiTypegenBytes& X, FString& Error)
+{
+    (void)X; (void)Error;
+    if (atg_value_len(V) > MAX_int32) { Error = TEXT("decoded bytes exceed Unreal limits"); return false; } X.Data.Reset(); X.Data.Append(atg_value_data(V), static_cast<int32>(atg_value_len(V))); return true;
+}
+
+bool UDataUnrealMetadata::EncodeBytesValue(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Input)
+{
+    Encoded.Data.Reset(); Error.Reset();
+    FAbiTypegenValue Args(atg_value_seq());
+    if (!Args.Get()) { Error = TEXT("ABI allocation failure"); return false; }
+    { FAbiTypegenValue Item(BuildFDataBytesValue_Input_Input(Input, Error)); if (!Item.Get() || atg_value_push(Args.Get(), Item.Get())) { if (Error.IsEmpty()) Error = TEXT("ABI allocation failure"); return false; } }
+    FAbiTypegenResult Native(atg_encode(atg_Data_abi, "bytesValue(bytes)", Args.Get()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    Encoded.Data = Native.CopyBytes(); return true;
+}
+
+bool UDataUnrealMetadata::DecodeBytesValue(const FAbiTypegenBytes& Data, FDataBytesValueResult& Result, FString& Error)
+{
+    Error.Reset();
+    FAbiTypegenResult Native(atg_decode(atg_Data_abi, "bytesValue(bytes)", Data.Data.GetData(), Data.Data.Num()));
+    if (!Native.IsOk()) { Error = Native.Error(); return false; }
+    FDataBytesValueResult Decoded{};
+    Result = MoveTemp(Decoded); return true;
 }

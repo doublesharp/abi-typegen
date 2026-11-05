@@ -18,6 +18,7 @@
     "Nethereum.Contracts.dll",
     "Nethereum.Hex.dll",
     "Nethereum.JsonRpc.Client.dll",
+    "Nethereum.JsonRpc.RpcClient.dll",
     "Nethereum.RPC.dll",
     "Nethereum.Signer.dll",
     "Nethereum.Util.dll",

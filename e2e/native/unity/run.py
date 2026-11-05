@@ -41,7 +41,7 @@ def run_tests(editor, mode):
         "-runTests", "-testPlatform", "EditMode" if mode == "editmode" else "PlayMode",
         "-testResults", str(xml), "-logFile", str(results / f"{mode}.log"),
     ], check=True, timeout=900)
-    suites = ["GeneratedBindingsEditModeTests"] if mode == "editmode" else [
+    suites = ["GeneratedBindingsEditModeTests", "RpcOperationsEditModeTests", "LocalHttpRpcEditModeTests"] if mode == "editmode" else [
         "AnvilPlayModeTests", "LifecyclePlayModeTests"
     ]
     validate_results(xml, [PREFIX + suite for suite in suites])

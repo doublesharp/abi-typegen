@@ -68,6 +68,15 @@ def run_command(command: list[str], *, timeout: int, env: dict[str, str] | None 
     return result.stdout
 
 
+def stage_addon() -> None:
+    """Copy the authoritative reusable addon into the disposable test project."""
+    source = ROOT / "integrations" / "godot" / "addon"
+    destination = PROJECT / "addons" / "abi_typegen"
+    destination.mkdir(parents=True, exist_ok=True)
+    for script in source.glob("*.gd"):
+        shutil.copy2(script, destination / script.name)
+
+
 def run_import(binary: str) -> None:
     # Godot 4.7.2 can queue extension-doc generation during the first scan and
     # crash during early shutdown. Retain --import's scan wait and allow 600
@@ -154,11 +163,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("import", "suite"))
     parser.add_argument("--godot", help="Godot executable (or set GODOT_BIN)")
-    parser.add_argument("--suite", choices=("codec", "packaging", "anvil"))
+    parser.add_argument("--suite", choices=("codec", "packaging", "anvil", "operations"))
     args = parser.parse_args()
     if args.action == "suite" and not args.suite:
         parser.error("suite action requires --suite")
     try:
+        stage_addon()
         binary = godot_binary(args.godot)
         if args.action == "import":
             run_import(binary)

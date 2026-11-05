@@ -5,9 +5,125 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_Registry.h"
 #include "RegistryUnreal.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryBatchLookupResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenBytes> Value0{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    TArray<FAbiTypegenAddress> Value1{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryEncodeResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryGetEntry_Output_Entry_Meta
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenWord256 CreatedAt{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Owner{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    bool Active{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryGetEntry_Output_Entry
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Id{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FString Label{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FRegistryGetEntry_Output_Entry_Meta Meta{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryGetEntryResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FRegistryGetEntry_Output_Entry Entry{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryHashLabelResult
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Value0{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryRegisterResult
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
+    bool bCompleted = true;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryRegisteredEvent
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Id{};
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenAddress Owner{};
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryRegisteredEventReceived, FRegistryRegisteredEvent, Event);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryRegisteredEventWatchFailure, FString, Error);
+/** Watches confirmed logs from an explicit cursor. Cancel to stop; reorgs report failure. */
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API URegistryRegisteredEventWatcher : public UAbiTypegenAsyncActionBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(BlueprintAssignable) FRegistryRegisteredEventReceived OnEvent;
+    UPROPERTY(BlueprintAssignable) FRegistryRegisteredEventWatchFailure OnFailure;
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject", DisplayName="Watch Registry RegisteredEvent"), Category="abi-typegen|Registry")
+    static URegistryRegisteredEventWatcher* Watch(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, int64 StartBlock, int32 Confirmations = 1, int32 BlocksPerRange = 100, float PollIntervalSeconds = 1.0f, float TimeoutSeconds = 120.0f);
+    virtual void Activate() override;
+    virtual void Cancel() override;
+    virtual void BeginDestroy() override;
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    int64 StartBlockValue = 0;
+    FAbiTypegenPollOptions Options;
+    TSharedPtr<FAbiTypegenPollSession> Session;
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryAlreadyRegisteredError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Id{};
+};
+
+USTRUCT(BlueprintType)
+struct ABITYPEGENUNREALTESTHOST_API FRegistryNotFoundError
+{
+    GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="abi-typegen")
+    FAbiTypegenBytes Id{};
+};
 UCLASS()
 class ABITYPEGENUNREALTESTHOST_API URegistryUnrealMetadata : public UBlueprintFunctionLibrary
 {
@@ -18,14 +134,68 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|Registry")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool EncodeBatchLookup(FAbiTypegenBytes& Encoded, FString& Error, const TArray<FAbiTypegenBytes>& Ids);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeBatchLookup(const FAbiTypegenBytes& Data, FRegistryBatchLookupResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool EncodeEncode(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenWord256& Value, const FAbiTypegenAddress& Addr);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeEncode(const FAbiTypegenBytes& Data, FRegistryEncodeResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool EncodeGetEntry(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Id);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeGetEntry(const FAbiTypegenBytes& Data, FRegistryGetEntryResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool EncodeHashLabel(FAbiTypegenBytes& Encoded, FString& Error, const FString& Label);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeHashLabel(const FAbiTypegenBytes& Data, FRegistryHashLabelResult& Result, FString& Error);
+    /** Encode calldata without signing or submitting it. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool EncodeRegister(FAbiTypegenBytes& Encoded, FString& Error, const FAbiTypegenBytes& Id, const FString& Label);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeRegister(const FAbiTypegenBytes& Data, FRegistryRegisterResult& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeRegisteredEvent(const FAbiTypegenBytes& Data, FRegistryRegisteredEvent& Result, FString& Error, const TArray<FAbiTypegenWord256>& Topics);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeAlreadyRegisteredError(const FAbiTypegenBytes& Data, FRegistryAlreadyRegisteredError& Result, FString& Error);
+    /** Decode ABI bytes into owned reflected values. Indexed dynamic fields contain the topic hash. */
+    UFUNCTION(BlueprintCallable, Category="abi-typegen|Registry")
+    static bool DecodeNotFoundError(const FAbiTypegenBytes& Data, FRegistryNotFoundError& Result, FString& Error);
+
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FRegistryEncodeResult
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryBatchLookupSuccess, FRegistryBatchLookupResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryBatchLookupFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API URegistryBatchLookupAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenBytes Value0;
+public:
+    UPROPERTY(BlueprintAssignable) FRegistryBatchLookupSuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FRegistryBatchLookupFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Registry")
+    static URegistryBatchLookupAsyncAction* BatchLookup(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, TArray<FAbiTypegenBytes> Ids);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    TArray<FAbiTypegenBytes> Ids;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryEncodeSuccess, FRegistryEncodeResult, Result);
@@ -51,12 +221,26 @@ private:
     FAbiTypegenAddress Addr;
 };
 
-USTRUCT(BlueprintType)
-struct ABITYPEGENUNREALTESTHOST_API FRegistryHashLabelResult
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryGetEntrySuccess, FRegistryGetEntryResult, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryGetEntryFailure, FString, Error);
+
+UCLASS()
+class ABITYPEGENUNREALTESTHOST_API URegistryGetEntryAsyncAction : public UAbiTypegenAsyncActionBase
 {
     GENERATED_BODY()
-    UPROPERTY(BlueprintReadOnly, Category="abi-typegen")
-    FAbiTypegenBytes Value0;
+public:
+    UPROPERTY(BlueprintAssignable) FRegistryGetEntrySuccess OnSuccess;
+    UPROPERTY(BlueprintAssignable) FRegistryGetEntryFailure OnFailure;
+
+    UFUNCTION(BlueprintCallable, meta=(BlueprintInternalUseOnly="true", WorldContext="WorldContextObject"), Category="abi-typegen|Registry")
+    static URegistryGetEntryAsyncAction* GetEntry(UObject* WorldContextObject, UObject* RequestOwner, const FString& RpcUrl, FAbiTypegenAddress ContractAddress, FAbiTypegenBytes Id);
+
+    virtual void Activate() override;
+
+private:
+    FString RpcUrlValue;
+    FAbiTypegenAddress ContractAddressValue;
+    FAbiTypegenBytes Id;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRegistryHashLabelSuccess, FRegistryHashLabelResult, Result);

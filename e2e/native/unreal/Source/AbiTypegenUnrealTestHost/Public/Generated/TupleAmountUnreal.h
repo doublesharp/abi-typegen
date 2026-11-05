@@ -5,6 +5,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "AbiTypegenAsyncActionBase.h"
 #include "AbiTypegenTypes.h"
+#include "AbiTypegenPolling.h"
 #include "Generated/atg_TupleAmount.h"
 #include "TupleAmountUnreal.generated.h"
 
@@ -18,4 +19,5 @@ public:
 
     UFUNCTION(BlueprintPure, Category="abi-typegen|TupleAmount")
     static TArray<FString> GetBlueprintUnsupportedOperations();
+
 };

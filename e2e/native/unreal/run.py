@@ -18,6 +18,12 @@ PROJECT = PROJECT_DIR / "AbiTypegenUnrealTestHost.uproject"
 PLUGIN_SOURCE = ROOT / "integrations" / "unreal" / "Plugins" / "AbiTypegen"
 PLUGIN_STAGED = PROJECT_DIR / "Plugins" / "AbiTypegen"
 EXPECTED_TESTS = (
+    "AbiTypegen.Unreal.Polling.RangeReorg",
+    "AbiTypegen.Unreal.Codec.ReflectedGenericAbi",
+    "AbiTypegen.Unreal.Polling.StrictQuantities",
+    "AbiTypegen.Unreal.Polling.StrictReceipt",
+    "AbiTypegen.Unreal.Polling.TransactionBoundary",
+    "AbiTypegen.Unreal.Polling.ConfirmationsCursorCancellation",
     "AbiTypegen.Unreal.Rpc.StrictEnvelope",
     "AbiTypegen.Unreal.Codec.MetadataAndGeneratedNames",
     "AbiTypegen.Unreal.Codec.Uint256Above128Bits",
@@ -167,6 +173,14 @@ def generate_bindings(typegen: str) -> None:
         public.mkdir(parents=True)
         private.mkdir(parents=True)
         for source in output.iterdir():
+            if source.suffix == ".h":
+                shutil.copy2(source, public / source.name)
+            elif source.suffix in (".cpp", ".c"):
+                shutil.copy2(source, private / source.name)
+
+        names_out = stage / "generic-names"
+        run([typegen, "generate", "--artifacts", "e2e/native/unreal/artifacts", "--out", str(names_out), "--target", "unreal", "--package", "AbiTypegenUnrealTestHost", "--contracts", "GenericNames"], cwd=ROOT, timeout=120)
+        for source in names_out.iterdir():
             if source.suffix == ".h":
                 shutil.copy2(source, public / source.name)
             elif source.suffix in (".cpp", ".c"):

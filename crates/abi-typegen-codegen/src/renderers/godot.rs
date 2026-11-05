@@ -3,6 +3,9 @@
 //! Generated GDScript contains ABI metadata, lossless Godot type descriptors,
 //! and thin calls into the reusable AbiTypegenCodec/AbiTypegenClient GDExtension.
 
+#[path = "godot_values.rs"]
+mod values;
+
 use crate::naming::{Scope, exported, overload_indices, param_names, repeat_indices};
 use crate::tuples::TupleRegistry;
 use abi_typegen_core::types::{AbiParam, ContractIr, SolType, StateMutability};
@@ -62,7 +65,11 @@ pub fn file_name(contract_name: &str) -> String {
 
 /// Returns a Godot global class name that cannot shadow engine builtins.
 pub fn namespace_name(name: &str) -> String {
-    let name = exported(name);
+    let clean: String = name
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '_')
+        .collect();
+    let name = exported(&clean);
     let name = if name.is_empty() { "Contract" } else { &name };
     format!("AtgContract{name}")
 }
@@ -229,7 +236,14 @@ fn params_decl(names: &[String]) -> String {
 }
 
 fn params_values(names: &[String]) -> String {
-    format!("[{}]", names.join(", "))
+    format!(
+        "[{}]",
+        names
+            .iter()
+            .map(|name| format!("_abi_value({name})"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 fn output_names_literal(params: &[AbiParam], registry: &TupleRegistry) -> String {
@@ -298,7 +312,9 @@ pub fn render_godot_file(ir: &ContractIr, wrappers: bool) -> String {
     let constructor_names = ir
         .constructor
         .as_ref()
-        .map(|constructor| names_with_reserved(&constructor.inputs, &registry, &["bytecode"]))
+        .map(|constructor| {
+            names_with_reserved(&constructor.inputs, &registry, &["bytecode", "_abi_value"])
+        })
         .unwrap_or_default();
     let constructor_inputs = ir
         .constructor
@@ -407,10 +423,23 @@ pub fn render_godot_file(ir: &ContractIr, wrappers: bool) -> String {
         error_meta.push((error, base, index));
     }
 
+    let value_types = values::ValueTypes::render(&mut out, ir, &registry);
+
     if !wrappers {
         return out;
     }
 
+    out.push_str(
+        r#"
+# Accept generated named values recursively while retaining dictionary inputs.
+static func _abi_value(value: Variant) -> Variant:
+    if value is Object and value.has_method("to_dictionary"):
+        return value.to_dictionary()
+    if value is Array:
+        return value.map(func(item): return _abi_value(item))
+    return value
+"#,
+    );
     out.push_str(
         "\n# Callable wrappers below require the reusable abi-typegen Godot GDExtension.\n",
     );
@@ -457,7 +486,9 @@ static func send_receive(client: AbiTypegenClient, _signer: Object, _contract_ad
         "send_fallback".to_string(),
         "send_receive".to_string(),
     ]);
-    for (function, base, overload_index) in function_meta {
+    for ((function, base, overload_index), result_type) in
+        function_meta.into_iter().zip(&value_types.results)
+    {
         let raw_stem = match overload_index {
             Some(index) => format!("{}_{}", gd_ident(&function.name), index + 1),
             None => gd_ident(&function.name),
@@ -473,12 +504,19 @@ static func send_receive(client: AbiTypegenClient, _signer: Object, _contract_ad
         let stem = claim_method_stem(
             &mut used_methods,
             &raw_stem,
-            &[("encode_", ""), ("decode_", "_result"), (action, "")],
+            &[
+                ("encode_", ""),
+                ("decode_", "_result"),
+                ("decode_", "_result_typed"),
+                (action, ""),
+                ("call_", "_typed"),
+            ],
         );
         let arg_names = names_with_reserved(
             &function.inputs,
             &registry,
             &[
+                "_abi_value",
                 "client",
                 "contract_address",
                 "block",
@@ -508,6 +546,15 @@ static func decode_{stem}_result(data: PackedByteArray) -> Dictionary:
 "#
         ));
 
+        out.push_str(&format!(
+            r#"
+static func decode_{stem}_result_typed(data: PackedByteArray) -> Dictionary:
+    var decoded := decode_{stem}_result(data)
+    if decoded.get("ok", false):
+        decoded["value"] = {result_type}.from_abi_value(decoded["value"])
+    return decoded
+"#
+        ));
         match function.state_mutability {
             StateMutability::View | StateMutability::Pure => {
                 out.push_str(&format!(
@@ -517,7 +564,11 @@ static func call_{stem}(client: AbiTypegenClient, contract_address: String{args_
         push_error("abi-typegen: call_{stem} requires an AbiTypegenClient")
         return null
     return client.call_contract(contract_address, ABI_JSON, {base}_SIGNATURE, {values}, {base}_INPUT_TYPES, {base}_OUTPUT_TYPES, {base}_OUTPUT_NAMES, block)
-"#
+
+static func call_{stem}_typed(client: AbiTypegenClient, contract_address: String{args_with_prefix}, block: String = "latest"):
+    return AbiTypegenTypedRequest.wrap(call_{stem}(client, contract_address{typed_args}, block), Callable({result_type}, "from_abi_value"))
+"#,
+                    typed_args = if arg_names.is_empty() { String::new() } else { format!(", {}", arg_names.join(", ")) },
                 ));
             }
             StateMutability::NonPayable | StateMutability::Payable => {
@@ -559,7 +610,8 @@ static func send_{stem}(client: AbiTypegenClient, signer: Object, contract_addre
         }
     }
 
-    for (event, base, repeat_index) in event_meta {
+    for ((event, base, repeat_index), event_type) in event_meta.into_iter().zip(&value_types.events)
+    {
         let raw_stem = match repeat_index {
             Some(index) => format!("{}_{}", gd_ident(&event.name), index + 1),
             None => gd_ident(&event.name),
@@ -567,7 +619,12 @@ static func send_{stem}(client: AbiTypegenClient, signer: Object, contract_addre
         let stem = claim_method_stem(
             &mut used_methods,
             &raw_stem,
-            &[("decode_", "_event"), ("", "_event_filter")],
+            &[
+                ("decode_", "_event"),
+                ("decode_", "_event_typed"),
+                ("", "_event_filter"),
+                ("watch_", ""),
+            ],
         );
         let indexed_count = event.inputs.iter().filter(|input| input.indexed).count();
         let initial_topic = if event.anonymous {
@@ -579,6 +636,18 @@ static func send_{stem}(client: AbiTypegenClient, signer: Object, contract_addre
             r#"
 static func decode_{stem}_event(topics: Array, data: PackedByteArray) -> Dictionary:
     return AbiTypegenCodec.decode_event(ABI_JSON, {base}_EVENT_SIGNATURE, topics, data, {base}_EVENT_TYPES, {base}_EVENT_NAMES)
+
+static func decode_{stem}_event_typed(topics: Array, data: PackedByteArray) -> Dictionary:
+    var decoded := decode_{stem}_event(topics, data)
+    if decoded.get("ok", false):
+        decoded["value"] = {event_type}.from_abi_value(decoded["value"])
+    return decoded
+
+static func watch_{stem}(client: AbiTypegenClient, contract_address: String, from_block: int, indexed_topics: Array = [], confirmations: int = 1, poll_seconds: float = 1.0):
+    var filter := {stem}_event_filter(contract_address, indexed_topics)
+    if not filter.get("ok", false):
+        return client.failed_request("invalid_filter", str(filter.get("error", {{}})))
+    return AbiTypegenOperations.watch_events(client, filter["value"], Callable({class_name}, "decode_{stem}_event_typed"), from_block, confirmations, poll_seconds)
 
 # Indexed topics are positional. Supply null for a wildcard or a pre-encoded 32-byte 0x topic.
 # Dynamic indexed values must be supplied as their already-computed topic hash.
@@ -606,16 +675,27 @@ static func {stem}_event_filter(contract_address: String = "", indexed_topics: A
         ));
     }
 
-    for (error, base, repeat_index) in error_meta {
+    for ((error, base, repeat_index), error_type) in error_meta.into_iter().zip(&value_types.errors)
+    {
         let raw_stem = match repeat_index {
             Some(index) => format!("{}_{}", gd_ident(&error.name), index + 1),
             None => gd_ident(&error.name),
         };
-        let stem = claim_method_stem(&mut used_methods, &raw_stem, &[("decode_", "_error")]);
+        let stem = claim_method_stem(
+            &mut used_methods,
+            &raw_stem,
+            &[("decode_", "_error"), ("decode_", "_error_typed")],
+        );
         out.push_str(&format!(
             r#"
 static func decode_{stem}_error(data: PackedByteArray) -> Dictionary:
     return AbiTypegenCodec.decode_error(ABI_JSON, {base}_ERROR_SIGNATURE, data, {base}_ERROR_TYPES, {base}_ERROR_NAMES)
+
+static func decode_{stem}_error_typed(data: PackedByteArray) -> Dictionary:
+    var decoded := decode_{stem}_error(data)
+    if decoded.get("ok", false):
+        decoded["value"] = {error_type}.from_abi_value(decoded["value"])
+    return decoded
 "#
         ));
     }
@@ -627,6 +707,86 @@ static func decode_{stem}_error(data: PackedByteArray) -> Dictionary:
 mod tests {
     use super::*;
     use abi_typegen_core::parser::parse_artifact;
+
+    #[test]
+    fn named_values_and_typed_helpers_cover_nested_abi_shapes() {
+        let ir = parse_artifact("Generic", r#"{"abi":[
+            {"type":"function","name":"inspect","inputs":[{"name":"items","type":"tuple[]","internalType":"struct Generic.Position[]","components":[{"name":"owner","type":"address"},{"name":"get","type":"uint256"},{"name":"get2","type":"uint256"}]}],"outputs":[{"name":"rows","type":"tuple[][]","internalType":"struct Generic.Position[][]","components":[{"name":"owner","type":"address"},{"name":"get","type":"uint256"},{"name":"get2","type":"uint256"}]}],"stateMutability":"view"},
+            {"type":"event","name":"Changed","inputs":[{"name":"item","type":"tuple","internalType":"struct Generic.Position","components":[{"name":"owner","type":"address"},{"name":"get","type":"uint256"},{"name":"get2","type":"uint256"}],"indexed":false}]},
+            {"type":"error","name":"Denied","inputs":[{"name":"owner","type":"address"}]}
+        ]}"#).expect("valid generic ABI");
+        let output = render_godot_file(&ir, true);
+        for required in [
+            "class AtgPosition:",
+            "class AtgInspectResult:",
+            "class AtgChangedEvent:",
+            "class AtgDeniedError:",
+            "static func decode_inspect_result_typed",
+            "static func call_inspect_typed",
+            "static func decode_changed_event_typed",
+            "static func decode_denied_error_typed",
+            "static func watch_changed",
+            "AbiTypegenTypedRequest.wrap",
+            "var owner: String",
+            "var get3: PackedByteArray",
+        ] {
+            assert!(output.contains(required), "missing {required}: {output}");
+        }
+        let metadata = render_godot_file(&ir, false);
+        assert!(metadata.contains("class AtgPosition:"));
+        assert!(!metadata.contains("AbiTypegenTypedRequest"));
+        assert!(!metadata.contains("static func watch_"));
+    }
+
+    #[test]
+    fn dollar_names_are_valid_godot_classes() {
+        let ir = parse_artifact("$Generic", r#"{"abi":[{"type":"function","name":"$inspect","inputs":[],"outputs":[{"name":"item","type":"tuple","internalType":"struct $Generic.$Position","components":[{"name":"get","type":"uint256"}]}],"stateMutability":"view"}]}"#).expect("Solidity identifiers allow dollars");
+        let output = render_godot_file(&ir, true);
+        assert!(output.contains("class_name AtgContractGeneric"));
+        assert!(output.contains("class AtgPosition:"));
+        assert!(output.contains("class AtgInspectResult:"));
+        assert!(!output.contains("class Atg$"));
+    }
+
+    #[test]
+    fn typed_fields_do_not_shadow_builtin_scalar_types() {
+        let ir = parse_artifact("Generic", r#"{"abi":[{"type":"function","name":"check","inputs":[],"outputs":[{"name":"","type":"bool"},{"name":"int","type":"uint256"},{"name":"float","type":"uint256"}],"stateMutability":"view"}]}"#).expect("valid ABI");
+        let output = render_godot_file(&ir, true);
+        for required in [
+            "var bool2: bool",
+            "var int2: PackedByteArray",
+            "var float2: PackedByteArray",
+        ] {
+            assert!(output.contains(required), "missing {required}");
+        }
+    }
+
+    #[test]
+    fn typed_values_reserve_object_signal_metadata_and_translation_members() {
+        let names = [
+            "get_meta_list",
+            "has_user_signal",
+            "has_connections",
+            "is_queued_for_deletion",
+            "tr_n",
+            "notify_property_list_changed",
+            "property_get_revert",
+            "get_method_argument_count",
+        ];
+        let outputs: Vec<_> = names
+            .iter()
+            .map(|name| serde_json::json!({"name":name,"type":"bool"}))
+            .collect();
+        let abi = serde_json::json!({"abi":[{"type":"function","name":"reservedFields","inputs":[],"outputs":outputs,"stateMutability":"view"}]}).to_string();
+        let ir = parse_artifact("Generic", &abi).expect("valid inherited-member fixture");
+        let output = render_godot_file(&ir, true);
+        for name in names {
+            assert!(
+                output.contains(&format!("var {name}2: bool")),
+                "inherited member {name} must be renamed"
+            );
+        }
+    }
 
     #[test]
     fn metadata_and_wrappers_are_deterministic() {
