@@ -182,7 +182,8 @@ numeric suffix. web3.js wrappers type overloads under the keys web3 registers at
 runtime: the plain name, which picks an overload by argument count, and the
 quoted signature, such as `methods['deposit(uint256)']`.
 
-The native targets number overloads the way their SDKs do, in ABI order:
+The native targets apply their SDK's numbering conventions after overloads have
+been sorted by selector:
 
 | Target        | `safeTransferFrom(a,b,c)`     | `safeTransferFrom(a,b,c,d)`    |
 | ------------- | ----------------------------- | ------------------------------ |
