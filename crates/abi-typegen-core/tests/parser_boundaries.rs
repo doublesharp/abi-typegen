@@ -28,6 +28,69 @@ fn artifact(abi: Value) -> String {
 }
 
 #[test]
+fn overload_order_uses_canonical_selectors_and_preserves_metadata() {
+    let nested = json!({"type":"function","name":"route","stateMutability":"payable",
+        "inputs":[
+            {"name":"items","type":"tuple[][2]","internalType":"struct Routes.Item[][2]","components":[
+                {"name":"amount","type":"uint"},
+                {"name":"children","type":"tuple[]","components":[
+                    {"name":"owner","type":"address"},{"name":"tags","type":"bytes32[2]"}
+                ]}
+            ]},
+            {"name":"weights","type":"uint256[3][]"}
+        ],"outputs":[{"name":"result","type":"int"}]});
+    let simple = json!({"type":"function","name":"route","stateMutability":"view",
+        "inputs":[{"name":"keys","type":"bytes32[2][]"},{"name":"weights","type":"uint256[3][]"}],
+        "outputs":[{"name":"ok","type":"bool"}]});
+    let middle = json!({"type":"function","name":"middle","inputs":[],"outputs":[]});
+    let signature = "route((uint256,(address,bytes32[2])[])[][2],uint256[3][])";
+    for pair in [
+        [nested.clone(), simple.clone()],
+        [simple.clone(), nested.clone()],
+    ] {
+        let source = json!({"abi":[
+            {"type":"constructor","inputs":[{"name":"owner","type":"address"}]},
+            pair[0], middle, {"type":"event","name":"Changed","inputs":[],"anonymous":true},
+            pair[1], {"type":"error","name":"Denied","inputs":[]},
+            {"type":"fallback","stateMutability":"payable"},{"type":"receive","stateMutability":"payable"}
+        ],"metadata":{"output":{"userdoc":{"notice":"Routes", "methods":{
+            (signature):{"notice":"Nested route"}
+        }}}}});
+        let ir = parse_artifact("Routes", &source.to_string()).unwrap();
+        assert_eq!(ir.raw_abi, source["abi"]);
+        assert_eq!(
+            ir.functions[0].signature(),
+            "route(bytes32[2][],uint256[3][])"
+        );
+        assert_eq!(ir.functions[0].selector().to_string(), "0x2c65d8fc");
+        assert_eq!(ir.functions[1].name, "middle");
+        let f = &ir.functions[2];
+        assert_eq!(f.signature(), signature);
+        assert_eq!(f.selector().to_string(), "0x7248a337");
+        assert_eq!(f.inputs[0].name, "items");
+        assert_eq!(f.inputs[1].name, "weights");
+        assert_eq!(
+            f.inputs[0].internal_type.as_deref(),
+            Some("struct Routes.Item[][2]")
+        );
+        assert_eq!(f.outputs[0].ty.canonical(), "int256");
+        assert_eq!(f.state_mutability, StateMutability::Payable);
+        assert_eq!(
+            f.natspec.as_ref().unwrap().notice.as_deref(),
+            Some("Nested route")
+        );
+        assert_eq!(
+            ir.natspec.as_ref().unwrap().notice.as_deref(),
+            Some("Routes")
+        );
+        assert_eq!(ir.constructor.as_ref().unwrap().inputs[0].name, "owner");
+        assert!(ir.events[0].anonymous);
+        assert_eq!(ir.errors[0].name, "Denied");
+        assert!(ir.has_receive && ir.has_fallback && ir.fallback_is_payable());
+    }
+}
+
+#[test]
 fn explicit_unknown_mutability_is_rejected_instead_of_becoming_nonpayable() {
     for kind in ["function", "constructor", "fallback", "receive"] {
         for mutability in ["invalid", "", "Payable", "readonly"] {

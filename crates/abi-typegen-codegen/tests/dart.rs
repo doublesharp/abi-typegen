@@ -357,16 +357,17 @@ fn function_overloads_and_normalized_collisions_keep_canonical_identities() {
         true,
     );
     for expected in [
-        "fooBarByUint256Signature = \"fooBar(uint256)\"",
-        "fooBarByUint256Selector = '0xf548f646'",
-        "fooBarByUint256ByFunction1Signature = \"foo_bar(uint256)\"",
-        "fooBarByUint256ByFunction1Selector = '0x5e25f0c6'",
-        "fooBarByFunction2Signature = \"fooBar()\"",
+        "fooBarByUint256ByFunction2Signature = \"fooBar(uint256)\"",
+        "fooBarByUint256ByFunction2Selector = '0xf548f646'",
+        "fooBarByUint256Signature = \"foo_bar(uint256)\"",
+        "fooBarByUint256Selector = '0x5e25f0c6'",
+        "fooBarByFunction0Signature = \"fooBar()\"",
         "addressFunctionSignature = \"address()\"",
     ] {
         assert!(source.contains(expected), "missing {expected}");
     }
-    assert!(source.contains("f.encodeName() == fooBarByUint256ByFunction1Signature"));
+    assert!(source.contains("f.encodeName() == fooBarByUint256ByFunction2Signature"));
+    assert!(source.contains("f.encodeName() == fooBarByUint256Signature"));
 }
 
 #[test]

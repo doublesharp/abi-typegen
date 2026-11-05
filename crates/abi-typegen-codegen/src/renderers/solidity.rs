@@ -615,7 +615,15 @@ mod tests {
         let out = render_solidity_file(&ir);
         assert_eq!(out.matches("struct Position {").count(), 1);
         assert_eq!(out.matches("struct Position_2 {").count(), 1);
-        assert!(out.contains("address account;"), "{out}");
+        // Selector order visits B.Position (address) before A.Position (uint256).
+        assert!(
+            out.contains("struct Position {\n        address account;"),
+            "{out}"
+        );
+        assert!(
+            out.contains("struct Position_2 {\n        uint256 amount;"),
+            "{out}"
+        );
         assert!(
             out.contains("function deposit(Position calldata position)"),
             "{out}"
@@ -625,7 +633,7 @@ mod tests {
             "{out}"
         );
         assert!(
-            out.contains("function again(Position_2[] calldata positions)"),
+            out.contains("function again(Position[] calldata positions)"),
             "{out}"
         );
     }

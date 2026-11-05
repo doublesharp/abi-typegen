@@ -434,6 +434,22 @@ pub fn parse_artifact(name: &str, json: &str) -> Result<ContractIr> {
         }
     }
 
+    // Numbered aliases must retain solc's selector order even when another
+    // compiler enumerates overloads differently. Reorder only same-name slots;
+    // parameter order, unrelated functions, and the preserved ABI stay intact.
+    let mut overloads: HashMap<&str, Vec<usize>> = HashMap::new();
+    for (index, function) in functions.iter().enumerate() {
+        overloads.entry(&function.name).or_default().push(index);
+    }
+    let groups: Vec<_> = overloads.into_values().filter(|g| g.len() > 1).collect();
+    for indices in groups {
+        let mut ordered: Vec<_> = indices.iter().map(|&i| functions[i].clone()).collect();
+        ordered.sort_by_cached_key(AbiFunction::selector);
+        for (index, function) in indices.into_iter().zip(ordered) {
+            functions[index] = function;
+        }
+    }
+
     Ok(ContractIr {
         name: name.to_string(),
         constructor,
@@ -665,8 +681,9 @@ mod tests {
             .filter(|f| f.name == "deposit")
             .collect();
         assert_eq!(deposit_fns.len(), 2);
-        assert_eq!(deposit_fns[0].inputs.len(), 1);
-        assert_eq!(deposit_fns[1].inputs.len(), 2);
+        assert_eq!(deposit_fns[0].signature(), "deposit(uint256,address)");
+        assert_eq!(deposit_fns[1].signature(), "deposit(uint256)");
+        assert!(deposit_fns[0].selector() < deposit_fns[1].selector());
     }
 
     #[test]

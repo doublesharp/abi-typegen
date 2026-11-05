@@ -115,6 +115,13 @@ mod tests {
     }
 
     #[test]
+    fn attestations_uint16_is_distinct_from_the_diesis_bytes32_signature() {
+        let f = function("attestations", vec![SolType::BytesN(32), SolType::Uint(16)]);
+        assert_eq!(f.signature(), "attestations(bytes32,uint16)");
+        assert_eq!(f.selector().to_string(), "0x8bdb5e22");
+    }
+
+    #[test]
     fn event_topic_matches_erc20_transfer() {
         let event = AbiEvent {
             name: "Transfer".to_string(),

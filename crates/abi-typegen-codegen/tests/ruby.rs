@@ -228,9 +228,9 @@ fn functions_cannot_replace_generated_encoders_decoders_or_accessors() {
             .collect(),
     ));
     for expected in [
-        "def foo\n",
-        "def encode_foo_2\n",
-        "def decode_foo_result_2\n",
+        "def foo_2\n",
+        "def encode_foo\n",
+        "def decode_foo_result\n",
         "def client_2\n",
         "def address_2\n",
         "def contract_2\n",

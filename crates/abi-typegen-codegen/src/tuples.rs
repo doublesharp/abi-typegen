@@ -243,7 +243,10 @@ mod tests {
             {"type":"function","name":"deposit","inputs":[{"name":"p","type":"tuple","internalType":"struct B.Position","components":[{"name":"account","type":"address"}]}],"outputs":[],"stateMutability":"nonpayable"}
         ]"#,
         );
-        assert_eq!(names(&reg), ["APosition", "BPosition"]);
+        // deposit((address)) has the lower selector, so B is visited first.
+        assert_eq!(names(&reg), ["BPosition", "APosition"]);
+        assert_eq!(reg.defs()[0].components[0].ty, SolType::Address);
+        assert_eq!(reg.defs()[1].components[0].ty, SolType::Uint(256));
     }
 
     #[test]

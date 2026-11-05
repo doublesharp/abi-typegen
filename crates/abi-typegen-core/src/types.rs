@@ -143,7 +143,7 @@ pub struct ContractIr {
     pub name: String,
     /// Constructor, if present.
     pub constructor: Option<AbiConstructor>,
-    /// All functions in the ABI.
+    /// All functions in the ABI, with same-name overloads in ascending selector order.
     pub functions: Vec<AbiFunction>,
     /// All events in the ABI.
     pub events: Vec<AbiEvent>,

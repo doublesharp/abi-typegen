@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Numbered function overload aliases use ascending canonical 4-byte selector
+  order across Rust, Go, Swift, Kotlin, F#, and OCaml. Compiler ABI reordering no
+  longer changes alias signatures, parameter types, or call selectors. Raw ABI
+  and Hardhat inputs need no compiler method identifiers; JavaScript and Python
+  retain their signature-based aliases.
+
 ## [0.8.0] - 2026-09-30
 
 Regenerate bindings when upgrading to pick up the fixes below. The Rust parser

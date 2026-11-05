@@ -182,6 +182,14 @@ signed RPC tests. Mix dependencies are pinned in the consumer lockfile.
 
 ## F#, OCaml, and q consumers
 
+For a focused overload compatibility check, build the workspace and run
+`python3 e2e/native/overloads/run.py --target <target>` with `rust`, `go`, `swift`,
+`kotlin`, `fsharp`, or `ocaml`. Each consumer compiles and checks actual alias call
+selectors for both a Hardhat artifact and a reversed raw ABI imported through
+`fetch --file`. It reuses the native consumers' dependency manifests and lockfiles,
+creates disposable projects under `TMPDIR`, and removes them on exit. OCaml also
+links the workspace runtime; `--typegen` and `--runtime-dir` override build paths.
+
 `make e2e-fsharp` generates the Foundry fixtures and runs the F# consumer with
 .NET 10 and Nethereum 6.1. It checks offline codecs and uses Anvil for signed
 writes, exact integer reads, deployment, and event decoding and queries.

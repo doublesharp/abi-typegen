@@ -149,6 +149,14 @@ Rust keeps alloy's `_0`, `_1`.
 
 ## Overloaded functions
 
+Numbered function aliases use ascending 4-byte selector order within each Solidity
+function name. Selectors are computed from canonical signatures, including tuple
+components and array dimensions, so raw ABI, Foundry, and Hardhat inputs agree
+without compiler method identifiers. For example, `setAddr(bytes32,uint256,bytes)`
+(`0x8b95dd71`) precedes `setAddr(bytes32,address)` (`0xd5fa2b00`). ABI entries,
+parameter order, and documentation are preserved. Regenerate bindings when
+upgrading to pick up this ordering.
+
 TypeScript wrapper and type names distinguish overloaded signatures. For example:
 
 ```text
